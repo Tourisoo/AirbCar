@@ -7,6 +7,10 @@ from .models import User, Booking, Partner, Listing
 #  By customizing it, you’ll enhance the token and response to include key fields
 #  from the User model, making the login process more informative for the frontend.
 
+
+#  This serializer class contains the logic for how to take the incoming 
+# data from the request and convert it into a model instance
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):

@@ -1,16 +1,15 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from .models import User, Booking, Partner, Listing
-from rest_framework import viewsets, generics, status
 from .serializers import UserSerializer, BookingSerializer, PartnerSerializer, ListingSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import viewsets, generics, status
 from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView
 import uuid
-
-# Create your views here.
-
-#  This serializer class contains the logic for how to take the incoming 
-# data from the request and convert it into a model instance
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.core.mail import send_mail
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -51,7 +50,39 @@ class UserRegisterView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         user = serializer.save()
-        user.email_verification_token = str(uuid.uuid4())  # Generate token for email verification
+        user.email_verification_token = str(uuid.uuid4())
         user.save()
-        # Placeholder for email verification (configured on Day 2)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class PasswordResetRequestView(generics.GenericAPIView):
+    def post(self, request):
+        email = request.data.get('email')
+        user = User.objects.filter(email=email).first()
+        if user:
+            token_generator = PasswordResetTokenGenerator()
+            token = token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            reset_url = f"{request.build_absolute_uri('/api/reset-password/')}{uid}/{token}/"
+            send_mail(
+                'Password Reset Request',
+                f'Use this link to reset your password: {reset_url}',
+                'from@airbcar.com',
+                [email],
+                fail_silently=False,
+            )
+            return Response({'message': 'Password reset email sent'}, status=status.HTTP_200_OK)
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+class PasswordResetConfirmView(generics.GenericAPIView):
+    def post(self, request, uidb64, token):
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+        token_generator = PasswordResetTokenGenerator()
+        if user and token_generator.check_token(user, token):
+            user.set_password(request.data.get('new_password'))
+            user.save()
+            return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
+        return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)

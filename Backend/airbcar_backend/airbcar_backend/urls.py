@@ -14,10 +14,11 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from core.views import home_view, user_list, booking_list, UserViewSet, PartnerViewSet, ListingViewSet, BookingViewSet, UserRegisterView
+from core.views import home_view, user_list, booking_list, UserViewSet, PartnerViewSet, ListingViewSet, BookingViewSet, UserRegisterView, PasswordResetRequestView, PasswordResetConfirmView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from core.serializers import CustomTokenObtainPairSerializer
 
@@ -40,6 +41,9 @@ urlpatterns = [
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/register/', UserRegisterView.as_view(), name='user_register'),
+    path('api/password-reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
+    path('api/reset-password/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('', home_view),
     # path('api-auth/', include('rest_framework.urls')),
     # path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
 ]
