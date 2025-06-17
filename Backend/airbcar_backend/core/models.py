@@ -12,9 +12,15 @@ class User(AbstractUser):
     is_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     email_verification_token = models.CharField(max_length=36, blank=True, null=True)
+    email_verified = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['email']),
+    ]
 
 class Partner(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='partner')
@@ -26,9 +32,15 @@ class Partner(models.Model):
         ('rejected', 'Rejected')
     ], default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
+    verification_document = models.FileField(upload_to='partner_docs/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.company_name} ({self.user.username})"
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['verification_status']),
+        ]
 
 class Listing(models.Model):
     partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='listings')

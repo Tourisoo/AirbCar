@@ -21,6 +21,8 @@ from rest_framework.routers import DefaultRouter
 from core.views import home_view, user_list, booking_list, UserViewSet, PartnerViewSet, ListingViewSet, BookingViewSet, UserRegisterView, PasswordResetRequestView, PasswordResetConfirmView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from core.serializers import CustomTokenObtainPairSerializer
+from django.conf import settings
+from django.conf.urls.static import static
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -46,5 +48,5 @@ urlpatterns = [
     path('api/reset-password/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     # path('api-auth/', include('rest_framework.urls')),
     # path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
