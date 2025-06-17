@@ -35,6 +35,7 @@ router.register(r'bookings', BookingViewSet)
 urlpatterns = [
 
     path('admin/', admin.site.urls),
+    path('', home_view),
     path('', include(router.urls)),
     path('api/users/list/', user_list, name='user_list'),
     path('api/bookings/list/', booking_list, name='bookings_list'),
@@ -43,7 +44,6 @@ urlpatterns = [
     path('api/register/', UserRegisterView.as_view(), name='user_register'),
     path('api/password-reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
     path('api/reset-password/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-    path('', home_view),
     # path('api-auth/', include('rest_framework.urls')),
     # path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
 ]

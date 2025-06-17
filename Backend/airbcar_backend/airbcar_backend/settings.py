@@ -78,6 +78,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'airbcar_backend.wsgi.application'
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases

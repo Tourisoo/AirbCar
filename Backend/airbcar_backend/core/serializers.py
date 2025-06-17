@@ -11,6 +11,7 @@ from .models import User, Booking, Partner, Listing
 #  This serializer class contains the logic for how to take the incoming 
 # data from the request and convert it into a model instance
 
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
