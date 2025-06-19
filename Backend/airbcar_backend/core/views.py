@@ -5,15 +5,45 @@ from .serializers import UserSerializer, BookingSerializer, PartnerSerializer, L
 from rest_framework import viewsets, generics, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.permissions import IsAuthenticated
 import uuid
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
+
+
+class UserVerificationView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'is_verified': user.is_verified,
+            'email_verified': user.email_verified
+        })
+
+    def post(self, request):
+        user = request.user
+        token = request.data.get('token')
+        if token == user.email_verification_token:
+            user.email_verified = True
+            user.is_verified = True
+            user.email_verification_token = None
+            user.save()
+            return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
+        return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return User.objects.all()  # Admins see all users
+        return User.objects.filter(id=user.id)  # Users see only their profile
 
 class PartnerViewSet(viewsets.ModelViewSet):
     queryset = Partner.objects.all()
@@ -52,6 +82,16 @@ class UserRegisterView(generics.CreateAPIView):
         user = serializer.save()
         user.email_verification_token = str(uuid.uuid4())
         user.save()
+
+        verification_url = f"{self.request.build_absolute_uri('/verify-email/')}?token={user.email_verification_token}"
+        send_mail(
+            subject='Verify your email',
+            message=f'Click the link to verify your email: {verification_url}',
+            from_email='no-reply@airbcar.com',
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class PasswordResetRequestView(generics.GenericAPIView):

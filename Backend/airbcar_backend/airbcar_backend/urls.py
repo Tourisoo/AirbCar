@@ -18,7 +18,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from core.views import home_view, user_list, booking_list, UserViewSet, PartnerViewSet, ListingViewSet, BookingViewSet, UserRegisterView, PasswordResetRequestView, PasswordResetConfirmView
+from core.views import home_view, user_list, booking_list, UserViewSet, \
+    PartnerViewSet, ListingViewSet, BookingViewSet, UserRegisterView, \
+    PasswordResetRequestView, PasswordResetConfirmView, UserVerificationView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from core.serializers import CustomTokenObtainPairSerializer
 from django.conf import settings
@@ -37,7 +39,7 @@ router.register(r'bookings', BookingViewSet)
 urlpatterns = [
 
     path('admin/', admin.site.urls),
-    path('', home_view),
+    # path('', home_view),
     path('', include(router.urls)),
     path('api/users/list/', user_list, name='user_list'),
     path('api/bookings/list/', booking_list, name='bookings_list'),
@@ -46,7 +48,7 @@ urlpatterns = [
     path('api/register/', UserRegisterView.as_view(), name='user_register'),
     path('api/password-reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
     path('api/reset-password/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('api/verify-email/', UserVerificationView.as_view(), name='user_verify_email'),
     # path('api-auth/', include('rest_framework.urls')),
-    # path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

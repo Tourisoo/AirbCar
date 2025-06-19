@@ -37,7 +37,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'phone_number', 'default_currency', 'is_partner', 'is_verified', 'password']
+        fields = ['id', 'username', 'email', 'phone_number', 'default_currency', 'is_partner', 'is_verified', 'password', 'profile_picture', 'email_verified']
+        read_only_fields = ['id', 'is_partner', 'is_verified', 'email_verified']
 
     def create(self, validated_data):
         user = User.objects.create(
@@ -50,9 +51,6 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
-
-
-
 
 class PartnerSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
