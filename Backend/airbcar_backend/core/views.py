@@ -37,7 +37,7 @@ class UserVerificationView(generics.GenericAPIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
@@ -192,9 +192,6 @@ python manage.py runserver
     </html>
     """
     return HttpResponse(html_content)
-
-
-
 
 # def home_view(request):
 #     return HttpResponse("<h1>Welcome Home<h1>")
