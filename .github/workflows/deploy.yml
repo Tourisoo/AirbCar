@@ -50,6 +50,14 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
+        run: npm install
+        working-directory: ./frontend
+      - name: Run backend tests
+        run: npm test
+        working-directory: ./backend
+      - name: Build backend Docker image
+        run: docker build -t django-app .
+        working-directory: ./backend
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
