@@ -19,13 +19,13 @@ jobs:
           node-version: '20'
       - name: Install frontend dependencies
         run: npm install
-        working-directory: ./Frontend
+        working-directory: ./frontend
       - name: Run frontend tests
         run: npm test
-        working-directory: ./Frontend
+        working-directory: ./frontend
       - name: Build frontend Docker image
         run: docker build -t nextjs-app .
-        working-directory: ./Frontend
+        working-directory: ./frontend
   test-backend:
     runs-on: ubuntu-latest
     services:
