@@ -48,12 +48,20 @@ echo ""
 echo "🚀 Building and starting the application with Docker..."
 echo ""
 
-# Build and start with docker-compose
-docker-compose up --build
+# Check if port 3000 is available
+if netstat -tuln 2>/dev/null | grep -q ":3000 " || ss -tuln 2>/dev/null | grep -q ":3000 "; then
+    echo "⚠️  Port 3000 is already in use. Using port 3001 instead..."
+    docker-compose -f docker-compose.alt.yml up --build
+    PORT_MSG="📱 Your app should be running at: http://localhost:3001"
+else
+    # Build and start with docker-compose
+    docker-compose up --build
+    PORT_MSG="📱 Your app should be running at: http://localhost:3000"
+fi
 
 echo ""
 echo "🎉 Setup complete!"
-echo "📱 Your app should be running at: http://localhost:3000"
+echo "$PORT_MSG"
 echo ""
 echo "📝 Useful Docker commands:"
 echo "  • Stop the app: docker-compose down"

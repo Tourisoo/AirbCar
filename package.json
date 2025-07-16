@@ -20,7 +20,9 @@
     "docker:build": "docker build -t car-rental-app .",
     "docker:run": "docker run -p 3000:3000 car-rental-app",
     "docker:dev": "docker-compose up --build",
+    "docker:dev-alt": "docker-compose -f docker-compose.alt.yml up --build",
     "docker:stop": "docker-compose down",
+    "docker:stop-alt": "docker-compose -f docker-compose.alt.yml down",
     "docker:logs": "docker-compose logs -f"
   },
   "dependencies": {
