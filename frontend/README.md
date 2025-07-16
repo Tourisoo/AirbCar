@@ -1,50 +1,40 @@
-# Getting Started with Docker for Next.js
+# Hello World Next.js App
 
-This guide explains how to build and run your Next.js application using Docker.
+This is a simple Next.js project that displays "Hello World" on the screen. The project was created with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) and styled with Tailwind CSS.
 
-## Prerequisites
+## Features
 
-- [Docker](https://www.docker.com/get-started) installed on your machine.
+- Next.js 15.3.5 with JavaScript
+- Tailwind CSS v4 for styling
+- App Router architecture
+- Clean, minimal "Hello World" display
+- pnpm package manager
 
-## 1. Build the Docker Image
+## Getting Started
 
-Open a terminal and navigate to the `frontend` directory:
+First, run the development server:
 
-```sh
-cd frontend
+```bash
+pnpm dev
 ```
 
-Build the Docker image (replace `my-next-app` with any name you like):
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-```sh
-docker build -t my-next-app .
-```
+You can start editing the page by modifying `src/app/page.js`. The page auto-updates as you edit the file.
 
-## 2. Run the Docker Container
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-Run the container, mapping port 3000 from the container to your local machine:
+## Learn More
 
-```sh
-docker run -p 3000:3000 my-next-app
-```
+To learn more about Next.js, take a look at the following resources:
 
-Your Next.js app will be available at [http://localhost:3000](http://localhost:3000).
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## 3. Stopping the Container
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-To stop the running container, press `Ctrl+C` in the terminal where it's running, or list and stop it manually:
+## Deploy on Vercel
 
-```sh
-docker ps
-# Find the container ID, then:
-docker stop <container_id>
-```
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
----
-
-For more advanced setups (multi-service, databases, etc.), consider using Docker Compose.
-
-
-
-
-maya
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
