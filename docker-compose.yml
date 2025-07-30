@@ -1,0 +1,25 @@
+version: '3'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: airbcar_db
+      POSTGRES_USER: airbcar_user
+      POSTGRES_PASSWORD: amineamine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  web:
+    build: Backend/
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_NAME: airbcar_db
+      DATABASE_USER: airbcar_user
+      DATABASE_PASSWORD: amineamine
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
