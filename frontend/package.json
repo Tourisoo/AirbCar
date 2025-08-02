@@ -10,7 +10,20 @@
     "start": "next start",
     "lint": "next lint",
     "db:studio": "prisma studio",
-    "db:view": "node view-users.js"
+    "db:view": "node view-users.js",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:setup": "prisma migrate dev && prisma generate",
+    "setup": "./setup.sh",
+    "setup:manual": "pnpm install",
+    "postinstall": "prisma generate",
+    "docker:build": "docker build -t car-rental-app .",
+    "docker:run": "docker run -p 3000:3000 car-rental-app",
+    "docker:dev": "docker-compose up --build",
+    "docker:dev-alt": "docker-compose -f docker-compose.alt.yml up --build",
+    "docker:stop": "docker-compose down",
+    "docker:stop-alt": "docker-compose -f docker-compose.alt.yml down",
+    "docker:logs": "docker-compose logs -f"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

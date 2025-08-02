@@ -1,24 +1,160 @@
-# Hello World Next.js App
+# Car Rental Platform
 
-This is a simple Next.js project that displays "Hello World" on the screen. The project was created with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) and styled with Tailwind CSS.
+A modern car rental platform built with Next.js, featuring user authentication, admin panel, and a beautiful UI.
 
 ## Features
 
 - Next.js 15.3.5 with JavaScript
 - Tailwind CSS v4 for styling
 - App Router architecture
-- Clean, minimal "Hello World" display
+- NextAuth.js authentication with email/password and Google OAuth
+- Prisma ORM with SQLite database
+- Admin panel for user management
+- Password reset functionality
+- Responsive design with modern UI components
 - pnpm package manager
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+ 
+- pnpm (recommended) or npm
+
+### Quick Setup
+
+1. Clone the repository:
+```bash
+git clone <your-repo-url>
+cd hello-world
+```
+
+2. Install dependencies:
+```bash
+pnpm install
+```
+
+3. Run the setup script:
+```bash
+pnpm run setup
+```
+This will create `.env.local` from the example and guide you through the setup.
+
+4. Edit `.env.local` with your actual values (at minimum, add a NextAuth secret):
+```bash
+# Generate a secret for NextAuth
+openssl rand -base64 32
+```
+
+5. After editing .env.local, set up the database:
+```bash
+pnpm run db:setup
+```
+
+6. Run the development server:
 ```bash
 pnpm dev
 ```
 
+### Manual Setup
+
+If you prefer to set up manually:
+
+1. Clone the repository:
+```bash
+git clone <your-repo-url>
+cd hello-world
+```
+
+2. Install dependencies:
+```bash
+pnpm install
+```
+
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
+Edit `.env.local` and add your actual values. At minimum, generate a NextAuth secret:
+```bash
+# Generate a secret for NextAuth
+openssl rand -base64 32
+```
+
+4. Set up the database:
+```bash
+pnpm run db:setup
+```
+
+5. Run the development server:
+```bash
+pnpm dev
+```
+
+### Docker Setup (Alternative)
+
+If you prefer to use Docker, you can run the entire application in a container:
+
+#### Quick Docker Setup
+
+1. Clone the repository:
+```bash
+git clone <your-repo-url>
+cd hello-world
+```
+
+2. Run the Docker setup script:
+```bash
+./docker-setup.sh
+```
+
+This will automatically:
+- Create `.env.local` from `.env.example`
+- Generate a NextAuth secret
+- Build the Docker image
+- Start the application at `http://localhost:3000`
+
+#### Manual Docker Setup
+
+1. Clone and navigate to the project:
+```bash
+git clone <your-repo-url>
+cd hello-world
+```
+
+2. Create environment file:
+```bash
+cp .env.example .env.local
+# Edit .env.local with your values
+```
+
+3. Build and run with Docker Compose:
+```bash
+docker-compose up --build
+```
+
+#### Docker Commands
+
+```bash
+# Build and start the application
+pnpm run docker:dev
+
+# Stop the application
+pnpm run docker:stop
+
+# View logs
+pnpm run docker:logs
+
+# Build Docker image only
+pnpm run docker:build
+
+# Run Docker container directly
+pnpm run docker:run
+```
+
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Usage
 
 You can start editing the page by modifying `src/app/page.js`. The page auto-updates as you edit the file.
 
