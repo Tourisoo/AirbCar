@@ -71,6 +71,17 @@ jobs:
         run: newman run ./correct/path/to/postman_collection.json
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: airbcar_db
+          POSTGRES_USER: airbcar_user
+          POSTGRES_PASSWORD: amineamine
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -92,3 +103,9 @@ jobs:
       - name: Run Django command
         working-directory: ./backend/airbcar_backend
         run: python manage.py test
+        env:
+          DATABASE_NAME: airbcar_db
+          DATABASE_USER: airbcar_user
+          DATABASE_PASSWORD: amineamine
+          DATABASE_HOST: localhost
+          DATABASE_PORT: 5432
