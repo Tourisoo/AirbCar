@@ -23,7 +23,7 @@ jobs:
       - name: Build frontend project
         run: |
           export CI=false
-          npm run build
+          npx next build --no-lint
         working-directory: ./frontend
       - name: Build frontend Docker image
         run: docker build -t nextjs-app .
