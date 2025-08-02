@@ -90,28 +90,27 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        # 'NAME': 'airbcar_db',
-        # 'USER': 'airbcar_user',
-        # 'PASSWORD': 'amineamine',
-        # 'HOST': 'localhost',
-        # 'PORT': '5432',
-
-        # 'NAME': os.environ.get('airbcar_db'),
-        # 'USER': os.environ.get('airbcar_user'),
-        # 'PASSWORD': os.environ.get('amineamine'),
-        # 'HOST': os.environ.get('localhost'),
-        # 'PORT': os.environ.get('5432'),
-        
-        'NAME': os.environ.get('DATABASE_NAME'),
-        'USER': os.environ.get('DATABASE_USER'),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
-        'HOST': os.environ.get('DATABASE_HOST'),
-        'PORT': os.environ.get('DATABASE_PORT'),
+# Check if running in Docker (environment variables are set)
+if os.environ.get('DATABASE_NAME'):
+    # Production/Docker database configuration
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DATABASE_NAME'),
+            'USER': os.environ.get('DATABASE_USER'),
+            'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+            'HOST': os.environ.get('DATABASE_HOST'),
+            'PORT': os.environ.get('DATABASE_PORT'),
+        }
     }
-}
+else:
+    # Local development database configuration (SQLite)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 
