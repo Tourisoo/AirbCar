@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: '20'
       - name: Install frontend dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
         working-directory: ./frontend
       - name: Run frontend tests
         run: npm test
@@ -96,7 +96,7 @@ jobs:
         working-directory: ./backend
       - name: Install frontend dependencies
         working-directory: ./frontend # Make sure this matches your repo structure
-        run: npm install
+        run: npm install --legacy-peer-deps
       - name: Run backend script
         working-directory: ./backend   # <-- Make sure this matches your actual directory
         run: /usr/bin/bash your_script.sh
