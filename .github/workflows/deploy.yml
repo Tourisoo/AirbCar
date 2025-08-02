@@ -19,13 +19,13 @@ jobs:
           node-version: '20'
       - name: Install frontend dependencies
         run: npm install
-        working-directory: ./Frontend
+        working-directory: ./frontend
       - name: Run frontend tests
         run: npm test
-        working-directory: ./Frontend
+        working-directory: ./frontend
       - name: Build frontend Docker image
         run: docker build -t nextjs-app .
-        working-directory: ./Frontend
+        working-directory: ./frontend
   test-backend:
     runs-on: ubuntu-latest
     services:
@@ -54,19 +54,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
-        working-directory: ./Backend
+        working-directory: ./backend
         env:
           DATABASE_URL: postgres://postgres:password@localhost:5432/mydb
           REDIS_URL: redis://localhost:6379/0
       - name: Build backend Docker image
         run: docker build -t django-app .
-        working-directory: ./Backend
+        working-directory: ./backend
   api-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run Postman/Newman tests
-        uses: matt-ball/newman-action@master
-        with:
-          collection: ./tests/postman_collection.json
-          environment: ./tests/postman_environment.json
+      - name: Install Newman
+        run: npm install -g newman
+      - name: Run Newman tests
+        run: newman run ./correct/path/to/postman_collection.json
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install frontend dependencies
+        working-directory: ./frontend # Make sure this matches your repo structure
+        run: npm install
+      - name: Run backend script
+        working-directory: ./backend   # <-- Make sure this matches your actual directory
+        run: /usr/bin/bash your_script.sh
