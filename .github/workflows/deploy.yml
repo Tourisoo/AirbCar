@@ -80,3 +80,5 @@ jobs:
       - name: Run backend script
         working-directory: ./backend   # <-- Make sure this matches your actual directory
         run: /usr/bin/bash your_script.sh
+      - name: Run Django command
+        run: python backend/airbcar_backend/manage.py test
