@@ -102,8 +102,9 @@ jobs:
         working-directory: ./frontend # Make sure this matches your repo structure
         run: npm install --legacy-peer-deps
       - name: Run Django command
-        working-directory: ./backend/airbcar_backend
-        run: python manage.py test
+        run: |
+          cd backend/airbcar_backend
+          python manage.py test
         env:
           DATABASE_NAME: airbcar_db
           DATABASE_USER: airbcar_user
