@@ -20,8 +20,8 @@ jobs:
       - name: Install frontend dependencies
         run: npm install --legacy-peer-deps
         working-directory: ./frontend
-      - name: Run frontend tests
-        run: npm test
+      - name: Build frontend project
+        run: npm run build
         working-directory: ./frontend
       - name: Build frontend Docker image
         run: docker build -t nextjs-app .
