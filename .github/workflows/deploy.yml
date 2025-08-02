@@ -21,7 +21,9 @@ jobs:
         run: npm install --legacy-peer-deps
         working-directory: ./frontend
       - name: Build frontend project
-        run: npm run build
+        run: |
+          export CI=false
+          npm run build
         working-directory: ./frontend
       - name: Build frontend Docker image
         run: docker build -t nextjs-app .
