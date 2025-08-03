@@ -33,7 +33,7 @@
     "dotenv": "^17.2.0",
     "next": "15.3.5",
     "next-auth": "^4.24.11",
-    "nodemailer": "^7.0.5",
+    "nodemailer": "^6.9.14",
     "prisma": "^6.11.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
