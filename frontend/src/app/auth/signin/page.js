@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useAuth } from '@/contexts/AuthContext'
 
 const signInSchema = z.object({
   email: z.string().email('Invalid email'),
@@ -17,6 +17,7 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const { login } = useAuth()
 
   const {
     register,
@@ -31,17 +32,14 @@ export default function SignIn() {
     setError('')
 
     try {
-      const result = await signIn('credentials', {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        setError('Invalid email or password')
-      } else {
+      const result = await login(data.email, data.password)
+      
+      if (result.success) {
+        // Redirect to home page
         router.push('/')
         router.refresh()
+      } else {
+        setError(result.error)
       }
     } catch (error) {
       setError('Something went wrong')
@@ -51,7 +49,8 @@ export default function SignIn() {
   }
 
   const handleGoogleSignIn = () => {
-    signIn('google', { callbackUrl: '/' })
+    // Keep this for potential future Google OAuth integration
+    console.log('Google sign in not implemented yet')
   }
 
   return (

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
     'core',
@@ -56,6 +57,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -186,4 +188,27 @@ MEDIA_URL = '/media/'
 # Optional: local file storage (default)
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
+# CORS settings
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_ALL_ORIGINS = True  # Only for development
+
+# Allow specific headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 STATIC_ROOT = BASE_DIR / 'staticfiles'

@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useAuth } from '@/contexts/AuthContext'
 
 const signUpSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -23,6 +23,7 @@ export default function SignUp() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const router = useRouter()
+  const { register: registerUser } = useAuth()
 
   const {
     register,
@@ -37,31 +38,16 @@ export default function SignUp() {
     setError('')
 
     try {
-      const response = await fetch('http://localhost:8000/api/register/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          password: data.password,
-        }),
-      })
-
-      if (response.ok) {
+      const result = await registerUser(data.name, data.email, data.password)
+      
+      if (result.success) {
         setSuccess(true)
-        // Auto sign in after successful registration
-        setTimeout(async () => {
-          await signIn('credentials', {
-            email: data.email,
-            password: data.password,
-            callbackUrl: '/',
-          })
+        // Redirect to home page after successful registration and auto-login
+        setTimeout(() => {
+          router.push('/')
         }, 2000)
       } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Something went wrong')
+        setError(result.error)
       }
     } catch (error) {
       setError('Something went wrong')
@@ -71,7 +57,8 @@ export default function SignUp() {
   }
 
   const handleGoogleSignIn = () => {
-    signIn('google', { callbackUrl: '/' })
+    // Keep this for potential future Google OAuth integration
+    console.log('Google sign in not implemented yet')
   }
 
   if (success) {
@@ -95,7 +82,7 @@ export default function SignUp() {
                 Account created successfully!
               </h2>
               <p className="text-sm text-gray-600">
-                Signing you in...
+                You're now signed in. Redirecting to home page...
               </p>
             </div>
           </div>

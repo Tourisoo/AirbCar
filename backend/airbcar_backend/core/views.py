@@ -34,6 +34,20 @@ class UserVerificationView(generics.GenericAPIView):
             return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
+class TokenVerifyView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'is_partner': user.is_partner,
+            'is_verified': user.is_verified,
+            'email_verified': user.email_verified
+        })
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer

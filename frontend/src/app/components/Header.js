@@ -1,15 +1,16 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Header() {
-  const { data: session, status } = useSession()
+  const { user, loading, logout } = useAuth()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   const handleSignOut = () => {
-    signOut({ callbackUrl: '/' })
+    logout()
+    setIsDropdownOpen(false)
   }
 
   return (
@@ -31,7 +32,7 @@ export default function Header() {
             <a href="#" className="text-gray-700 hover:text-gray-900 font-medium text-sm underline">
               Our mission
             </a>
-            {session && (
+            {user && (
               <a href="#" className="text-gray-700 hover:text-gray-900 font-medium text-sm underline">
                 My Bookings
               </a>
@@ -41,7 +42,7 @@ export default function Header() {
           {/* Right side */}
           <div className="flex items-center space-x-3">
             {/* Heart icon */}
-            {session && (
+            {user && (
               <button className="w-10 h-10 bg-white border-2 border-orange-300 rounded-full flex items-center justify-center hover:bg-orange-25 hover:border-orange-400 hover:border-2 group">
                 <svg className="w-4 h-4 text-orange-500 group-hover:fill-orange-500 transition-colors duration-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
@@ -50,30 +51,30 @@ export default function Header() {
             )}
             
             {/* Authentication */}
-            {status === 'loading' ? (
+            {loading ? (
               <div className="w-20 h-10 bg-gray-200 animate-pulse rounded-md"></div>
-            ) : session ? (
+            ) : user ? (
               <div className="relative">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                 >
-                  {session.user.image ? (
+                  {user.profile_picture ? (
                     <img
-                      src={session.user.image}
-                      alt={session.user.name || 'User'}
+                      src={user.profile_picture}
+                      alt={user.username || 'User'}
                       className="w-10 h-10 rounded-full object-cover border-2 border-orange-300 hover:border-orange-400 transition-colors duration-200"
                     />
                   ) : (
                     <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center border-2 border-orange-300 hover:border-orange-400 transition-colors duration-200">
                       <span className="text-white text-sm font-semibold">
-                        {session.user.name?.charAt(0)?.toUpperCase() || session.user.email?.charAt(0)?.toUpperCase()}
+                        {user.username?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
                       </span>
                     </div>
                   )}
                   <div className="hidden md:flex items-center space-x-2">
                     <span className="text-sm font-medium text-gray-700">
-                      {session.user.name || session.user.email}
+                      {user.username || user.email}
                     </span>
                     <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -84,8 +85,8 @@ export default function Header() {
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-3 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                     <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900">{session.user.name || 'User'}</p>
-                      <p className="text-sm text-gray-500 truncate">{session.user.email}</p>
+                      <p className="text-sm font-medium text-gray-900">{user.username || 'User'}</p>
+                      <p className="text-sm text-gray-500 truncate">{user.email}</p>
                     </div>
                     <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
                       <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
