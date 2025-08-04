@@ -19,11 +19,17 @@ COPY prisma ./prisma/
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy environment example
+# Copy only the necessary files for the application
 COPY .env.example ./
+COPY next.config.js ./
+COPY postcss.config.mjs ./
+COPY eslint.config.mjs ./
+COPY jsconfig.json ./
+COPY start.sh ./
 
-# Copy source code
-COPY . .
+# Copy source directories
+COPY src ./src/
+COPY public ./public/
 
 # Create .env.local from example and set default DATABASE_URL
 RUN cp .env.example .env.local && \
@@ -37,11 +43,8 @@ ENV DATABASE_URL="file:./prisma/dev.db"
 ENV NEXTAUTH_URL="http://localhost:3000"
 ENV NODE_ENV="development"
 
-# Copy and prepare the startup script
-COPY start.sh /app/start.sh
-
+# Make the startup script executable
 RUN chmod +x /app/start.sh
-
 
 # Expose port 3000
 EXPOSE 3000
