@@ -70,3 +70,13 @@ class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = ["id", "user", "listing", "date"]
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    password = serializers.CharField(min_length=6, required=True)
+    
+    def validate_password(self, value):
+        # You can add additional password validation here if needed
+        return value
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)

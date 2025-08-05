@@ -28,7 +28,9 @@ export default function ForgotPassword() {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
+      // Use Django backend for password reset
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/password-reset/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
