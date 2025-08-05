@@ -1,4 +1,3 @@
-
 services:
   db:
     image: postgres:15
@@ -24,17 +23,16 @@ services:
       DATABASE_PORT: 5432
     depends_on:
       - db
-    restart: unless-stopped
   app:
     build: frontend/
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_DJANGO_API_URL=http://web:8000
-      - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=your-secret-key-here-replace-in-production
+      - DATABASE_URL=file:./prisma/dev.db
+      - NEXTAUTH_URL=http://localhost:8000
       # Override these in .env file or docker-compose.override.yml
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
       - EMAIL_SERVER_USER=${EMAIL_SERVER_USER:-}
@@ -47,6 +45,8 @@ services:
       - ./frontend:/app
       # Preserve node_modules in container
       - /app/node_modules
+      # Persist database
+      - ./frontend/prisma:/app/prisma
     networks:
       - airbo
     restart: unless-stopped

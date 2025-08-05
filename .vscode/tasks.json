@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Django Tests",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"manage.py",
+				"test"
+			],
+			"group": "test",
+			"isBackground": false,
+			"options": {
+				"cwd": "c:\\Users\\Dima D'origine\\OneDrive\\Bureau\\airbcar_ff\\backend\\airbcar_backend"
+			}
+		}
+	]
+}
