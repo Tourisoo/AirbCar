@@ -21,7 +21,7 @@ from rest_framework.routers import DefaultRouter
 from core.views import home_view, user_list, booking_list, UserViewSet, \
     PartnerViewSet, ListingViewSet, BookingViewSet, UserRegisterView, \
     PasswordResetRequestView, PasswordResetConfirmView, UserVerificationView, \
-    TokenVerifyView
+    TokenVerifyView, AdminVerificationView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from core.serializers import CustomTokenObtainPairSerializer
 from django.conf import settings
@@ -47,6 +47,7 @@ urlpatterns = [
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/verify-token/', TokenVerifyView.as_view(), name='token_verify'),
+    path('api/verify-admin/', AdminVerificationView.as_view(), name='admin_verify'),
     path('api/register/', UserRegisterView.as_view(), name='user_register'),
     path('api/password-reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
     path('api/reset-password/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),

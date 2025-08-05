@@ -1,30 +1,158 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [adminLoading, setAdminLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const { user, loading: authLoading, logout } = useAuth()
+  const router = useRouter()
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/auth/signin?redirect=' + encodeURIComponent('/admin'))
+    }
+  }, [user, authLoading, router])
+
+  // Check if user is admin
+  useEffect(() => {
+    if (!user) return
+    
+    const checkAdminStatus = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+        const token = localStorage.getItem('access_token')
+        
+        const response = await fetch(`${apiUrl}/api/verify-token/`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+        
+        if (response.ok) {
+          const userData = await response.json()
+          console.log('User data from verify-token:', userData)
+          // Check if user has admin privileges
+          setIsAdmin(userData.is_staff === true || userData.is_superuser === true)
+        } else {
+          setIsAdmin(false)
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error)
+        setIsAdmin(false)
+      } finally {
+        setAdminLoading(false)
+      }
+    }
+    
+    checkAdminStatus()
+  }, [user])
 
   useEffect(() => {
-    fetch('/api/admin/users')
+    // Only fetch data if user is authenticated and is admin
+    if (!user || !isAdmin || adminLoading) return
+    
+    // Use Django backend for admin data
+    const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+    fetch(`${apiUrl}/api/users/list/`)
+      .then(res => res.text()) // Get as text first since it returns HTML
+      .then(html => {
+        // Parse the HTML to extract user information
+        // For now, let's use a simple approach and get users from the REST API differently
+        // Let's try the /users/ endpoint with authentication
+        const token = localStorage.getItem('access_token')
+        return fetch(`${apiUrl}/users/?format=json`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+      })
       .then(res => res.json())
-      .then(data => {
-        setData(data)
+      .then(users => {
+        // Transform Django user data to match admin page format
+        const transformedData = {
+          success: true,
+          users: Array.isArray(users) ? users.map(user => ({
+            id: user.id,
+            name: user.username,
+            email: user.email,
+            emailVerified: user.email_verified,
+            image: user.profile_picture,
+            createdAt: new Date().toISOString(), // Django doesn't expose created_at
+            accounts: [{ provider: 'credentials', type: 'credentials' }] // Default for Django users
+          })) : [],
+          stats: {
+            totalUsers: Array.isArray(users) ? users.length : 0,
+            verifiedUsers: Array.isArray(users) ? users.filter(u => u.email_verified).length : 0,
+            googleUsers: 0, // No Google users in Django yet
+            credentialUsers: Array.isArray(users) ? users.length : 0, // All Django users are credential users
+            activeUsers: Array.isArray(users) ? users.filter(u => u.is_verified).length : 0
+          }
+        }
+        setData(transformedData)
         setLoading(false)
       })
       .catch(error => {
         console.error('Error:', error)
         setLoading(false)
       })
-  }, [])
+  }, [user, isAdmin, adminLoading])
+
+  // Show loading while checking auth and admin status
+  if (authLoading || adminLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show nothing while redirecting
+  if (!user) {
+    return null
+  }
+
+  // Show access denied for non-admin users
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">Access Denied</h3>
+          <p className="mt-1 text-sm text-gray-500">You don't have permission to access the admin dashboard.</p>
+          <div className="mt-6">
+            <button
+              onClick={() => router.push('/')}
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            >
+              Go Home
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <p className="mt-4 text-gray-600">Loading data...</p>
         </div>
       </div>
     )
@@ -43,9 +171,24 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="mt-2 text-gray-600">Manage your users and view statistics</p>
+        {/* Header with user info and logout */}
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="mt-2 text-gray-600">Manage your users and view statistics</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="text-right">
+              <p className="text-sm font-medium text-gray-900">{user.username}</p>
+              <p className="text-sm text-gray-500">{user.email}</p>
+            </div>
+            <button
+              onClick={logout}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}

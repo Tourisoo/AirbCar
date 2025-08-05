@@ -34,6 +34,18 @@ class UserVerificationView(generics.GenericAPIView):
             return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
+class AdminVerificationView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'is_admin': user.is_staff,
+            'is_superuser': user.is_superuser,
+            'username': user.username,
+            'email': user.email
+        })
+
 class TokenVerifyView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
@@ -45,7 +57,9 @@ class TokenVerifyView(generics.GenericAPIView):
             'email': user.email,
             'is_partner': user.is_partner,
             'is_verified': user.is_verified,
-            'email_verified': user.email_verified
+            'email_verified': user.email_verified,
+            'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser
         })
 
 class UserViewSet(viewsets.ModelViewSet):
