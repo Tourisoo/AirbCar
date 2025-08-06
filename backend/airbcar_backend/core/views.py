@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from .models import User, Booking, Partner, Listing
-from .serializers import UserSerializer, BookingSerializer, PartnerSerializer, ListingSerializer
+from .serializers import UserSerializer, BookingSerializer, PartnerSerializer, ListingSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer
 from rest_framework import viewsets, generics, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -34,6 +34,18 @@ class UserVerificationView(generics.GenericAPIView):
             return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
+class AdminVerificationView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'is_admin': user.is_staff,
+            'is_superuser': user.is_superuser,
+            'username': user.username,
+            'email': user.email
+        })
+
 class TokenVerifyView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
@@ -45,7 +57,9 @@ class TokenVerifyView(generics.GenericAPIView):
             'email': user.email,
             'is_partner': user.is_partner,
             'is_verified': user.is_verified,
-            'email_verified': user.email_verified
+            'email_verified': user.email_verified,
+            'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser
         })
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -231,14 +245,20 @@ class UserRegisterView(generics.CreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class PasswordResetRequestView(generics.GenericAPIView):
+    serializer_class = PasswordResetRequestSerializer
+    
     def post(self, request):
-        email = request.data.get('email')
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        email = serializer.validated_data['email']
         user = User.objects.filter(email=email).first()
         if user:
             token_generator = PasswordResetTokenGenerator()
             token = token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            reset_url = f"{request.build_absolute_uri('/api/reset-password/')}{uid}/{token}/"
+            # Send user to frontend reset page with uid and token as URL parameters
+            reset_url = f"http://localhost:3000/auth/reset-password?uid={uid}&token={token}"
             send_mail(
                 'Password Reset Request',
                 f'Use this link to reset your password: {reset_url}',
@@ -250,15 +270,21 @@ class PasswordResetRequestView(generics.GenericAPIView):
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
     
 class PasswordResetConfirmView(generics.GenericAPIView):
+    serializer_class = PasswordResetConfirmSerializer
+    
     def post(self, request, uidb64, token):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
         try:
             uid = urlsafe_base64_decode(uidb64).decode()
             user = User.objects.get(pk=uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
+            
         token_generator = PasswordResetTokenGenerator()
         if user and token_generator.check_token(user, token):
-            user.set_password(request.data.get('new_password'))
+            user.set_password(serializer.validated_data['password'])
             user.save()
             return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)

@@ -20,6 +20,7 @@ export default function ResetPassword() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
   const [token, setToken] = useState('')
+  const [uid, setUid] = useState('')
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -33,15 +34,17 @@ export default function ResetPassword() {
 
   useEffect(() => {
     const tokenFromUrl = searchParams.get('token')
-    if (tokenFromUrl) {
+    const uidFromUrl = searchParams.get('uid')
+    if (tokenFromUrl && uidFromUrl) {
       setToken(tokenFromUrl)
+      setUid(uidFromUrl)
     } else {
       setError('Invalid reset link')
     }
   }, [searchParams])
 
   const onSubmit = async (data) => {
-    if (!token) {
+    if (!token || !uid) {
       setError('Invalid reset token')
       return
     }
@@ -50,13 +53,14 @@ export default function ResetPassword() {
     setError('')
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/reset-password', {
+      // Use Django backend API with uid and token in URL path
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/reset-password/${uid}/${token}/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          token,
           password: data.password,
         }),
       })
@@ -117,7 +121,7 @@ export default function ResetPassword() {
     )
   }
 
-  if (error && !token) {
+  if (error && (!token || !uid)) {
     return (
       <div className="min-h-screen flex">
         {/* Left side - Error message */}
@@ -234,7 +238,7 @@ export default function ResetPassword() {
             <div className="space-y-4">
               <button
                 type="submit"
-                disabled={isLoading || !token}
+                disabled={isLoading || !token || !uid}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? 'Updating password...' : 'Update password'}

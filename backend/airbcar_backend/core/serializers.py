@@ -13,24 +13,48 @@ from .models import User, Booking, Partner, Listing
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    username_field = 'email'  # Use email field instead of username
+    
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
         token['username'] = user.username
+        token['email'] = user.email
         token['is_partner'] = user.is_partner
         token['is_verified'] = user.is_verified
         return token
 
     def validate(self, attrs):
-        data = super().validate(attrs)
-        data['user'] = {
-            'id': self.user.id,
-            'username': self.user.username,
-            'email': self.user.email,
-            'is_partner': self.user.is_partner,
-            'is_verified': self.user.is_verified
-        }
-        return data
+        # Override to authenticate with email instead of username
+        email = attrs.get('email')
+        password = attrs.get('password')
+        
+        if email and password:
+            try:
+                user = User.objects.get(email=email)
+                if user.check_password(password):
+                    # Set the user for parent validation
+                    self.user = user
+                    # Call parent validate with username instead of email
+                    attrs['username'] = user.username
+                    attrs.pop('email')  # Remove email from attrs
+                    data = super().validate(attrs)
+                    
+                    # Add user data to response
+                    data['user'] = {
+                        'id': self.user.id,
+                        'username': self.user.username,
+                        'email': self.user.email,
+                        'is_partner': self.user.is_partner,
+                        'is_verified': self.user.is_verified
+                    }
+                    return data
+                else:
+                    raise serializers.ValidationError('Invalid email or password')
+            except User.DoesNotExist:
+                raise serializers.ValidationError('Invalid email or password')
+        else:
+            raise serializers.ValidationError('Email and password required')
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
@@ -70,3 +94,13 @@ class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = ["id", "user", "listing", "date"]
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    password = serializers.CharField(min_length=6, required=True)
+    
+    def validate_password(self, value):
+        # You can add additional password validation here if needed
+        return value
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)

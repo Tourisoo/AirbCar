@@ -1,9 +1,24 @@
 # Docker ignore file to reduce build context size
-node_modules
+node_modules/
+.next/
+out/
+build/
+.pnpm-store/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# Development and testing files
+test-*.js
+view-users.js
+setup.sh
+docker-setup.sh
+*.bat
+
+# Git and version control
+.git/
+.gitignore
 
 # Next.js build output
 .next
@@ -99,3 +114,7 @@ temp/
 *.njsproj
 *.sln
 *.sw?
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
