@@ -95,6 +95,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
+
         # 'NAME': 'airbcar_db',
         # 'USER': 'airbcar_user',
         # 'PASSWORD': 'amineamine',
@@ -107,11 +108,18 @@ DATABASES = {
         # 'HOST': os.environ.get('localhost'),
         # 'PORT': os.environ.get('5432'),
         
-        'NAME': os.environ.get('DATABASE_NAME'),
-        'USER': os.environ.get('DATABASE_USER'),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
-        'HOST': os.environ.get('DATABASE_HOST'),
-        'PORT': os.environ.get('DATABASE_PORT'),
+        # 'NAME': os.environ.get('DATABASE_NAME'),
+        # 'USER': os.environ.get('DATABASE_USER'),
+        # 'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+        # 'HOST': os.environ.get('DATABASE_HOST'),
+        # 'PORT': os.environ.get('DATABASE_PORT'),
+
+        'NAME': os.environ.get('DB_NAME', 'airbcar_db'),
+        'USER': os.environ.get('DB_USER', 'airbcar_user'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'amineamine'),
+        'HOST': os.environ.get('DB_HOST', 'db'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+
     }
 }
 
