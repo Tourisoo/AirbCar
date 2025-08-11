@@ -7,6 +7,10 @@ import sys
 import os
 from .settings import *
 
+# Force environment variables for GitHub Actions
+if os.environ.get('GITHUB_ACTIONS'):
+    os.environ['DB_HOST'] = 'localhost'
+
 # Resolve DB host for CI/GitHub Actions
 IN_CONTAINER = os.path.exists('/.dockerenv')
 IS_GITHUB = os.environ.get('GITHUB_ACTIONS')
@@ -14,7 +18,7 @@ IS_GITHUB = os.environ.get('GITHUB_ACTIONS')
 # Always use the explicit DB_HOST from environment in CI, fallback to smart defaults
 if IS_GITHUB:
     # In GitHub Actions, always use localhost (services are exposed on localhost)
-    DB_HOST = os.environ.get('DB_HOST', 'localhost')
+    DB_HOST = 'localhost'
 elif IN_CONTAINER:
     # In Docker container, use service name 'db'
     DB_HOST = os.environ.get('DB_HOST', 'db')

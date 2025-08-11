@@ -35,7 +35,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.8'
 
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
@@ -52,6 +52,13 @@ jobs:
       - name: Debug database configuration
         run: |
           cd backend/airbcar_backend
+          echo "=== Environment Variables ==="
+          echo "GITHUB_ACTIONS: $GITHUB_ACTIONS"
+          echo "DB_HOST: $DB_HOST"
+          echo "DB_NAME: $DB_NAME"
+          echo "DB_USER: $DB_USER"
+          echo ""
+          echo "=== Django Settings Check ==="
           python -c "
           import os
           import sys
@@ -62,10 +69,38 @@ jobs:
           from django.conf import settings
           print('Database HOST:', settings.DATABASES['default']['HOST'])
           print('Database NAME:', settings.DATABASES['default']['NAME'])
-          print('Environment vars:')
+          print('Database USER:', settings.DATABASES['default']['USER'])
+          print('Environment vars during Django setup:')
           print('  GITHUB_ACTIONS:', os.environ.get('GITHUB_ACTIONS'))
           print('  DB_HOST:', os.environ.get('DB_HOST'))
           print('  IN_CONTAINER:', os.path.exists('/.dockerenv'))
+          " || echo "Django setup failed"
+        env:
+          GITHUB_ACTIONS: true
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: airbcar_db
+          DB_USER: airbcar_user
+          DB_PASSWORD: amineamine
+
+      - name: Test database connection
+        run: |
+          cd backend/airbcar_backend
+          python -c "
+          import os
+          import sys
+          sys.path.append('.')
+          os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'airbcar_backend.settings_ci')
+          import django
+          django.setup()
+          from django.db import connection
+          try:
+              cursor = connection.cursor()
+              cursor.execute('SELECT 1')
+              print('Database connection successful!')
+          except Exception as e:
+              print(f'Database connection failed: {e}')
+              sys.exit(1)
           "
         env:
           GITHUB_ACTIONS: true
@@ -78,7 +113,7 @@ jobs:
       - name: Run database migrations
         run: |
           cd backend/airbcar_backend
-          python manage.py migrate --settings=airbcar_backend.settings_ci
+          python ci_migrate.py
         env:
           GITHUB_ACTIONS: true
           DB_HOST: localhost
@@ -90,7 +125,7 @@ jobs:
       - name: Run backend tests
         run: |
           cd backend/airbcar_backend
-          python manage.py test --settings=airbcar_backend.settings_ci
+          python ci_test.py
         env:
           GITHUB_ACTIONS: true
           DB_HOST: localhost
