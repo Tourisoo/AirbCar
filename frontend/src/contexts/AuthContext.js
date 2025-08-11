@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
           is_partner: payload.is_partner || false,
           is_verified: payload.is_verified || false
         })
-      } catch (error) {
+      } catch {
         // Invalid token format
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
@@ -93,7 +93,7 @@ export function AuthProvider({ children }) {
           error: errorData.detail || 'Invalid email or password' 
         }
       }
-    } catch (error) {
+    } catch {
       return { 
         success: false, 
         error: 'Something went wrong' 
@@ -134,7 +134,7 @@ export function AuthProvider({ children }) {
           error: errorMessage 
         }
       }
-    } catch (error) {
+    } catch {
       return { 
         success: false, 
         error: 'Something went wrong' 

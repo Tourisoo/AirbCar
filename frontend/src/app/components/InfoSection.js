@@ -60,7 +60,7 @@ export default function InfoSection() {
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">Compare fuel policies</h3>
                 <p className="text-xs text-gray-600 leading-relaxed">
-                  To save money on topping up the tank before you take off, look out for deals with a "full-to-full" fuel tank policy.
+                  To save money on topping up the tank before you take off, look out for deals with a &quot;full-to-full&quot; fuel tank policy.
                 </p>
               </div>
             </div>
@@ -84,7 +84,7 @@ export default function InfoSection() {
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">Look further afield</h3>
                 <p className="text-xs text-gray-600 leading-relaxed">
-                  If you're on a budget, it's often cheaper to hop on public transportation to a car rental pick-up location a little farther away.
+                  If you&apos;re on a budget, it&apos;s often cheaper to hop on public transportation to a car rental pick-up location a little farther away.
                 </p>
               </div>
             </div>

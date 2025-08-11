@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // Hook for parallax scrolling effects
 export const useParallax = (speed = 0.5, options = {}) => {
@@ -13,7 +13,6 @@ export const useParallax = (speed = 0.5, options = {}) => {
     const updatePosition = () => {
       if (!elementRef.current) return;
 
-      const rect = elementRef.current.getBoundingClientRect();
       const scrolled = window.pageYOffset;
       const rate = scrolled * speed * direction;
       

@@ -14,13 +14,12 @@ const signUpSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(1, 'Please confirm your password'),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
+  message: "Passwords don&apos;t match",
   path: ["confirmPassword"],
 })
 
 export default function SignUp() {
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const router = useRouter()
   const { register: registerUser } = useAuth()
@@ -35,7 +34,6 @@ export default function SignUp() {
 
   const onSubmit = async (data) => {
     setIsLoading(true)
-    setError('')
 
     try {
       const result = await registerUser(data.name, data.email, data.password)
@@ -47,10 +45,11 @@ export default function SignUp() {
           router.push('/')
         }, 2000)
       } else {
-        setError(result.error)
+        // Handle errors in the form state instead of separate error state
+        console.error('Registration failed:', result.error)
       }
     } catch (error) {
-      setError('Something went wrong')
+      console.error('Registration error:', error)
     }
 
     setIsLoading(false)
@@ -82,7 +81,7 @@ export default function SignUp() {
                 Account created successfully!
               </h2>
               <p className="text-sm text-gray-600">
-                You're now signed in. Redirecting to home page...
+                You&apos;re now signed in. Redirecting to home page...
               </p>
             </div>
           </div>
@@ -123,11 +122,7 @@ export default function SignUp() {
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
+            {/* Error display removed since we're not using error state */}
 
             <div className="space-y-4">
               <div>

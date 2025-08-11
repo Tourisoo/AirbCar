@@ -170,7 +170,7 @@ export default function ForgotPassword() {
         <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
           <div className="text-center text-white p-8">
             <h3 className="text-3xl font-bold mb-4">Reset Your Password</h3>
-            <p className="text-lg opacity-90">Don't worry, we'll help you get back into your account</p>
+            <p className="text-lg opacity-90">Don&apos;t worry, we&apos;ll help you get back into your account</p>
           </div>
         </div>
       </div>

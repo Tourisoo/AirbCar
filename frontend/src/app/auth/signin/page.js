@@ -71,7 +71,7 @@ export default function SignIn() {
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900">Sign in to your account</h2>
             <p className="mt-2 text-sm text-gray-600">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link href="/auth/signup" className="font-medium text-orange-500 hover:text-orange-600">
                 Sign up here
               </Link>

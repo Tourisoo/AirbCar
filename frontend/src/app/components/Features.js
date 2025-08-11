@@ -1,5 +1,5 @@
 'use client';
-import { useScrollAnimation, animations, animationPresets } from "../../hooks/useScrollAnimation";
+import { useScrollAnimation, animationPresets } from "../../hooks/useScrollAnimation";
 import { useMagnetic } from "../../hooks/useAdvancedScrollEffects";
 
 export default function Features() {
