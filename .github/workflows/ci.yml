@@ -63,17 +63,13 @@ jobs:
           import os
           import sys
           sys.path.append('.')
-          os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'airbcar_backend.settings_ci')
+          os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'airbcar_backend.settings_ci_simple')
           import django
           django.setup()
           from django.conf import settings
           print('Database HOST:', settings.DATABASES['default']['HOST'])
           print('Database NAME:', settings.DATABASES['default']['NAME'])
           print('Database USER:', settings.DATABASES['default']['USER'])
-          print('Environment vars during Django setup:')
-          print('  GITHUB_ACTIONS:', os.environ.get('GITHUB_ACTIONS'))
-          print('  DB_HOST:', os.environ.get('DB_HOST'))
-          print('  IN_CONTAINER:', os.path.exists('/.dockerenv'))
           " || echo "Django setup failed"
         env:
           GITHUB_ACTIONS: true
@@ -90,7 +86,7 @@ jobs:
           import os
           import sys
           sys.path.append('.')
-          os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'airbcar_backend.settings_ci')
+          os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'airbcar_backend.settings_ci_simple')
           import django
           django.setup()
           from django.db import connection
@@ -113,7 +109,7 @@ jobs:
       - name: Run database migrations
         run: |
           cd backend/airbcar_backend
-          python ci_migrate.py
+          python manage.py migrate --settings=airbcar_backend.settings_ci_simple
         env:
           GITHUB_ACTIONS: true
           DB_HOST: localhost
@@ -125,7 +121,7 @@ jobs:
       - name: Run backend tests
         run: |
           cd backend/airbcar_backend
-          python ci_test.py
+          python manage.py test --settings=airbcar_backend.settings_ci_simple
         env:
           GITHUB_ACTIONS: true
           DB_HOST: localhost
