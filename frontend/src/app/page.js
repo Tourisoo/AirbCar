@@ -57,9 +57,6 @@ export default function Home() {
       />
       
       <div className="relative z-10">
-        <div ref={featuresRef} style={animationPresets.section(featuresVisible)}>
-          <Features />
-        </div>
         
         <div ref={destinationsRef} style={animations.morphIn(destinationsVisible, {
           duration: '1s',

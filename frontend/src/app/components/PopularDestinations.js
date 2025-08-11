@@ -137,7 +137,7 @@ export default function PopularDestinations() {
             `}</style>
           
           {/* Marrakech Card */}
-          <div className="flex-shrink-0 w-72 relative bg-blue-600 rounded-lg overflow-hidden aspect-[9/14] group cursor-pointer">
+          <div className="flex-shrink-0 w-80 h-130 relative bg-blue-600 rounded-lg overflow-hidden group cursor-pointer">
             {/* Background image */}
             <div 
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -145,16 +145,16 @@ export default function PopularDestinations() {
             ></div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
             <div className="absolute top-6 left-6 text-white z-10">
-              <h3 className="text-2xl font-bold mb-1">Marrakech</h3>
-              <p className="text-sm font-medium">Most popular car type: Economy</p>
-              <button className="mt-3 bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded text-sm font-semibold transition-colors">
+              <h3 className="text-3xl font-bold mb-2">Marrakech</h3>
+              <p className="text-base font-medium">Most popular car type: Economy</p>
+              <button className="mt-4 bg-orange-500 hover:bg-orange-600 px-5 py-2.5 rounded text-base font-semibold transition-colors">
                 Get More
               </button>
             </div>
           </div>
 
           {/* Agadir Card */}
-          <div className="flex-shrink-0 w-72 relative bg-blue-500 rounded-lg overflow-hidden aspect-[9/14] group cursor-pointer">
+          <div className="flex-shrink-0 w-80 h-130 relative bg-blue-500 rounded-lg overflow-hidden group cursor-pointer">
             {/* Background image */}
             <div 
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -162,16 +162,16 @@ export default function PopularDestinations() {
             ></div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
             <div className="absolute top-6 left-6 text-white z-10">
-              <h3 className="text-2xl font-bold mb-1">Agadir</h3>
-              <p className="text-sm font-medium">Most popular car type: Economy</p>
-              <button className="mt-3 bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded text-sm font-semibold transition-colors">
+              <h3 className="text-3xl font-bold mb-2">Agadir</h3>
+              <p className="text-base font-medium">Most popular car type: Economy</p>
+              <button className="mt-4 bg-orange-500 hover:bg-orange-600 px-5 py-2.5 rounded text-base font-semibold transition-colors">
                 Get More
               </button>
             </div>
           </div>
 
           {/* Tangier Card */}
-          <div className="flex-shrink-0 w-72 relative bg-teal-500 rounded-lg overflow-hidden aspect-[9/14] group cursor-pointer">
+          <div className="flex-shrink-0 w-80 h-130 relative bg-teal-500 rounded-lg overflow-hidden group cursor-pointer">
             {/* Background image */}
             <div 
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -179,16 +179,16 @@ export default function PopularDestinations() {
             ></div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
             <div className="absolute top-6 left-6 text-white z-10">
-              <h3 className="text-2xl font-bold mb-1">Tangier</h3>
-              <p className="text-sm font-medium">Most popular car type: Economy</p>
-              <button className="mt-3 bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded text-sm font-semibold transition-colors">
+              <h3 className="text-3xl font-bold mb-2">Tangier</h3>
+              <p className="text-base font-medium">Most popular car type: Economy</p>
+              <button className="mt-4 bg-orange-500 hover:bg-orange-600 px-5 py-2.5 rounded text-base font-semibold transition-colors">
                 Get More
               </button>
             </div>
           </div>
 
           {/* Casablanca Card */}
-          <div className="flex-shrink-0 w-72 relative bg-purple-500 rounded-lg overflow-hidden aspect-[9/14] group cursor-pointer">
+          <div className="flex-shrink-0 w-80 h-130 relative bg-purple-500 rounded-lg overflow-hidden group cursor-pointer">
             {/* Background image */}
             <div 
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -196,16 +196,16 @@ export default function PopularDestinations() {
             ></div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
             <div className="absolute top-6 left-6 text-white z-10">
-              <h3 className="text-2xl font-bold mb-1">Casablanca</h3>
-              <p className="text-sm font-medium">Most popular car type: Economy</p>
-              <button className="mt-3 bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded text-sm font-semibold transition-colors">
+              <h3 className="text-3xl font-bold mb-2">Casablanca</h3>
+              <p className="text-base font-medium">Most popular car type: Economy</p>
+              <button className="mt-4 bg-orange-500 hover:bg-orange-600 px-5 py-2.5 rounded text-base font-semibold transition-colors">
                 Get More
               </button>
             </div>
           </div>
 
           {/* Rabat Card */}
-          <div className="flex-shrink-0 w-72 relative bg-emerald-500 rounded-lg overflow-hidden aspect-[9/14] group cursor-pointer">
+          <div className="flex-shrink-0 w-80 h-130 relative bg-emerald-500 rounded-lg overflow-hidden group cursor-pointer">
             {/* Background image */}
             <div 
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -213,16 +213,16 @@ export default function PopularDestinations() {
             ></div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
             <div className="absolute top-6 left-6 text-white z-10">
-              <h3 className="text-2xl font-bold mb-1">Rabat</h3>
-              <p className="text-sm font-medium">Most popular car type: Economy</p>
-              <button className="mt-3 bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded text-sm font-semibold transition-colors">
+              <h3 className="text-3xl font-bold mb-2">Rabat</h3>
+              <p className="text-base font-medium">Most popular car type: Economy</p>
+              <button className="mt-4 bg-orange-500 hover:bg-orange-600 px-5 py-2.5 rounded text-base font-semibold transition-colors">
                 Get More
               </button>
             </div>
           </div>
 
           {/* Tetouan Card */}
-          <div className="flex-shrink-0 w-72 relative bg-indigo-500 rounded-lg overflow-hidden aspect-[9/14] group cursor-pointer">
+          <div className="flex-shrink-0 w-80 h-130 relative bg-indigo-500 rounded-lg overflow-hidden group cursor-pointer">
             {/* Background image */}
             <div 
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -230,9 +230,9 @@ export default function PopularDestinations() {
             ></div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
             <div className="absolute top-6 left-6 text-white z-10">
-              <h3 className="text-2xl font-bold mb-1">Tetouan</h3>
-              <p className="text-sm font-medium">Most popular car type: Economy</p>
-              <button className="mt-3 bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded text-sm font-semibold transition-colors">
+              <h3 className="text-3xl font-bold mb-2">Tetouan</h3>
+              <p className="text-base font-medium">Most popular car type: Economy</p>
+              <button className="mt-4 bg-orange-500 hover:bg-orange-600 px-5 py-2.5 rounded text-base font-semibold transition-colors">
                 Get More
               </button>
             </div>
