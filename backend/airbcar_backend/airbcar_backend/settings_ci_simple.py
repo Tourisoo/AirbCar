@@ -58,19 +58,24 @@ TEMPLATES = [
 WSGI_APPLICATION = 'airbcar_backend.wsgi.application'
 
 # Database - FORCE localhost for CI
+print("=== SETTINGS_CI_SIMPLE.PY LOADING ===")
+print(f"Environment DB_HOST: {os.environ.get('DB_HOST', 'NOT SET')}")
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME', 'airbcar_db'),
         'USER': os.environ.get('DB_USER', 'airbcar_user'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'amineamine'),
-        'HOST': 'localhost',  # FORCED to localhost for CI
+        'HOST': 'localhost',  # FORCED to localhost for CI - NO ENVIRONMENT VARIABLE
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
 # Print debug info
 print(f"CI Simple Settings - Database HOST: {DATABASES['default']['HOST']}")
+print(f"CI Simple Settings - Database NAME: {DATABASES['default']['NAME']}")
+print("=== SETTINGS_CI_SIMPLE.PY LOADED ===")
 
 # Auth settings
 AUTH_PASSWORD_VALIDATORS = []
