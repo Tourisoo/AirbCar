@@ -9,13 +9,14 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    
     services:
-      postgres:
+      db:
         image: postgres:15
         env:
-          POSTGRES_DB: airbcar
-          POSTGRES_USER: airbcar
-          POSTGRES_PASSWORD: airbcar
+          POSTGRES_DB: airbcar_db
+          POSTGRES_USER: airbcar_user
+          POSTGRES_PASSWORD: amineamine
         ports:
           - 5432:5432
         options: >-
@@ -24,10 +25,10 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-      redis:
-        image: redis:7
-        ports:
-          - 6379:6379
+      # redis:
+      #   image: redis:7
+      #   ports:
+      #     - 6379:6379
     steps:
       - uses: actions/checkout@v4
 
@@ -48,13 +49,27 @@ jobs:
           cd backend
           pip install -r requirements.txt
 
+      - name: Run database migrations
+        run: |
+          cd backend/airbcar_backend
+          python manage.py migrate --settings=airbcar_backend.settings_ci
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: airbcar_db
+          DB_USER: airbcar_user
+          DB_PASSWORD: amineamine
+
       - name: Run backend tests
         run: |
           cd backend/airbcar_backend
-          python manage.py test
+          python manage.py test --settings=airbcar_backend.settings_ci
         env:
-          DATABASE_URL: postgres://airbcar:airbcar@localhost:5432/airbcar
-          REDIS_URL: redis://localhost:6379
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: airbcar_db
+          DB_USER: airbcar_user
+          DB_PASSWORD: amineamine
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

@@ -10,8 +10,12 @@ from .settings import *
 # Override database settings for CI testing
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',  # Use in-memory database for faster CI tests
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'airbcar_db'),
+        'USER': os.environ.get('DB_USER', 'airbcar_user'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'amineamine'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),  # Use localhost in CI since services are exposed on localhost
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
@@ -23,8 +27,8 @@ class DisableMigrations:
     def __getitem__(self, item):
         return None
 
-# Use this to speed up tests in CI
-MIGRATION_MODULES = DisableMigrations()
+# Use this to speed up tests in CI - commented out since we're using real DB
+# MIGRATION_MODULES = DisableMigrations()
 
 # Use simple file storage for CI
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
