@@ -216,3 +216,8 @@ The project uses GitHub Actions for:
 - API endpoint testing
 - Docker image building
 - Deployment to staging/production environments
+
+
+
+
+*******

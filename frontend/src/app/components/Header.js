@@ -1,15 +1,56 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Header() {
-  const { data: session, status } = useSession()
+  const { user, loading, logout } = useAuth()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  // Check if user is admin
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false)
+      return
+    }
+
+    const checkAdminStatus = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+        const token = localStorage.getItem('access_token')
+        
+        if (!token) {
+          setIsAdmin(false)
+          return
+        }
+
+        const response = await fetch(`${apiUrl}/api/verify-token/`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+        
+        if (response.ok) {
+          const userData = await response.json()
+          setIsAdmin(userData.is_staff === true || userData.is_superuser === true)
+        } else {
+          setIsAdmin(false)
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error)
+        setIsAdmin(false)
+      }
+    }
+
+    checkAdminStatus()
+  }, [user])
 
   const handleSignOut = () => {
-    signOut({ callbackUrl: '/' })
+    logout()
+    setIsDropdownOpen(false)
   }
 
   return (
@@ -31,17 +72,22 @@ export default function Header() {
             <a href="#" className="text-gray-700 hover:text-gray-900 font-medium text-sm underline">
               Our mission
             </a>
-            {session && (
+            {user && !isAdmin && (
               <a href="#" className="text-gray-700 hover:text-gray-900 font-medium text-sm underline">
                 My Bookings
               </a>
+            )}
+            {isAdmin && (
+              <Link href="/admin" className="text-gray-700 hover:text-gray-900 font-medium text-sm underline">
+                Admin Dashboard
+              </Link>
             )}
           </nav>
           
           {/* Right side */}
           <div className="flex items-center space-x-3">
             {/* Heart icon */}
-            {session && (
+            {user && (
               <button className="w-10 h-10 bg-white border-2 border-orange-300 rounded-full flex items-center justify-center hover:bg-orange-25 hover:border-orange-400 hover:border-2 group">
                 <svg className="w-4 h-4 text-orange-500 group-hover:fill-orange-500 transition-colors duration-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
@@ -50,30 +96,30 @@ export default function Header() {
             )}
             
             {/* Authentication */}
-            {status === 'loading' ? (
+            {loading ? (
               <div className="w-20 h-10 bg-gray-200 animate-pulse rounded-md"></div>
-            ) : session ? (
+            ) : user ? (
               <div className="relative">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                 >
-                  {session.user.image ? (
+                  {user.profile_picture ? (
                     <img
-                      src={session.user.image}
-                      alt={session.user.name || 'User'}
+                      src={user.profile_picture}
+                      alt={user.username || 'User'}
                       className="w-10 h-10 rounded-full object-cover border-2 border-orange-300 hover:border-orange-400 transition-colors duration-200"
                     />
                   ) : (
                     <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center border-2 border-orange-300 hover:border-orange-400 transition-colors duration-200">
                       <span className="text-white text-sm font-semibold">
-                        {session.user.name?.charAt(0)?.toUpperCase() || session.user.email?.charAt(0)?.toUpperCase()}
+                        {user.username?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
                       </span>
                     </div>
                   )}
                   <div className="hidden md:flex items-center space-x-2">
                     <span className="text-sm font-medium text-gray-700">
-                      {session.user.name || session.user.email}
+                      {user.username || user.email}
                     </span>
                     <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -84,8 +130,8 @@ export default function Header() {
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-3 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                     <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900">{session.user.name || 'User'}</p>
-                      <p className="text-sm text-gray-500 truncate">{session.user.email}</p>
+                      <p className="text-sm font-medium text-gray-900">{user.username || 'User'}</p>
+                      <p className="text-sm text-gray-500 truncate">{user.email}</p>
                     </div>
                     <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
                       <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,12 +139,22 @@ export default function Header() {
                       </svg>
                       Profile
                     </a>
-                    <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
-                      <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                      My Bookings
-                    </a>
+                    {!isAdmin && (
+                      <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
+                        <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        My Bookings
+                      </a>
+                    )}
+                    {isAdmin && (
+                      <Link href="/admin" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
+                        <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        Admin Dashboard
+                      </Link>
+                    )}
                     <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
                       <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />

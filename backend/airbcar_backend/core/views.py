@@ -1,11 +1,14 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from .models import User, Booking, Partner, Listing
-from .serializers import UserSerializer, BookingSerializer, PartnerSerializer, ListingSerializer
+from .serializers import UserSerializer, BookingSerializer, PartnerSerializer, ListingSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer
 from rest_framework import viewsets, generics, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
 import uuid
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -33,6 +36,98 @@ class UserVerificationView(generics.GenericAPIView):
             user.save()
             return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+            
+        token_generator = PasswordResetTokenGenerator()
+        if user and token_generator.check_token(user, token):
+            user.set_password(serializer.validated_data['password'])
+            user.save()
+            return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
+        return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AdminVerificationView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        # Check if user is admin/staff
+        if request.user.is_staff or request.user.is_superuser:
+            return Response({'is_admin': True}, status=status.HTTP_200_OK)
+        else:
+            return Response({'is_admin': False}, status=status.HTTP_403_FORBIDDEN)
+
+
+class CustomLoginView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        username = request.data.get('username')
+        password = request.data.get('password')
+        
+        if not password:
+            return Response({'error': 'Password is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Since USERNAME_FIELD = 'email' in our User model, we need to authenticate with email
+        user_email = None
+        
+        # Handle email login  
+        if email and not username:
+            user_email = email
+        elif username and not email:
+            # If username provided, find the user's email
+            try:
+                user = User.objects.get(username=username)
+                user_email = user.email
+            except User.DoesNotExist:
+                return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        elif email and username:
+            # If both provided, use email
+            user_email = email
+        else:
+            return Response({'error': 'Username or email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Authenticate user using email as username (since USERNAME_FIELD = 'email')
+        user = authenticate(username=user_email, password=password)
+        if user:
+            refresh = RefreshToken.for_user(user)
+            access_token = refresh.access_token
+            
+            # Add custom claims
+            access_token['username'] = user.username
+            access_token['email'] = user.email
+            access_token['is_partner'] = user.is_partner
+            access_token['is_verified'] = user.is_verified
+            
+            return Response({
+                'access': str(access_token),
+                'refresh': str(refresh),
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'is_partner': user.is_partner,
+                    'is_verified': user.is_verified
+                }
+            })
+        else:
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+
+class TokenVerifyView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'is_partner': user.is_partner,
+            'is_verified': user.is_verified,
+            'email_verified': user.email_verified,
+            'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser
+        })
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -217,14 +312,20 @@ class UserRegisterView(generics.CreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class PasswordResetRequestView(generics.GenericAPIView):
+    serializer_class = PasswordResetRequestSerializer
+    
     def post(self, request):
-        email = request.data.get('email')
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        email = serializer.validated_data['email']
         user = User.objects.filter(email=email).first()
         if user:
             token_generator = PasswordResetTokenGenerator()
             token = token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            reset_url = f"{request.build_absolute_uri('/api/reset-password/')}{uid}/{token}/"
+            # Send user to frontend reset page with uid and token as URL parameters
+            reset_url = f"http://localhost:3000/auth/reset-password?uid={uid}&token={token}"
             send_mail(
                 'Password Reset Request',
                 f'Use this link to reset your password: {reset_url}',
@@ -236,15 +337,21 @@ class PasswordResetRequestView(generics.GenericAPIView):
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
     
 class PasswordResetConfirmView(generics.GenericAPIView):
+    serializer_class = PasswordResetConfirmSerializer
+    
     def post(self, request, uidb64, token):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
         try:
             uid = urlsafe_base64_decode(uidb64).decode()
             user = User.objects.get(pk=uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
+            
         token_generator = PasswordResetTokenGenerator()
         if user and token_generator.check_token(user, token):
-            user.set_password(request.data.get('new_password'))
+            user.set_password(serializer.validated_data['password'])
             user.save()
             return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)

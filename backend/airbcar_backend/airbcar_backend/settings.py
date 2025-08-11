@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
     'core',
@@ -56,6 +57,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -90,27 +92,36 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# Check if running in Docker (environment variables are set)
-if os.environ.get('DATABASE_NAME'):
-    # Production/Docker database configuration
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DATABASE_NAME'),
-            'USER': os.environ.get('DATABASE_USER'),
-            'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
-            'HOST': os.environ.get('DATABASE_HOST'),
-            'PORT': os.environ.get('DATABASE_PORT'),
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+
+        # 'NAME': 'airbcar_db',
+        # 'USER': 'airbcar_user',
+        # 'PASSWORD': 'amineamine',
+        # 'HOST': 'localhost',
+        # 'PORT': '5432',
+
+        # 'NAME': os.environ.get('airbcar_db'),
+        # 'USER': os.environ.get('airbcar_user'),
+        # 'PASSWORD': os.environ.get('amineamine'),
+        # 'HOST': os.environ.get('localhost'),
+        # 'PORT': os.environ.get('5432'),
+        
+        # 'NAME': os.environ.get('DATABASE_NAME'),
+        # 'USER': os.environ.get('DATABASE_USER'),
+        # 'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+        # 'HOST': os.environ.get('DATABASE_HOST'),
+        # 'PORT': os.environ.get('DATABASE_PORT'),
+
+        'NAME': os.environ.get('DB_NAME', 'airbcar_db'),
+        'USER': os.environ.get('DB_USER', 'airbcar_user'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'amineamine'),
+        'HOST': os.environ.get('DB_HOST', 'db'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+
     }
-else:
-    # Local development database configuration (SQLite)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
 
 
@@ -185,4 +196,27 @@ MEDIA_URL = '/media/'
 # Optional: local file storage (default)
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
+# CORS settings
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_ALL_ORIGINS = True  # Only for development
+
+# Allow specific headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 STATIC_ROOT = BASE_DIR / 'staticfiles'

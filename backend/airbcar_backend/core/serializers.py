@@ -13,16 +13,58 @@ from .models import User, Booking, Partner, Listing
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    email = serializers.EmailField(required=False)
+    username = serializers.CharField(required=False)
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Force the username_field to be 'username'
+        self.username_field = 'username'
+    
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
         token['username'] = user.username
+        token['email'] = user.email
         token['is_partner'] = user.is_partner
         token['is_verified'] = user.is_verified
         return token
 
     def validate(self, attrs):
+        print(f"DEBUG: Received attrs: {attrs}")
+        print(f"DEBUG: username_field: {self.username_field}")
+        
+        # Handle both email and username login
+        username = attrs.get('username')
+        email = attrs.get('email')
+        password = attrs.get('password')
+        
+        print(f"DEBUG: username: {username}, email: {email}, password: {password}")
+        
+        if not password:
+            raise serializers.ValidationError('Password is required')
+            
+        # If email is provided, look up the user and get their username
+        if email and not username:
+            try:
+                from core.models import User
+                user = User.objects.get(email=email)
+                print(f"DEBUG: Found user by email: {user.username}")
+                attrs['username'] = user.username
+                # Remove email from attrs to avoid confusion
+                if 'email' in attrs:
+                    del attrs['email']
+            except User.DoesNotExist:
+                raise serializers.ValidationError('Invalid credentials')
+        elif not username and not email:
+            raise serializers.ValidationError('Username or email is required')
+        
+        print(f"DEBUG: Final attrs before parent call: {attrs}")
+        
+        # Call parent validate method which will authenticate using username
         data = super().validate(attrs)
+        
+        # Add user data to response
         data['user'] = {
             'id': self.user.id,
             'username': self.user.username,
@@ -30,6 +72,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'is_partner': self.user.is_partner,
             'is_verified': self.user.is_verified
         }
+        
         return data
 
 class UserSerializer(serializers.ModelSerializer):
@@ -70,3 +113,13 @@ class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = ["id", "user", "listing", "date"]
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    password = serializers.CharField(min_length=6, required=True)
+    
+    def validate_password(self, value):
+        # You can add additional password validation here if needed
+        return value
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
