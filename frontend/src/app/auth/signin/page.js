@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
@@ -13,7 +13,7 @@ const signInSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 })
 
-export default function SignIn() {
+function SignInForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -188,5 +188,26 @@ export default function SignIn() {
         </div>
       </div>
     </div>
+  )
+}
+
+// Loading component for Suspense fallback
+function SignInLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    </div>
+  )
+}
+
+// Main export with Suspense boundary
+export default function SignIn() {
+  return (
+    <Suspense fallback={<SignInLoading />}>
+      <SignInForm />
+    </Suspense>
   )
 }
