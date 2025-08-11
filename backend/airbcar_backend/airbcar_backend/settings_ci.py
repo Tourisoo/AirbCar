@@ -7,6 +7,13 @@ import sys
 import os
 from .settings import *
 
+# Resolve DB host for CI/GitHub Actions
+IN_CONTAINER = os.path.exists('/.dockerenv')
+IS_GITHUB = os.environ.get('GITHUB_ACTIONS')
+DB_HOST = os.environ.get('DB_HOST', 'db' if IN_CONTAINER else 'localhost')
+if IS_GITHUB and not IN_CONTAINER and DB_HOST in ('db', ''):
+    DB_HOST = '127.0.0.1'
+
 # Override database settings for CI testing
 DATABASES = {
     'default': {
@@ -14,7 +21,7 @@ DATABASES = {
         'NAME': os.environ.get('DB_NAME', 'airbcar_db'),
         'USER': os.environ.get('DB_USER', 'airbcar_user'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'amineamine'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),  # Use localhost in CI since services are exposed on localhost
+        'HOST': DB_HOST,  # Prefer localhost on GHA runners
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
