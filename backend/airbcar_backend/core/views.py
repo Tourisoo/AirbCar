@@ -220,7 +220,7 @@ def home_view(request):
         <div class="container">
             <h1>🚗 Airbcar Backend API</h1>
             <p><strong>Date:</strong> July 9, 2025</p>
-            <p><strong>Dev:</strong> Naoufal (Frontend)</p>
+            <p><strong>Dev:</strong> Amine (BackEnd) </p>
             <p><strong>Status:</strong> Day 1 — Login, Sign-up, User APIs</p>
             <p><strong>Base URL:</strong> <code>http://localhost:8000/</code></p>
 
