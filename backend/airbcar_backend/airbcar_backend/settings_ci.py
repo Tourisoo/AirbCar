@@ -10,18 +10,29 @@ from .settings import *
 # Resolve DB host for CI/GitHub Actions
 IN_CONTAINER = os.path.exists('/.dockerenv')
 IS_GITHUB = os.environ.get('GITHUB_ACTIONS')
-DB_HOST = os.environ.get('DB_HOST', 'db' if IN_CONTAINER else 'localhost')
-if IS_GITHUB and not IN_CONTAINER and DB_HOST in ('db', ''):
-    DB_HOST = '127.0.0.1'
 
-# Override database settings for CI testing
+# Always use the explicit DB_HOST from environment in CI, fallback to smart defaults
+if IS_GITHUB:
+    # In GitHub Actions, always use localhost (services are exposed on localhost)
+    DB_HOST = os.environ.get('DB_HOST', 'localhost')
+elif IN_CONTAINER:
+    # In Docker container, use service name 'db'
+    DB_HOST = os.environ.get('DB_HOST', 'db')
+else:
+    # Local development, default to localhost
+    DB_HOST = os.environ.get('DB_HOST', 'localhost')
+
+# Debug print to help troubleshoot
+print(f"CI Settings Debug - IS_GITHUB: {IS_GITHUB}, IN_CONTAINER: {IN_CONTAINER}, DB_HOST: {DB_HOST}")
+
+# Override database settings for CI testing - completely replace the DATABASES setting
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME', 'airbcar_db'),
         'USER': os.environ.get('DB_USER', 'airbcar_user'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'amineamine'),
-        'HOST': DB_HOST,  # Prefer localhost on GHA runners
+        'HOST': DB_HOST,  # Use our calculated host
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
