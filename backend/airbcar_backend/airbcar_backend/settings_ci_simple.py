@@ -60,15 +60,22 @@ WSGI_APPLICATION = 'airbcar_backend.wsgi.application'
 # Database - FORCE localhost for CI
 print("=== SETTINGS_CI_SIMPLE.PY LOADING ===")
 print(f"Environment DB_HOST: {os.environ.get('DB_HOST', 'NOT SET')}")
+print(f"Environment DATABASE_HOST: {os.environ.get('DATABASE_HOST', 'NOT SET')}")
+
+# Support both DB_* and DATABASE_* environment variable formats
+db_name = os.environ.get('DB_NAME') or os.environ.get('DATABASE_NAME', 'airbcar_db')
+db_user = os.environ.get('DB_USER') or os.environ.get('DATABASE_USER', 'airbcar_user')
+db_password = os.environ.get('DB_PASSWORD') or os.environ.get('DATABASE_PASSWORD', 'amineamine')
+db_port = os.environ.get('DB_PORT') or os.environ.get('DATABASE_PORT', '5432')
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'airbcar_db'),
-        'USER': os.environ.get('DB_USER', 'airbcar_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'amineamine'),
+        'NAME': db_name,
+        'USER': db_user,
+        'PASSWORD': db_password,
         'HOST': 'localhost',  # FORCED to localhost for CI - NO ENVIRONMENT VARIABLE
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'PORT': db_port,
     }
 }
 

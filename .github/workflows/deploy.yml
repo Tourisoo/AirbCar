@@ -59,23 +59,25 @@ jobs:
       - name: Run Django migrations
         run: |
           cd backend/airbcar_backend
-          python manage.py migrate
+          python manage.py migrate --settings=airbcar_backend.settings_ci_simple
         env:
           DATABASE_NAME: airbcar_db
           DATABASE_USER: airbcar_user
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
+          DJANGO_SETTINGS_MODULE: airbcar_backend.settings_ci_simple
       - name: Run Django tests
         run: |
           cd backend/airbcar_backend
-          python manage.py test
+          python manage.py test --settings=airbcar_backend.settings_ci_simple
         env:
           DATABASE_NAME: airbcar_db
           DATABASE_USER: airbcar_user
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
+          DJANGO_SETTINGS_MODULE: airbcar_backend.settings_ci_simple
       - name: Build backend Docker image
         run: docker build -t django-app .
         working-directory: ./backend
@@ -109,16 +111,28 @@ jobs:
       - name: Run Django migrations
         run: |
           cd backend/airbcar_backend
-          python manage.py migrate
+          python manage.py migrate --settings=airbcar_backend.settings_ci_simple
         env:
           DATABASE_URL: postgres://airbcar_user:amineamine@localhost:5432/airbcar_db
+          DATABASE_NAME: airbcar_db
+          DATABASE_USER: airbcar_user
+          DATABASE_PASSWORD: amineamine
+          DATABASE_HOST: localhost
+          DATABASE_PORT: 5432
+          DJANGO_SETTINGS_MODULE: airbcar_backend.settings_ci_simple
       - name: Start backend server
         run: |
           cd backend/airbcar_backend
-          python manage.py runserver &
+          python manage.py runserver --settings=airbcar_backend.settings_ci_simple &
           echo $! > backend.pid
         env:
           DATABASE_URL: postgres://airbcar_user:amineamine@localhost:5432/airbcar_db
+          DATABASE_NAME: airbcar_db
+          DATABASE_USER: airbcar_user
+          DATABASE_PASSWORD: amineamine
+          DATABASE_HOST: localhost
+          DATABASE_PORT: 5432
+          DJANGO_SETTINGS_MODULE: airbcar_backend.settings_ci_simple
       - name: Wait for backend to be ready
         run: |
           timeout 60 bash -c 'until curl -f http://localhost:8000/ 2>/dev/null; do sleep 2; done' || echo "Backend health check skipped"
