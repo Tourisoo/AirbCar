@@ -1,12 +1,41 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Hero() {
   const [mounted, setMounted] = useState(false);
+  const [searchForm, setSearchForm] = useState({
+    location: '',
+    pickupDate: '',
+    pickupTime: '',
+    dropoffDate: ''
+  });
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleInputChange = (e) => {
+    setSearchForm(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // Create search params from form data
+    const searchParams = new URLSearchParams({
+      location: searchForm.location,
+      pickupDate: searchForm.pickupDate,
+      pickupTime: searchForm.pickupTime,
+      dropoffDate: searchForm.dropoffDate
+    });
+    
+    // Navigate to search results page
+    router.push(`/search?${searchParams.toString()}`);
+  };
 
   return (
     <>
@@ -109,7 +138,7 @@ export default function Hero() {
           
           {/* Search Form */}
           <div className="hero-form relative">
-          <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-8 max-w-7xl mx-auto shadow-2xl border border-white/20">
+          <form onSubmit={handleSearch} className="bg-white/95 backdrop-blur-lg rounded-2xl p-8 max-w-7xl mx-auto shadow-2xl border border-white/20">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
               {/* Pickup Location */}
               <div className="md:col-span-1 form-field">
@@ -118,6 +147,9 @@ export default function Hero() {
                 </label>
                 <input
                   type="text"
+                  name="location"
+                  value={searchForm.location}
+                  onChange={handleInputChange}
                   placeholder="City, airport, or location"
                   className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 bg-white/80 text-gray-800 placeholder-gray-500 font-medium"
                 />
@@ -130,6 +162,9 @@ export default function Hero() {
                 </label>
                 <input
                   type="date"
+                  name="pickupDate"
+                  value={searchForm.pickupDate}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 bg-white/80 text-gray-800 font-medium"
                 />
               </div>
@@ -141,6 +176,9 @@ export default function Hero() {
                 </label>
                 <input
                   type="time"
+                  name="pickupTime"
+                  value={searchForm.pickupTime}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 bg-white/80 text-gray-800 font-medium"
                 />
               </div>
@@ -152,13 +190,16 @@ export default function Hero() {
                 </label>
                 <input
                   type="date"
+                  name="dropoffDate"
+                  value={searchForm.dropoffDate}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 bg-white/80 text-gray-800 font-medium"
                 />
               </div>
               
               {/* Search Button */}
               <div className="md:col-span-1 flex items-end">
-                <button className="search-button w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300">
+                <button type="submit" className="search-button w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300">
                   🔍 Search
                 </button>
               </div>
@@ -181,7 +222,7 @@ export default function Hero() {
                 </div>
               </div>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </section>
