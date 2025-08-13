@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import Header from '../../../components/Header'
-import Footer from '../../../components/Footer'
+import Header from '../../components/Header'
+import Footer from '../../components/Footer'
 
 export default function BookingPage() {
   const router = useRouter()
