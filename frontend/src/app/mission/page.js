@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { useScrollAnimation, animations } from '../../hooks/useScrollAnimation'
@@ -13,6 +13,27 @@ export default function MissionPage() {
   const [whyUsRef, whyUsVisible] = useScrollAnimation({ delay: 200 })
   const [factsRef, factsVisible] = useScrollAnimation({ delay: 150 })
   const [testimonialsRef, testimonialsVisible] = useScrollAnimation({ delay: 100 })
+
+  // Testimonials scroll functions with dynamic scroll amount
+  const scrollLeft = useCallback(() => {
+    const container = document.getElementById('testimonials-container');
+    if (container) {
+      const cardWidth = 350; // Adjust based on card width
+      const gap = 24; // space-x-6 = 24px
+      const scrollAmount = cardWidth + gap;
+      container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    }
+  }, []);
+
+  const scrollRight = useCallback(() => {
+    const container = document.getElementById('testimonials-container');
+    if (container) {
+      const cardWidth = 50; // Adjust based on card width
+      const gap = 24; // space-x-6 = 24px
+      const scrollAmount = cardWidth + gap;
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
@@ -36,9 +57,17 @@ export default function MissionPage() {
             Make cities for<br />
             people, not cars.
           </h1>
-          <p className="text-xl md:text-2xl opacity-90 max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl opacity-90 max-w-2xl mx-auto mb-8">
             We're building a sustainable future where mobility is accessible, affordable, and environmentally conscious.
           </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button className="bg-white text-orange-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-50 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1">
+              Start Your Journey
+            </button>
+            <button className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-orange-600 transition-all duration-200">
+              Learn More
+            </button>
+          </div>
         </div>
         
         {/* Floating elements */}
@@ -109,12 +138,12 @@ export default function MissionPage() {
                 own a car but still need reliable transportation.
               </p>
               <div className="grid grid-cols-2 gap-4 pt-4">
-                <div className="text-center p-4 bg-red-50 rounded-lg">
-                  <div className="text-2xl font-bold text-red-600">95%</div>
+                <div className="text-center p-4 bg-red-50 rounded-lg hover:bg-red-100 transition-colors duration-300 group">
+                  <div className="text-2xl font-bold text-red-600 group-hover:scale-110 transition-transform duration-300">95%</div>
                   <div className="text-sm text-gray-600">Cars sit unused daily</div>
                 </div>
-                <div className="text-center p-4 bg-red-50 rounded-lg">
-                  <div className="text-2xl font-bold text-red-600">30%</div>
+                <div className="text-center p-4 bg-red-50 rounded-lg hover:bg-red-100 transition-colors duration-300 group">
+                  <div className="text-2xl font-bold text-red-600 group-hover:scale-110 transition-transform duration-300">30%</div>
                   <div className="text-sm text-gray-600">Urban space for parking</div>
                 </div>
               </div>
@@ -148,8 +177,8 @@ export default function MissionPage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-6">
+            <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 group">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-6 group-hover:bg-green-200 transition-colors duration-300">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -161,8 +190,8 @@ export default function MissionPage() {
               </p>
             </div>
             
-            <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+            <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 group">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6 group-hover:bg-blue-200 transition-colors duration-300">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
@@ -174,8 +203,8 @@ export default function MissionPage() {
               </p>
             </div>
             
-            <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-6">
+            <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 group">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-6 group-hover:bg-purple-200 transition-colors duration-300">
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
@@ -230,14 +259,14 @@ export default function MissionPage() {
                   alt="Green transportation" 
                   className="w-full h-48 object-cover rounded-xl shadow-lg"
                 />
-                <div className="bg-green-50 p-4 rounded-xl">
-                  <div className="text-2xl font-bold text-green-600">85%</div>
+                <div className="bg-green-50 p-4 rounded-xl hover:bg-green-100 transition-colors duration-300 group">
+                  <div className="text-2xl font-bold text-green-600 group-hover:scale-110 transition-transform duration-300">85%</div>
                   <div className="text-sm text-gray-600">Reduction in personal vehicle need</div>
                 </div>
               </div>
               <div className="space-y-4 pt-8">
-                <div className="bg-blue-50 p-4 rounded-xl">
-                  <div className="text-2xl font-bold text-blue-600">60%</div>
+                <div className="bg-blue-50 p-4 rounded-xl hover:bg-blue-100 transition-colors duration-300 group">
+                  <div className="text-2xl font-bold text-blue-600 group-hover:scale-110 transition-transform duration-300">60%</div>
                   <div className="text-sm text-gray-600">Cost savings vs car ownership</div>
                 </div>
                 <img 
@@ -384,74 +413,180 @@ export default function MissionPage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-6">What our customers say</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Real experiences from real customers who trust Airbcar for their transportation needs
+            </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-xl shadow-lg">
-              <div className="flex items-center mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-              <p className="text-gray-600 mb-6">
-                "Airbcar has completely changed how I think about transportation. It's so convenient 
-                and affordable, and I love knowing I'm helping the environment."
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
-                  <span className="text-orange-600 font-bold">S</span>
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Sarah M.</div>
-                  <div className="text-sm text-gray-500">Casablanca</div>
-                </div>
-              </div>
-            </div>
+          {/* Testimonials Carousel */}
+          <div className="relative">
+            {/* Navigation Buttons */}
+            <button 
+              className="absolute left-2 md:left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 hover:shadow-xl transition-all duration-300 group"
+              onClick={scrollLeft}
+              aria-label="Previous testimonials"
+            >
+              <svg className="w-6 h-6 text-gray-600 group-hover:text-orange-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
             
-            <div className="bg-white p-8 rounded-xl shadow-lg">
-              <div className="flex items-center mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-              <p className="text-gray-600 mb-6">
-                "Perfect for city living! I sold my car and haven't looked back. The app is 
-                super easy to use and cars are always clean and well-maintained."
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
-                  <span className="text-orange-600 font-bold">A</span>
+            <button 
+              className="absolute right-2 md:right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 hover:shadow-xl transition-all duration-300 group"
+              onClick={scrollRight}
+              aria-label="Next testimonials"
+            >
+              <svg className="w-6 h-6 text-gray-600 group-hover:text-orange-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            {/* Scrollable Container */}
+            <div 
+              id="testimonials-container"
+              className="flex overflow-x-auto scrollbar-hide space-x-6 pb-4 px-16 md:px-0 snap-x snap-mandatory"
+            >
+              {/* Testimonial 1 */}
+              <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg min-w-[320px] md:min-w-[350px] flex-shrink-0 hover:shadow-xl transition-shadow duration-300 snap-start">
+                <div className="flex items-center mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
                 </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Ahmed B.</div>
-                  <div className="text-sm text-gray-500">Rabat</div>
+                <p className="text-gray-600 mb-6 text-sm md:text-base leading-relaxed">
+                  "Airbcar has completely changed how I think about transportation. It's so convenient 
+                  and affordable, and I love knowing I'm helping the environment."
+                </p>
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-orange-600 font-bold">S</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">Sarah M.</div>
+                    <div className="text-sm text-gray-500">Casablanca</div>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div className="bg-white p-8 rounded-xl shadow-lg">
-              <div className="flex items-center mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-              <p className="text-gray-600 mb-6">
-                "As a student, Airbcar is a lifesaver. It's so much cheaper than owning a car, 
-                and I can still get around the city whenever I need to."
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
-                  <span className="text-orange-600 font-bold">L</span>
+              
+              {/* Testimonial 2 */}
+              <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg min-w-[320px] md:min-w-[350px] flex-shrink-0 hover:shadow-xl transition-shadow duration-300 snap-start">
+                <div className="flex items-center mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
                 </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Leila K.</div>
-                  <div className="text-sm text-gray-500">Marrakech</div>
+                <p className="text-gray-600 mb-6 text-sm md:text-base leading-relaxed">
+                  "Perfect for city living! I sold my car and haven't looked back. The app is 
+                  super easy to use and cars are always clean and well-maintained."
+                </p>
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-orange-600 font-bold">A</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">Ahmed B.</div>
+                    <div className="text-sm text-gray-500">Rabat</div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Testimonial 3 */}
+              <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg min-w-[320px] md:min-w-[350px] flex-shrink-0 hover:shadow-xl transition-shadow duration-300 snap-start">
+                <div className="flex items-center mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-gray-600 mb-6 text-sm md:text-base leading-relaxed">
+                  "As a student, Airbcar is a lifesaver. It's so much cheaper than owning a car, 
+                  and I can still get around the city whenever I need to."
+                </p>
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-orange-600 font-bold">L</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">Leila K.</div>
+                    <div className="text-sm text-gray-500">Marrakech</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Testimonial 4 */}
+              <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg min-w-[320px] md:min-w-[350px] flex-shrink-0 hover:shadow-xl transition-shadow duration-300 snap-start">
+                <div className="flex items-center mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-gray-600 mb-6 text-sm md:text-base leading-relaxed">
+                  "The perfect solution for weekend trips! I can rent a car when I need it without 
+                  the hassle of ownership. Great selection and competitive prices."
+                </p>
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-orange-600 font-bold">M</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">Mohamed F.</div>
+                    <div className="text-sm text-gray-500">Fez</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Testimonial 5 */}
+              <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg min-w-[320px] md:min-w-[350px] flex-shrink-0 hover:shadow-xl transition-shadow duration-300 snap-start">
+                <div className="flex items-center mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-gray-600 mb-6 text-sm md:text-base leading-relaxed">
+                  "Excellent customer service and reliable vehicles. I use Airbcar for business trips 
+                  and they never disappoint. Highly recommend!"
+                </p>
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-orange-600 font-bold">Z</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">Zineb H.</div>
+                    <div className="text-sm text-gray-500">Agadir</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Testimonial 6 */}
+              <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg min-w-[320px] md:min-w-[350px] flex-shrink-0 hover:shadow-xl transition-shadow duration-300 snap-start">
+                <div className="flex items-center mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-gray-600 mb-6 text-sm md:text-base leading-relaxed">
+                  "Great for exploring Morocco! Clean cars, easy booking process, and fantastic 
+                  support team. Made our vacation planning stress-free."
+                </p>
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-orange-600 font-bold">Y</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">Youssef A.</div>
+                    <div className="text-sm text-gray-500">Tangier</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -461,29 +596,181 @@ export default function MissionPage() {
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-orange-400 to-orange-600 text-white">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Airbcar is the first Moroccan<br />
-            mobility rental car app.
-          </h2>
-          <p className="text-xl opacity-90 mb-8 max-w-2xl mx-auto">
-            Join thousands of users who are already making a difference. 
-            Download our app and start your sustainable mobility journey today.
-          </p>
-          <button className="bg-white text-orange-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-50 transition-colors duration-200 shadow-lg">
-            Download App
-          </button>
-          
-          {/* Phone mockup */}
-          <div className="mt-12 flex justify-center">
-            <div className="relative">
-              <div className="w-64 h-96 bg-black rounded-3xl p-2 shadow-2xl">
-                <div className="w-full h-full bg-white rounded-2xl flex items-center justify-center">
-                  <div className="text-center text-gray-400">
-                    <div className="text-orange-600 font-bold text-xl mb-2">Airbcar</div>
-                    <div className="text-sm">Mobile App</div>
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left side - Text content */}
+            <div className="text-center lg:text-left">
+              <div className="mb-6">
+                <span className="text-white/80 text-lg">About us</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+                Airbcar is the first Moroccan<br />
+                mobility rental car app.
+              </h2>
+              <p className="text-xl opacity-90 mb-8 max-w-2xl">
+                We're making cities for people, offering better alternatives for 
+                every purpose a private car serves — including 
+                ride-hailing, shared cars, scooters, 
+                and food and grocery delivery.
+              </p>
+              <button className="bg-white text-orange-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-50 transition-colors duration-200 shadow-lg">
+                Be Partner
+              </button>
+            </div>
+            
+            {/* Right side - Mobile app mockup */}
+            <div className="flex justify-center lg:justify-end">
+              <div className="relative">
+                {/* Phone frame */}
+                <div className="w-80 h-[600px] bg-black rounded-[3rem] p-3 shadow-2xl">
+                  {/* Screen */}
+                  <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative">
+                    {/* Status bar */}
+                    <div className="flex justify-between items-center px-6 py-3 text-black text-sm">
+                      <span className="font-medium">9:41</span>
+                      <div className="flex space-x-1">
+                        <div className="w-4 h-2 bg-black rounded-sm"></div>
+                        <div className="w-4 h-2 bg-black rounded-sm"></div>
+                        <div className="w-4 h-2 bg-black rounded-sm"></div>
+                      </div>
+                    </div>
+                    
+                    {/* App content */}
+                    <div className="px-6 py-4 space-y-3">
+                      {/* Premium option */}
+                      <div className="flex items-center justify-between py-4">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-14 h-8 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
+                            <svg className="w-10 h-6 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M5,11L6.5,6.5H17.5L19,11H5M17.5,16A1.5,1.5 0 0,1 16,14.5A1.5,1.5 0 0,1 17.5,13A1.5,1.5 0 0,1 19,14.5A1.5,1.5 0 0,1 17.5,16M6.5,16A1.5,1.5 0 0,1 5,14.5A1.5,1.5 0 0,1 6.5,13A1.5,1.5 0 0,1 8,14.5A1.5,1.5 0 0,1 6.5,16M18.92,6C18.72,5.42 18.16,5 17.5,5H6.5C5.84,5 5.28,5.42 5.08,6L3,12V20A1,1 0 0,0 4,21H5A1,1 0 0,0 6,20V19H18V20A1,1 0 0,0 19,21H20A1,1 0 0,0 21,20V12L18.92,6Z"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="text-gray-900 font-medium text-base">Premium</div>
+                            <div className="text-gray-500 text-sm">Mid-size and luxury cars</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-gray-900 font-bold text-lg">4.50 €</div>
+                        </div>
+                      </div>
+                      
+                      {/* Soft option */}
+                      <div className="flex items-center justify-between py-4">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-14 h-8 rounded-xl overflow-hidden bg-orange-100 flex items-center justify-center">
+                            <svg className="w-10 h-6 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M5,11L6.5,6.5H17.5L19,11H5M17.5,16A1.5,1.5 0 0,1 16,14.5A1.5,1.5 0 0,1 17.5,13A1.5,1.5 0 0,1 19,14.5A1.5,1.5 0 0,1 17.5,16M6.5,16A1.5,1.5 0 0,1 5,14.5A1.5,1.5 0 0,1 6.5,13A1.5,1.5 0 0,1 8,14.5A1.5,1.5 0 0,1 6.5,16M18.92,6C18.72,5.42 18.16,5 17.5,5H6.5C5.84,5 5.28,5.42 5.08,6L3,12V20A1,1 0 0,0 4,21H5A1,1 0 0,0 6,20V19H18V20A1,1 0 0,0 19,21H20A1,1 0 0,0 21,20V12L18.92,6Z"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="text-gray-900 font-medium text-base">Soft</div>
+                            <div className="text-gray-500 text-sm">Eco and economy cars</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-gray-900 font-bold text-lg">3.50 €</div>
+                        </div>
+                      </div>
+                      
+                      {/* Air option */}
+                      <div className="flex items-center justify-between py-4">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-14 h-8 rounded-xl overflow-hidden bg-gray-200 flex items-center justify-center">
+                            <svg className="w-10 h-6 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M5,11L6.5,6.5H17.5L19,11H5M17.5,16A1.5,1.5 0 0,1 16,14.5A1.5,1.5 0 0,1 17.5,13A1.5,1.5 0 0,1 19,14.5A1.5,1.5 0 0,1 17.5,16M6.5,16A1.5,1.5 0 0,1 5,14.5A1.5,1.5 0 0,1 6.5,13A1.5,1.5 0 0,1 8,14.5A1.5,1.5 0 0,1 6.5,16M18.92,6C18.72,5.42 18.16,5 17.5,5H6.5C5.84,5 5.28,5.42 5.08,6L3,12V20A1,1 0 0,0 4,21H5A1,1 0 0,0 6,20V19H18V20A1,1 0 0,0 19,21H20A1,1 0 0,0 21,20V12L18.92,6Z"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="text-gray-900 font-medium text-base">Air</div>
+                            <div className="text-gray-500 text-sm">Standard car</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-gray-900 font-bold text-lg">5.25 €</div>
+                        </div>
+                      </div>
+                      
+                      {/* Premium option 2 */}
+                      <div className="flex items-center justify-between py-4">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-14 h-8 rounded-xl overflow-hidden bg-gray-800 flex items-center justify-center">
+                            <svg className="w-10 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M5,11L6.5,6.5H17.5L19,11H5M17.5,16A1.5,1.5 0 0,1 16,14.5A1.5,1.5 0 0,1 17.5,13A1.5,1.5 0 0,1 19,14.5A1.5,1.5 0 0,1 17.5,16M6.5,16A1.5,1.5 0 0,1 5,14.5A1.5,1.5 0 0,1 6.5,13A1.5,1.5 0 0,1 8,14.5A1.5,1.5 0 0,1 6.5,16M18.92,6C18.72,5.42 18.16,5 17.5,5H6.5C5.84,5 5.28,5.42 5.08,6L3,12V20A1,1 0 0,0 4,21H5A1,1 0 0,0 6,20V19H18V20A1,1 0 0,0 19,21H20A1,1 0 0,0 21,20V12L18.92,6Z"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="text-gray-900 font-medium text-base">Premium</div>
+                            <div className="text-gray-500 text-sm">Mid-size and luxury cars</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-orange-600 font-bold text-lg">3.50 €</div>
+                        </div>
+                      </div>
+                      
+                      {/* Bolt Drive option - highlighted */}
+                      <div className="flex items-center justify-between py-4 bg-orange-50 rounded-2xl px-4 -mx-2">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-14 h-8 rounded-xl bg-orange-500 flex items-center justify-center">
+                            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="text-orange-600 font-bold text-base">Bolt Drive</div>
+                            <div className="text-gray-500 text-sm">13 min walk 👥 4</div>
+                            <div className="text-gray-500 text-sm">VVP-556</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-orange-600 font-bold text-lg">3.50 €</div>
+                        </div>
+                      </div>
+                      
+                      {/* Scooter option */}
+                      <div className="flex items-center justify-between py-4">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-14 h-8 rounded-xl bg-orange-100 flex items-center justify-center">
+                            <svg className="w-8 h-6 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M7.82 18c-.4 0-.8-.16-1.06-.44L5.5 16.3c-.54-.54-.54-1.42 0-1.96l.71-.71c.39-.39 1.02-.39 1.41 0l.71.71c.54.54.54 1.42 0 1.96l-1.26 1.26c-.26.28-.66.44-1.06.44m8.36 0c.4 0 .8-.16 1.06-.44l1.26-1.26c.54-.54.54-1.42 0-1.96l-.71-.71c-.39-.39-1.02-.39-1.41 0l-.71.71c-.54.54-.54 1.42 0 1.96l1.26 1.26c.26.28.66.44 1.06.44M12 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="text-orange-600 font-bold text-base">Scooter</div>
+                            <div className="text-gray-500 text-sm">5 min walk</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-orange-600 font-bold text-lg">3.80 €</div>
+                        </div>
+                      </div>
+                      
+                      {/* Tuk-Tuk option */}
+                      <div className="flex items-center justify-between py-4">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-14 h-8 rounded-xl bg-orange-500 flex items-center justify-center relative">
+                            <svg className="w-10 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M3 17h2c0 1.1.9 2 2 2s2-.9 2-2h6c0 1.1.9 2 2 2s2-.9 2-2h2v-5l-3-4H3v7zM3 6h8v5H3V6zm16 7.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zM7 13.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="text-orange-600 font-bold text-base">Tuk-Tuk</div>
+                            <div className="text-gray-500 text-sm">5 min 👥 4</div>
+                            <div className="text-gray-500 text-sm">3-wheel rides</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-orange-600 font-bold text-lg">3.80 €</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
+                
+                {/* Floating elements for visual appeal */}
+                <div className="absolute -top-4 -left-4 w-8 h-8 bg-white/20 rounded-full animate-pulse"></div>
+                <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-white/20 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
               </div>
             </div>
           </div>

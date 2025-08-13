@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1014px" height="723px" viewBox="0 0 1014 723" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>compare</title>
+    <g id="colors" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" transform="translate(-368.000000, -340.000000)">
+            <g id="compare" transform="translate(368.000000, 342.000000)">
+                <rect id="Rectangle_1" fill="#F3F3F3" fill-rule="nonzero" transform="translate(839.680000, 478.195000) rotate(180.000000) translate(-839.680000, -478.195000) " x="720.46" y="248.59" width="238.44" height="459.21"></rect>
+                <rect id="Rectangle_2" fill="#DFDFDF" fill-rule="nonzero" transform="translate(985.980000, 478.195000) rotate(180.000000) translate(-985.980000, -478.195000) " x="958.25" y="248.59" width="55.46" height="459.21"></rect>
+                <rect id="Rectangle_3" fill="#DFDFDF" fill-rule="nonzero" transform="translate(839.675000, 296.805000) rotate(180.000000) translate(-839.675000, -296.805000) " x="740.21" y="277.63" width="198.93" height="38.35"></rect>
+                <circle id="Ellipse_1" fill="#F3F3F3" fill-rule="nonzero" cx="754.51" cy="292" r="6.73"></circle>
+                <line x1="870.45" y1="292" x2="766.89" y2="292" id="Line_1" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></line>
+                <rect id="Rectangle_4" fill="#DFDFDF" fill-rule="nonzero" transform="translate(839.675000, 361.625000) rotate(180.000000) translate(-839.675000, -361.625000) " x="740.21" y="342.45" width="198.93" height="38.35"></rect>
+                <circle id="Ellipse_2" fill="#F3F3F3" fill-rule="nonzero" cx="754.51" cy="356.82" r="6.73"></circle>
+                <line x1="870.45" y1="356.82" x2="766.89" y2="356.82" id="Line_2" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></line>
+                <rect id="Rectangle_5" fill="#DFDFDF" fill-rule="nonzero" transform="translate(839.675000, 426.455000) rotate(180.000000) translate(-839.675000, -426.455000) " x="740.21" y="407.28" width="198.93" height="38.35"></rect>
+                <circle id="Ellipse_3" fill="#F3F3F3" fill-rule="nonzero" cx="754.51" cy="421.63" r="6.73"></circle>
+                <line x1="870.45" y1="421.63" x2="766.89" y2="421.63" id="Line_3" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></line>
+                <rect id="Rectangle_6" fill="#DFDFDF" fill-rule="nonzero" transform="translate(839.675000, 491.265000) rotate(180.000000) translate(-839.675000, -491.265000) " x="740.21" y="472.09" width="198.93" height="38.35"></rect>
+                <circle id="Ellipse_4" fill="#F3F3F3" fill-rule="nonzero" cx="754.51" cy="486.45" r="6.73"></circle>
+                <line x1="870.45" y1="486.45" x2="766.89" y2="486.45" id="Line_4" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></line>
+                <rect id="Rectangle_7" fill="#DFDFDF" fill-rule="nonzero" transform="translate(839.675000, 556.085000) rotate(180.000000) translate(-839.675000, -556.085000) " x="740.21" y="536.91" width="198.93" height="38.35"></rect>
+                <circle id="Ellipse_5" fill="#F3F3F3" fill-rule="nonzero" cx="754.51" cy="551.27" r="6.73"></circle>
+                <line x1="870.45" y1="551.27" x2="766.89" y2="551.27" id="Line_5" stroke="#F3F3F3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></line>
+                <line x1="1000.89" y1="305.22" x2="971.05" y2="305.22" id="Line_6" stroke="#F3F3F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></line>
+                <line x1="1000.89" y1="312.95" x2="971.05" y2="312.95" id="Line_7" stroke="#F3F3F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></line>
+                <line x1="1000.89" y1="357.77" x2="971.05" y2="357.77" id="Line_8" stroke="#F3F3F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></line>
+                <line x1="1000.89" y1="365.49" x2="971.05" y2="365.49" id="Line_9" stroke="#F3F3F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></line>
+                <line x1="1000.89" y1="421.63" x2="971.05" y2="421.63" id="Line_10" stroke="#F3F3F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></line>
+                <line x1="1000.89" y1="429.36" x2="971.05" y2="429.36" id="Line_11" stroke="#F3F3F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></line>
+                <line x1="1000.89" y1="483.42" x2="971.05" y2="483.42" id="Line_12" stroke="#F3F3F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></line>
+                <line x1="1000.89" y1="491.14" x2="971.05" y2="491.14" id="Line_13" stroke="#F3F3F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></line>
+                <rect id="Rectangle_8" fill="#F3F3F3" fill-rule="nonzero" x="0" y="91.52" width="423.15" height="241.03"></rect>
+                <rect id="Rectangle_9" fill="#D0D0D0" fill-rule="nonzero" x="32.35" y="129.51" width="239.85" height="174.14" rx="23.65"></rect>
+                <path d="M650.63,353.67 C654.63,356.98 683.34,378.77 695.1,392.56 C706.01,395.56 753.29,413.56 794.65,419.88 C794.52,425.71 791.53,445.13 791.53,445.13 C791.53,445.13 691.98,432.76 679.98,429.47 C667.98,426.18 621.22,397.8 610.98,387.07 C624.63,372.63 650.63,353.67 650.63,353.67 Z" id="Path_1" fill="#DE8E68" fill-rule="nonzero"></path>
+                <ellipse id="Ellipse_6" fill="#DE8E68" fill-rule="nonzero" cx="805.33" cy="433.32" rx="22.3" ry="16.54"></ellipse>
+                <polygon id="Path_2" fill="#445BE6" fill-rule="nonzero" points="490.92 503.03 490.92 720.1 564.7 720.1 527.81 505.38"></polygon>
+                <polygon id="Path_3" fill="#5A70F9" fill-rule="nonzero" points="614.68 511.62 614.68 720.1 555.38 720.1 507.46 500.81"></polygon>
+                <path d="M475.76,360.41 C472.39,364.06 462.85,375.84 460.33,380.33 C453.88,374.72 345.86,275.4 343.33,275.4 C340.971005,275.433987 339.025603,277.258072 338.84,279.61 C338.84,292.77 348.44,293.42 360.36,306.06 C385.36,350.93 445.25,432.23 460.88,432.23 C469.88,432.23 507.45,395.55 507.45,390.74 C507.45,385.93 475.76,360.41 475.76,360.41 Z" id="Path_4" fill="#DE8E68" fill-rule="nonzero"></path>
+                <path d="M528.19,306.39 C503.19,291.29 463.42,346.67 464.19,355.93 C464.96,365.19 501.69,392.14 517.03,389.14 C527.09,387.14 554.32,322.14 528.19,306.39 Z" id="Path_5" fill="#FCC486" fill-rule="nonzero"></path>
+                <path d="M563.11,288.41 C637.26,288.41 632.42,498.63 619.28,509.25 C602.93,522.47 496.81,510.25 490.92,503.03 C485.03,495.81 480.7,288.41 563.11,288.41 Z" id="Path_6" fill="#FED385" fill-rule="nonzero"></path>
+                <path d="M583.95,300.8 C583.95,307 549.58,308.33 549.58,300.8 L549.58,258.6 L583.95,258.6 L583.95,300.8 Z" id="Path_7" fill="#DE8E68" fill-rule="nonzero"></path>
+                <ellipse id="Ellipse_7" fill="#DE8E68" fill-rule="nonzero" transform="translate(561.545919, 240.532742) rotate(-68.430000) translate(-561.545919, -240.532742) " cx="561.545919" cy="240.532742" rx="41.37" ry="30.79"></ellipse>
+                <ellipse id="Ellipse_8" fill="#DE8E68" fill-rule="nonzero" transform="translate(585.907618, 256.091281) rotate(-54.395000) translate(-585.907618, -256.091281) " cx="585.907618" cy="256.091281" rx="9.833" ry="6.874"></ellipse>
+                <path d="M617.92,235.46 C617.92,229.73 612.57,223.46 611.56,216.21 C611.04,212.56 612.17,197.37 607.91,192.21 C599.06,181.56 593.83,183.74 587.06,181.21 C575.26,176.9 570.74,169.75 561,169.75 C549.94,169.75 545.47,175.48 537.55,175.48 C528.49,175.48 521.07,171.31 508.36,171.31 C501.58,171.31 492.72,180.17 492.72,187.99 C492.72,206.47 509.92,203.82 509.92,208.32 C509.92,211.44 508.92,213.92 508.92,218.22 C508.92,223.82 516.22,227.08 520.39,227.08 C533.09,227.08 534.77,225.53 534.77,225.53 C537.293357,220.492662 540.51514,215.836732 544.34,211.7 C544.85,211.16 553.1,216.99 566.57,217.44 C577.62,217.81 585.39,219.94 585.39,225.09 C585.39,228.72 584.06,239.51 584.14,242.55 C584.22,245.59 585.3,247.55 585.98,247.55 C586.66,247.55 587.04,246.55 591.28,246.55 C595.83,246.55 596.18,252.14 596.97,252.14 C601.5,252.24 617.92,248.53 617.92,235.46 Z" id="Path_8" fill="#171717" fill-rule="nonzero"></path>
+                <path d="M596.86,309.57 C621.86,294.46 661.64,349.85 660.86,359.1 C660.08,368.35 623.4,395.3 608.05,392.31 C597.97,390.35 570.74,325.35 596.86,309.57 Z" id="Path_9" fill="#FED892" fill-rule="nonzero"></path>
+                <path d="M362.96,303.86 C355.180359,308.891705 351.335102,318.219252 353.308603,327.271664 C355.282104,336.324075 362.660875,343.204691 371.828938,344.541656 C380.997002,345.878621 390.033467,341.391813 394.51,333.28 L362.96,303.86 Z" id="Path_10" fill="#DE8E68" fill-rule="nonzero"></path>
+                <rect id="Rectangle_18" fill="#FFFFFF" fill-rule="nonzero" x="49.94" y="153.04" width="101.24" height="6.86"></rect>
+                <rect id="Rectangle_19" fill="#FFFFFF" fill-rule="nonzero" x="49.94" y="176.14" width="101.24" height="6.86"></rect>
+                <rect id="Rectangle_20" fill="#FFFFFF" fill-rule="nonzero" x="49.94" y="199.24" width="101.24" height="6.86"></rect>
+                <rect id="Rectangle_21" fill="#FFFFFF" fill-rule="nonzero" x="49.72" y="222.34" width="101.24" height="6.86"></rect>
+                <rect id="Rectangle_22" fill="#FFFFFF" fill-rule="nonzero" x="49.72" y="245.44" width="101.24" height="6.86"></rect>
+                <rect id="Rectangle_23" fill="#FFFFFF" fill-rule="nonzero" x="49.72" y="268.53" width="101.24" height="6.86"></rect>
+                <rect id="Rectangle_24" fill="#FFFFFF" fill-rule="nonzero" x="192.11" y="113.98" width="170.13" height="102.6" rx="23.65"></rect>
+                <circle id="Ellipse_9" fill="#F3F3F3" fill-rule="nonzero" cx="273.08" cy="127.11" r="5.72"></circle>
+                <circle id="Ellipse_10" fill="#F3F3F3" fill-rule="nonzero" cx="273.08" cy="203.46" r="5.72"></circle>
+                <line x1="273.08" y1="128.98" x2="273.08" y2="201.84" id="Line_14" stroke="#F3F3F3" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></line>
+                <line x1="286.97" y1="138.53" x2="286.97" y2="181.02" id="Line_15" stroke="#F3F3F3" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></line>
+                <line x1="273.08" y1="203.46" x2="286.97" y2="181.02" id="Line_16" stroke="#F3F3F3" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></line>
+                <path d="M806.91,119.65 C793.127413,106.131923 790.741002,84.78981 801.197427,68.5613998 C811.653852,52.3329895 832.074403,45.686049 850.08,52.65 C861.465515,35.2036347 881.541119,25.4543056 902.292533,27.2939922 C923.043946,29.1336788 941.091299,42.2627435 949.23,61.44 C965.364388,54.9145681 983.86258,59.3730475 995.252481,72.5324508 C1006.64238,85.6918541 1008.40187,104.638235 999.63,119.67 L806.91,119.65 Z" id="Path_12" fill="#DFDFDF" fill-rule="nonzero"></path>
+                <line x1="977.66" y1="116.25" x2="977.66" y2="253.34" id="Line_17" stroke="#DFDFDF" stroke-width="4"></line>
+                <path d="M714.36,192.22 C721.5,205.97 737.42,211.03 749.75,211.03 C779.53,211.03 790.9,182.34 790.9,172.64" id="Path_13" stroke="#DFDFDF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M712.48,47.34 C719.06,59.85 722.32,73.08 722.32,84.64 C722.32,112.02 717.75,130.79 714.32,147.21" id="Path_14" stroke="#DFDFDF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M562.19,29.34 C582.35,12.51 605.01,0 631.98,0 C654.14,0 672.13,6.6 686.05,16.67" id="Path_15" stroke="#DFDFDF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M453.63,116.76 C474.76,116.76 494.09,98.76 514.76,76.89" id="Path_16" stroke="#DFDFDF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+                <rect id="Rectangle_25" fill="#DFDFDF" fill-rule="nonzero" x="521.9" y="35.47" width="29.78" height="29.78"></rect>
+                <circle id="Ellipse_11" fill="#DFDFDF" fill-rule="nonzero" cx="699.41" cy="29.75" r="13.08"></circle>
+                <polygon id="Path_17" fill="#DFDFDF" fill-rule="nonzero" points="735.7 170.36 706.56 151.38 704.69 186.11"></polygon>
+            </g>
+        </g>
+    </g>
+</svg>

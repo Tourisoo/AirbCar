@@ -419,3 +419,15 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(45deg, #f7931e, #ff6b35);
 }
+
+/* Hide scrollbar utility class */
+.scrollbar-hide {
+  /* Firefox */
+  scrollbar-width: none;
+  /* Safari and Chrome */
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

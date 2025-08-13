@@ -145,13 +145,50 @@ export default function CarTypes() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div ref={headerRef} className="text-center mb-12" style={animations.fadeInDown(headerVisible)}>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Find the best deals on car rental in Fes
-          </h2>
-          <p className="text-gray-600">
-            Here are the most popular types of rental cars you can pick up from a point near you in the next 30 days.
-          </p>
+        <div ref={headerRef} className="text-center mb-12" style={animations.morphIn(headerVisible, {
+          duration: '1s',
+          distance: '50px',
+          blur: '3px'
+        })}>
+          <div className="relative">
+            {/* Animated background element */}
+            <div className="absolute inset-0 flex justify-center">
+              <div className={`w-32 h-1 bg-gradient-to-r from-orange-400 to-red-500 rounded-full transform transition-all duration-1000 delay-300 ${
+                headerVisible ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'
+              }`}></div>
+            </div>
+            
+            <h2 className={`text-3xl font-bold text-gray-900 mb-4 relative transform transition-all duration-800 delay-200 ${
+              headerVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+            }`}>
+              Find the best deals on car rental in 
+              <span className={`text-orange-500 inline-block transform transition-all duration-1000 delay-500 ${
+                headerVisible ? 'scale-100 rotate-0' : 'scale-75 rotate-3'
+              }`}> Fes</span>
+            </h2>
+            
+            <p className={`text-gray-600 transform transition-all duration-800 delay-400 ${
+              headerVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+            }`}>
+              Here are the most popular types of rental cars you can pick up from a point near you in the next 30 days.
+            </p>
+            
+            {/* Decorative floating elements */}
+            <div className="absolute -top-4 -left-4 w-8 h-8 text-orange-400 opacity-0 animate-float" 
+                 style={{ 
+                   animation: headerVisible ? 'float 3s ease-in-out infinite 0.8s' : 'none',
+                   opacity: headerVisible ? 0.6 : 0 
+                 }}>
+              🚗
+            </div>
+            <div className="absolute -top-6 -right-8 w-6 h-6 text-blue-400 opacity-0" 
+                 style={{ 
+                   animation: headerVisible ? 'float 3s ease-in-out infinite 1.2s' : 'none',
+                   opacity: headerVisible ? 0.5 : 0 
+                 }}>
+              ⭐
+            </div>
+          </div>
         </div>
 
         {/* Car Types Grid */}
@@ -253,6 +290,22 @@ export default function CarTypes() {
           </div>
         </div>
       </div>
+      
+      {/* Custom CSS for animations */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { 
+            transform: translateY(0px) rotate(0deg); 
+          }
+          50% { 
+            transform: translateY(-15px) rotate(5deg); 
+          }
+        }
+        
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+      `}</style>
     </section>
   );
 }

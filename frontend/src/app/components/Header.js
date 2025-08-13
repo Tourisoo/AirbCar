@@ -72,9 +72,9 @@ export default function Header() {
           
           {/* Navigation - Center */}
           <nav className="hidden md:flex space-x-8">
-            <a href="#" className="text-gray-700 hover:text-gray-900 font-medium text-sm underline">
+            <Link href="/partner" className="text-gray-700 hover:text-gray-900 font-medium text-sm underline">
               Become a Partner
-            </a>
+            </Link>
             <Link href="/mission" className="text-gray-700 hover:text-gray-900 font-medium text-sm underline">
               Our mission
             </Link>

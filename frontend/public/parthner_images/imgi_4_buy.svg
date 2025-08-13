@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="774px" height="638px" viewBox="0 0 774 638" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>buy</title>
+    <g id="colors" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" transform="translate(-714.000000, -600.000000)">
+            <g id="buy" transform="translate(714.000000, 600.000000)">
+                <path d="M549.08,50.34 C629.08,69.54 694.87,153.65 693.85,236.58 C692.85,319.33 625.03,400.9 568.28,479.4 C511.69,557.91 466.49,633.4 409.28,637.4 C352,641.34 282.8,573.71 225.54,528.85 C168.1,484 122.73,461.9 83.65,422.48 C44.57,383.06 11.94,326.3 19.58,275.48 C27.22,224.66 75.15,179.81 125.28,155.34 C175.58,130.7 227.91,126.45 301.28,101.47 C374.65,76.49 469,31 549.08,50.34 Z" id="Path_30" fill="#F8F8F8" fill-rule="nonzero"></path>
+                <path d="M508.59,434.14 L404,227.65 C400.81,225.79 388,217.56 388,217.56" id="Path_31" stroke="#DFDFDF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M396.5,244 C395.25,239.87 391.5,231.36 391.5,231.36 C389.21,231.22 373.27,223.02 373.27,223.02" id="Path_32" stroke="#DFDFDF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+                <line x1="368.71" y1="223.78" x2="418.27" y2="203.56" id="Line_18" stroke="#DFDFDF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></line>
+                <polygon id="Path_33" fill="#000000" fill-rule="nonzero" points="12.74 539.2 0 550.97 30.58 591.07 40.04 582.7 25.48 547.02"></polygon>
+                <polygon id="Path_34" fill="#000000" fill-rule="nonzero" points="259.67 502.6 249.14 522 275.28 562.7 286.29 559.86 279.07 506.74"></polygon>
+                <ellipse id="Ellipse_14" fill="#D37C59" fill-rule="nonzero" cx="378.84" cy="216.04" rx="15.56" ry="11.61"></ellipse>
+                <path d="M171.19,228.3 C164.19,238.3 10.36,540.38 10.36,540.38 L27.76,551 L230.76,331.32 L171.19,228.3 Z" id="Path_35" fill="#363A43" fill-rule="nonzero"></path>
+                <path d="M303.72,155 C307.72,158.42 319.44,171.72 323.27,174.14 C327.1,176.56 371.03,203.96 379.27,206.38 C387.51,208.8 370,216 370,216 C370,216 312.77,203.31 308.54,200.49 C304.31,197.67 279.24,177.49 279.24,172.08 C279.24,166.67 303.72,155 303.72,155 Z" id="Path_36" fill="#D37C59" fill-rule="nonzero"></path>
+                <path d="M270.19,129 C282.96,115.15 307.9,148 307.36,152.83 C306.82,157.66 289.18,177.92 278,177.92 C274.65,177.92 261.22,138.73 270.19,129 Z" id="Path_37" fill="#4B65F2" fill-rule="nonzero"></path>
+                <path d="M169.21,231.34 C166.21,235.34 153.21,267.34 153.21,278.34 C153.21,353.34 265.03,372.8 281.09,372.8 C278.77,383.27 254.17,502.19 255.33,504.8 C256.49,507.41 276.9,512.74 281.09,512.05 C297.09,503.34 348.74,382.05 344.86,364.8 C339.41,340.63 253.86,269.94 241.5,262.9 C229.14,255.86 169.21,231.34 169.21,231.34 Z" id="Path_38" fill="#363A43" fill-rule="nonzero"></path>
+                <path d="M243.08,98 C329.15,98 262.47,259.78 247.33,268.55 C237.33,274.33 175.33,252.35 168.69,230.3 C166.42,222.77 195.52,98 243.08,98 Z" id="Path_39" fill="#4E68F6" fill-rule="nonzero"></path>
+                <ellipse id="Ellipse_15" fill="#DE8E68" fill-rule="nonzero" cx="365.74" cy="221.51" rx="15.56" ry="11.61"></ellipse>
+                <path d="M215.61,172.7 C215.82,180.86 218.55,218.31 221.94,219.44 C262.94,233.12 333.94,227.09 346.2,226.27 C358.46,225.45 366.32,216.82 365.71,214.77 C365.1,212.72 326.54,197 259.6,195.15 C258.36,187.59 261.33,164.74 258.27,162.7 C255.21,160.66 215.61,172.7 215.61,172.7 Z" id="Path_40" fill="#DE8E68" fill-rule="nonzero"></path>
+                <path d="M227,104.93 C262.61,97.65 269,164.13 265.58,169.03 C262.16,173.93 216.79,180.86 210.87,176.58 C204.95,172.3 200,110.44 227,104.93 Z" id="Path_41" fill="#4963EC" fill-rule="nonzero"></path>
+                <path d="M251.23,56.66 C249.59,62.92 238.4,98.76 239.09,100.66 C239.78,102.56 255.18,110.94 261.09,110.02 C261.32,107.29 263.83,92.67 268.97,83.88 C274.11,75.09 251.23,56.66 251.23,56.66 Z" id="Path_42" fill="#D37C59" fill-rule="nonzero"></path>
+                <ellipse id="Ellipse_16" fill="#DE8E68" fill-rule="nonzero" transform="translate(273.891343, 54.522713) rotate(-84.232000) translate(-273.891343, -54.522713) " cx="273.891343" cy="54.5227133" rx="34.697" ry="23.055"></ellipse>
+                <path d="M246.74,56.66 C244.12,55.22 239.15,46.74 239.15,38.86 C239.15,26.53 251.44,19.51 259.73,15.86 C266,13.05 271.33,-7.10542736e-14 285.61,-7.10542736e-14 C297,-7.10542736e-14 297.76,11.47 303,11.91 C316.58,13.04 314.9,50.42 295.93,50.42 C295.93,46.76 294.7,37.67 292.67,33.3 C281.27,33.87 271.99,48.52 256.18,48.46 C252.79,48.4 246.74,56.66 246.74,56.66 Z" id="Path_43" fill="#E1AB11" fill-rule="nonzero"></path>
+                <ellipse id="Ellipse_17" fill="#DE8E68" fill-rule="nonzero" cx="254.71" cy="54.23" rx="7.02" ry="8.57"></ellipse>
+                <path d="M760.12,512.06 L433.4,512.06 L433.4,441.17 C451.27,439.59 705.29,415.59 705.29,415.59 L705.29,261.46 L396.5,244 L433.4,441.19" id="Path_44" stroke="#DFDFDF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+                <circle id="Ellipse_18" stroke="#DFDFDF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" cx="459.66" cy="536.07" r="15.16"></circle>
+                <circle id="Ellipse_19" stroke="#DFDFDF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" cx="755.75" cy="536.07" r="15.16"></circle>
+                <line x1="408.56" y1="308.43" x2="705.29" y2="308.43" id="Line_19" stroke="#DFDFDF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></line>
+                <line x1="416.76" y1="352.25" x2="705.29" y2="352.25" id="Line_20" stroke="#DFDFDF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></line>
+                <line x1="343.62" y1="234.01" x2="368.71" y2="223.78" id="Line_21" stroke="#DFDFDF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></line>
+                <path d="M441.87,352.25 C438.62,343.06 404.14,244.41 404.14,244.41" id="Path_45" stroke="#DFDFDF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -56,6 +56,9 @@ export const useScrollAnimation = (options = {}) => {
   }, [trackProgress]);
 
   useEffect(() => {
+    // Ensure we're in a browser environment
+    if (typeof window === 'undefined') return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         calculateScrollProgress(entry);
@@ -82,6 +85,20 @@ export const useScrollAnimation = (options = {}) => {
     const currentElement = elementRef.current;
     if (currentElement) {
       observer.observe(currentElement);
+      
+      // Check if element is already visible on mount (for refresh scenarios)
+      const rect = currentElement.getBoundingClientRect();
+      const isCurrentlyVisible = rect.top < window.innerHeight && rect.bottom > 0;
+      
+      if (isCurrentlyVisible && !hasAnimated) {
+        const animationDelay = isReducedMotion ? 0 : Math.min(delay, 100); // Cap delay at 100ms for refresh
+        setTimeout(() => {
+          setIsVisible(true);
+          if (triggerOnce) {
+            setHasAnimated(true);
+          }
+        }, animationDelay);
+      }
     }
 
     return () => {

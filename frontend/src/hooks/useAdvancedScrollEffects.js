@@ -8,6 +8,9 @@ export const useParallax = (speed = 0.5, options = {}) => {
   const { horizontal = false, direction = 1 } = options;
 
   useEffect(() => {
+    // Ensure we're in a browser environment
+    if (typeof window === 'undefined') return;
+    
     let ticking = false;
 
     const updatePosition = () => {
@@ -27,8 +30,10 @@ export const useParallax = (speed = 0.5, options = {}) => {
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Initialize position immediately
     updatePosition();
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, [speed, direction]);
@@ -183,6 +188,9 @@ export const useScrollBackground = (colors, options = {}) => {
   const { smooth = true, offset = 0 } = options;
 
   useEffect(() => {
+    // Ensure we're in a browser environment
+    if (typeof window === 'undefined') return;
+    
     const handleScroll = () => {
       const scrollPercentage = (window.scrollY + offset) / 
         (document.documentElement.scrollHeight - window.innerHeight);
@@ -204,8 +212,10 @@ export const useScrollBackground = (colors, options = {}) => {
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Initialize color immediately
     handleScroll();
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, [colors, smooth, offset]);

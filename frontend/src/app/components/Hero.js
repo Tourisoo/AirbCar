@@ -83,8 +83,8 @@ export default function Hero() {
       `}</style>
       
       <section
-        className={`bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen py-20 px-4 relative flex items-center overflow-hidden ${mounted ? 'hero-enter' : ''}`}
-        style={{ backgroundImage: 'url(/car-rental-tips.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}
+        className={`bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 h-[800px] py-20 px-4 relative flex items-center overflow-hidden ${mounted ? 'hero-enter' : ''}`}
+        style={{ backgroundImage: 'url(/car-rental-tips.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-black/40"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10"></div>

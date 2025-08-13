@@ -56,7 +56,65 @@ export default function Features() {
 
   return (
     <section className="py-20 bg-white relative overflow-hidden">
-      <p>ffffff</p>
+      {/* Animated background pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-0 left-0 w-full h-full" 
+             style={{
+               backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FF6B35' fill-opacity='0.1'%3E%3Ccircle cx='7' cy='7' r='7'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+               animation: 'float 6s ease-in-out infinite'
+             }}></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 relative z-10">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            Why Choose Airbcar?
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Discover the features that make us the best choice for your car rental needs
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {features.map((feature, index) => (
+            <div
+              key={index}
+              ref={feature.animationRef}
+              style={{
+                ...animationPresets.card(feature.isVisible, index),
+                ...feature.magneticStyle
+              }}
+              className="group"
+            >
+              <div
+                ref={feature.magneticRef}
+                className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-gray-100"
+              >
+                <div className={`w-16 h-16 bg-gradient-to-r ${feature.gradient} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                  {feature.icon}
+                </div>
+                
+                <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-orange-600 transition-colors duration-300">
+                  {feature.title}
+                </h3>
+                
+                <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full bg-gradient-to-r ${feature.gradient} rounded-full transform transition-transform duration-1000 ${feature.isVisible ? 'translate-x-0' : '-translate-x-full'}`}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(5deg); }
+        }
+      `}</style>
     </section>
   );
 }
