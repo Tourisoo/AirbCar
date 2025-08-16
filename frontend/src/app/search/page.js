@@ -803,10 +803,10 @@ function SearchContent() {
 
       {/* Car Details Modal */}
       {showCarModal && selectedCar && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center p-4">
+          <div className="bg-white overflow-hidden max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between rounded-t-2xl z-10">
+            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between rounded-t-[40px] z-10">
               <h2 className="text-xl font-bold text-gray-900">
                 {selectedCar.name} {selectedCar.modelYear}
               </h2>
