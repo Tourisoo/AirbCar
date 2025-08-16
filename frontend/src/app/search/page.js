@@ -22,94 +22,355 @@ function SearchContent() {
   const [showFilters, setShowFilters] = useState(false)
   const [selectedCar, setSelectedCar] = useState(null)
   const [showCarModal, setShowCarModal] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [showPickupProcess, setShowPickupProcess] = useState(false)
 
   // Mock data - replace with actual API call
   const mockCars = [
     {
       id: 1,
-      name: 'Dacia Duster 2020',
+      name: 'Dacia Duster',
+      modelYear: 2020,
       image: '/api/placeholder/300/200',
+      images: [
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600'
+      ],
       price: 420,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Diesel',
       seats: 5,
+      mileage: '45,000 km',
       verified: true,
       rating: 4.8,
       reviews: 124,
-      features: ['Air Conditioning', 'GPS', 'Bluetooth']
+      features: ['Air Conditioning', 'GPS', 'Bluetooth'],
+      description: 'Perfect for exploring Morocco! This reliable Dacia Duster offers great comfort and performance for both city drives and mountain adventures. Well-maintained with all necessary equipment.',
+      ownerRules: [
+        'No smoking in the vehicle',
+        'Return with same fuel level',
+        'Maximum 2 additional drivers',
+        'No pets allowed',
+        'Clean the car before return'
+      ],
+      technicalFeatures: [
+        'ABS Brakes',
+        'Power Steering',
+        'Electric Windows',
+        'Central Locking',
+        'Airbags'
+      ],
+      optionsAccessories: [
+        'Air Conditioning',
+        'GPS Navigation',
+        'Bluetooth Connectivity',
+        'USB Charging Ports',
+        'Roof Rails'
+      ],
+      pickupProcess: {
+        steps: [
+          'Meet at the designated pickup location',
+          'Vehicle inspection together',
+          'Review rental agreement',
+          'Provide driving license and ID',
+          'Quick tutorial of car features'
+        ],
+        duration: '15-20 minutes',
+        requirements: ['Valid driving license', 'Credit card', 'ID/Passport']
+      },
+      cancellationPolicy: 'Free cancellation up to 24 hours before pickup. 50% refund for cancellations within 24 hours.'
     },
     {
       id: 2,
       name: 'Vauxhall Corsa',
+      modelYear: 2019,
       image: '/api/placeholder/300/200',
+      images: [
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600'
+      ],
       price: 600,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Diesel',
       seats: 5,
+      mileage: '38,000 km',
       verified: true,
       rating: 4.6,
       reviews: 89,
-      features: ['Air Conditioning', 'GPS', 'USB Port']
+      features: ['Air Conditioning', 'GPS', 'USB Port'],
+      description: 'Compact and efficient city car perfect for urban exploration and short trips around Morocco.',
+      ownerRules: [
+        'No smoking in the vehicle',
+        'Return with same fuel level',
+        'Maximum 1 additional driver',
+        'Clean the car before return'
+      ],
+      technicalFeatures: [
+        'ABS Brakes',
+        'Power Steering',
+        'Electric Windows',
+        'Central Locking'
+      ],
+      optionsAccessories: [
+        'Air Conditioning',
+        'GPS Navigation',
+        'USB Charging Ports',
+        'Bluetooth'
+      ],
+      pickupProcess: {
+        steps: [
+          'Meet at the designated pickup location',
+          'Vehicle inspection together',
+          'Review rental agreement',
+          'Provide driving license and ID'
+        ],
+        duration: '10-15 minutes',
+        requirements: ['Valid driving license', 'Credit card', 'ID/Passport']
+      },
+      cancellationPolicy: 'Free cancellation up to 24 hours before pickup. 50% refund for cancellations within 24 hours.'
     },
     {
       id: 3,
       name: 'Mercedes E Class',
+      modelYear: 2021,
       image: '/api/placeholder/300/200',
+      images: [
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600'
+      ],
       price: 550,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Diesel',
       seats: 5,
+      mileage: '25,000 km',
       verified: true,
       rating: 4.9,
       reviews: 156,
-      features: ['Air Conditioning', 'GPS', 'Leather Seats', 'Premium Audio']
+      features: ['Air Conditioning', 'GPS', 'Leather Seats', 'Premium Audio'],
+      description: 'Luxury executive sedan perfect for business trips and comfortable long-distance travel. Premium comfort with all modern amenities.',
+      ownerRules: [
+        'No smoking in the vehicle',
+        'Return with same fuel level',
+        'Maximum 2 additional drivers',
+        'Professional use only',
+        'Clean the car before return'
+      ],
+      technicalFeatures: [
+        'ABS Brakes',
+        'Power Steering',
+        'Electric Windows',
+        'Central Locking',
+        'Multiple Airbags',
+        'Stability Control'
+      ],
+      optionsAccessories: [
+        'Premium Leather Seats',
+        'GPS Navigation',
+        'Premium Audio System',
+        'Climate Control',
+        'Bluetooth Connectivity',
+        'USB Charging Ports'
+      ],
+      pickupProcess: {
+        steps: [
+          'Meet at the designated pickup location',
+          'Vehicle inspection together',
+          'Review rental agreement',
+          'Provide driving license and ID',
+          'Premium features tutorial'
+        ],
+        duration: '20-25 minutes',
+        requirements: ['Valid driving license', 'Credit card', 'ID/Passport']
+      },
+      cancellationPolicy: 'Free cancellation up to 48 hours before pickup. 25% refund for cancellations within 48 hours.'
     },
     {
       id: 4,
       name: 'Toyota Aygo',
+      modelYear: 2018,
       image: '/api/placeholder/300/200',
+      images: [
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600'
+      ],
       price: 380,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Petrol',
       seats: 4,
+      mileage: '52,000 km',
       verified: false,
       rating: 4.3,
       reviews: 67,
-      features: ['Air Conditioning', 'Bluetooth']
+      features: ['Air Conditioning', 'Bluetooth'],
+      description: 'Compact and economical city car, perfect for urban exploration and short trips. Great fuel efficiency and easy parking.',
+      ownerRules: [
+        'No smoking in the vehicle',
+        'Return with same fuel level',
+        'Maximum 1 additional driver',
+        'City driving only'
+      ],
+      technicalFeatures: [
+        'ABS Brakes',
+        'Power Steering',
+        'Electric Windows',
+        'Central Locking'
+      ],
+      optionsAccessories: [
+        'Air Conditioning',
+        'Bluetooth Connectivity',
+        'USB Port',
+        'Radio/CD Player'
+      ],
+      pickupProcess: {
+        steps: [
+          'Meet at the designated pickup location',
+          'Vehicle inspection together',
+          'Review rental agreement',
+          'Provide driving license and ID'
+        ],
+        duration: '10-15 minutes',
+        requirements: ['Valid driving license', 'Credit card', 'ID/Passport']
+      },
+      cancellationPolicy: 'Free cancellation up to 24 hours before pickup. No refund for cancellations within 24 hours.'
     },
     {
       id: 5,
       name: 'BMW X3',
+      modelYear: 2022,
       image: '/api/placeholder/300/200',
+      images: [
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600'
+      ],
       price: 850,
       location: 'Casablanca',
       transmission: 'Automatic',
       fuel: 'Diesel',
       seats: 5,
+      mileage: '15,000 km',
       verified: true,
       rating: 4.7,
       reviews: 203,
-      features: ['Air Conditioning', 'GPS', 'Leather Seats', 'Sunroof']
+      features: ['Air Conditioning', 'GPS', 'Leather Seats', 'Sunroof'],
+      description: 'Premium luxury SUV with all modern features. Perfect for family trips, mountain adventures, and luxury travel across Morocco.',
+      ownerRules: [
+        'No smoking in the vehicle',
+        'Return with same fuel level',
+        'Maximum 2 additional drivers',
+        'No off-road driving',
+        'Professional cleaning required'
+      ],
+      technicalFeatures: [
+        'ABS Brakes',
+        'Power Steering',
+        'Electric Windows',
+        'Central Locking',
+        'Multiple Airbags',
+        'Stability Control',
+        'Traction Control',
+        'Hill Start Assist'
+      ],
+      optionsAccessories: [
+        'Premium Leather Seats',
+        'GPS Navigation',
+        'Premium Audio System',
+        'Panoramic Sunroof',
+        'Climate Control',
+        'Bluetooth Connectivity',
+        'USB Charging Ports',
+        'Parking Sensors'
+      ],
+      pickupProcess: {
+        steps: [
+          'Meet at the designated pickup location',
+          'Comprehensive vehicle inspection',
+          'Review rental agreement',
+          'Provide driving license and ID',
+          'Premium features and safety tutorial',
+          'Insurance verification'
+        ],
+        duration: '25-30 minutes',
+        requirements: ['Valid driving license', 'Credit card', 'ID/Passport', 'Insurance proof']
+      },
+      cancellationPolicy: 'Free cancellation up to 72 hours before pickup. 50% refund for cancellations within 72 hours.'
     },
     {
       id: 6,
       name: 'Renault Clio',
+      modelYear: 2019,
       image: '/api/placeholder/300/200',
+      images: [
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600',
+        '/api/placeholder/800/600'
+      ],
       price: 320,
       location: 'Marrakesh',
       transmission: 'Manual',
       fuel: 'Petrol',
       seats: 5,
+      mileage: '41,000 km',
       verified: true,
       rating: 4.4,
       reviews: 92,
-      features: ['Air Conditioning', 'GPS']
+      features: ['Air Conditioning', 'GPS'],
+      description: 'Reliable and economical compact car, ideal for city exploration and day trips. Great fuel economy and comfortable for small groups.',
+      ownerRules: [
+        'No smoking in the vehicle',
+        'Return with same fuel level',
+        'Maximum 2 additional drivers',
+        'Clean the car before return'
+      ],
+      technicalFeatures: [
+        'ABS Brakes',
+        'Power Steering',
+        'Electric Windows',
+        'Central Locking',
+        'Airbags'
+      ],
+      optionsAccessories: [
+        'Air Conditioning',
+        'GPS Navigation',
+        'Bluetooth Connectivity',
+        'USB Charging Ports',
+        'Radio/CD Player'
+      ],
+      pickupProcess: {
+        steps: [
+          'Meet at the designated pickup location',
+          'Vehicle inspection together',
+          'Review rental agreement',
+          'Provide driving license and ID',
+          'Basic features tutorial'
+        ],
+        duration: '15-20 minutes',
+        requirements: ['Valid driving license', 'Credit card', 'ID/Passport']
+      },
+      cancellationPolicy: 'Free cancellation up to 24 hours before pickup. 50% refund for cancellations within 24 hours.'
     }
   ]
+
+  useEffect(() => {
+    // Cleanup function to reset body overflow when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [])
 
   useEffect(() => {
     // Simulate API call
@@ -169,36 +430,36 @@ function SearchContent() {
     })
   }
 
-  const openCarModal = (car) => {
+  const handleViewDetails = (car) => {
     setSelectedCar(car)
+    setCurrentImageIndex(0)
     setShowCarModal(true)
+    document.body.style.overflow = 'hidden'
   }
 
-  const closeCarModal = () => {
+  const handleCloseModal = () => {
     setShowCarModal(false)
     setSelectedCar(null)
+    setCurrentImageIndex(0)
+    setShowPickupProcess(false)
+    document.body.style.overflow = 'unset'
   }
 
-  // Handle escape key to close modal
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape' && showCarModal) {
-        closeCarModal()
-      }
+  const nextImage = () => {
+    if (selectedCar && selectedCar.images) {
+      setCurrentImageIndex((prev) => 
+        prev === selectedCar.images.length - 1 ? 0 : prev + 1
+      )
     }
-    
-    if (showCarModal) {
-      document.addEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'hidden' // Prevent background scrolling
-    } else {
-      document.body.style.overflow = 'unset'
+  }
+
+  const prevImage = () => {
+    if (selectedCar && selectedCar.images) {
+      setCurrentImageIndex((prev) => 
+        prev === 0 ? selectedCar.images.length - 1 : prev - 1
+      )
     }
-    
-    return () => {
-      document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'unset'
-    }
-  }, [showCarModal])
+  }
 
   if (loading) {
     return (
@@ -501,7 +762,7 @@ function SearchContent() {
                       {/* Action Buttons */}
                       <div className="flex space-x-3">
                         <button 
-                          onClick={() => openCarModal(car)}
+                          onClick={() => handleViewDetails(car)}
                           className="flex-1 bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors font-medium"
                         >
                           View Details
@@ -542,539 +803,290 @@ function SearchContent() {
 
       {/* Car Details Modal */}
       {showCarModal && selectedCar && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 animate-fadeIn"
-          onClick={closeCarModal}
-        >
-          <div 
-            className="bg-white rounded-xl max-w-7xl w-full max-h-[95vh] overflow-hidden transform transition-all duration-300 scale-100 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-200">
+            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between rounded-t-2xl z-10">
+              <h2 className="text-xl font-bold text-gray-900">
+                {selectedCar.name} {selectedCar.modelYear}
+              </h2>
               <button
-                onClick={closeCarModal}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
+                onClick={handleCloseModal}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            {/* Modal Content - Scrollable */}
-            <div className="overflow-y-auto max-h-[calc(95vh-80px)]">
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-0">
-                {/* Left Column - Car Details (3/4 width) */}
-                <div className="lg:col-span-3 p-6">
-                  
-                  {/* Image Gallery */}
-                  {/* Gallery Section - Horizontal Layout inspired by reference images */}
-                  <div className="mb-8">
-                    <div className="flex gap-4">
-                      {/* Main large image */}
-                      <div className="flex-1">
-                        <img
-                          src={selectedCar.image}
-                          alt={selectedCar.name}
-                          className="w-full h-96 object-cover rounded-lg"
-                        />
-                      </div>
-                      {/* Side images grid */}
-                      <div className="w-80 grid grid-cols-2 gap-3">
-                        <img
-                          src={selectedCar.image}
-                          alt={`${selectedCar.name} view 2`}
-                          className="w-full h-[185px] object-cover rounded-lg"
-                        />
-                        <img
-                          src={selectedCar.image}
-                          alt={`${selectedCar.name} view 3`}
-                          className="w-full h-[185px] object-cover rounded-lg"
-                        />
-                        <img
-                          src={selectedCar.image}
-                          alt={`${selectedCar.name} view 4`}
-                          className="w-full h-[185px] object-cover rounded-lg"
-                        />
-                        <img
-                          src={selectedCar.image}
-                          alt={`${selectedCar.name} view 5`}
-                          className="w-full h-[185px] object-cover rounded-lg"
-                        />
-                      </div>
-                    </div>
-                  </div>                  {/* Car Details Header */}
-                  <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{selectedCar.name}</h1>
-                    <div className="flex items-center space-x-6 text-gray-600 mb-4">
-                      <span className="flex items-center">
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        3.35 km • 2024 • {selectedCar.seats} seats
-                      </span>
-                    </div>
-                    
-                    {/* Rating */}
-                    <div className="flex items-center space-x-6">
-                      <div className="flex items-center">
-                        <span className="text-2xl font-bold text-gray-900 mr-2">{selectedCar.rating}</span>
-                        <div className="flex items-center">
-                          {[...Array(5)].map((_, i) => (
-                            <svg
-                              key={i}
-                              className={`w-5 h-5 ${i < Math.floor(selectedCar.rating) ? 'text-yellow-400' : 'text-gray-300'}`}
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                          ))}
-                        </div>
-                      </div>
-                      <span className="text-orange-500 font-medium">{selectedCar.reviews} Reviews</span>
-                    </div>
-                  </div>
-
-                  {/* Additional Cards Section - Orange theme matching global design */}
-                  <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
-                    {/* Meet the owner card - Full width with orange theme */}
-                    <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
-                      <div className="flex items-center mb-4">
-                        <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mr-4">
-                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            <div className="flex flex-col lg:flex-row">
+              {/* Left Side - Car Details */}
+              <div className="lg:w-2/3 p-6">
+                {/* Image Gallery */}
+                <div className="mb-8">
+                  <div className="relative">
+                    <img
+                      src={selectedCar.images[currentImageIndex]}
+                      alt={selectedCar.name}
+                      className="w-full h-64 lg:h-80 object-cover rounded-xl"
+                    />
+                    {selectedCar.images.length > 1 && (
+                      <>
+                        <button
+                          onClick={prevImage}
+                          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors"
+                        >
+                          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                           </svg>
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">Meet the owner to get the keys</h3>
-                          <p className="text-sm text-gray-600">Arrange to pick up and return the car to the owner in person</p>
-                        </div>
-                        <div className="ml-auto">
-                          <button className="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors">
-                            See how it works →
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Pickup & return location - Full width */}
-                    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Pickup & return location</h3>
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1">Near</p>
-                          <p className="text-base font-medium text-gray-900 mb-3">
-                            Calle Manuel Altolaguirre, Málaga, Maroc
-                          </p>
-                          <p className="text-sm text-gray-600">Contact the owner to arrange the exact pickup location</p>
-                        </div>
-                        <div className="bg-gray-100 rounded-lg h-32 flex items-center justify-center">
-                          <span className="text-gray-500 text-sm">Map placeholder</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Owner Section - Enhanced to match reference */}
-                  <div className="mb-8">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">Owner</h2>
-                    <div className="bg-white rounded-xl p-6 border border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center mr-4">
-                            <span className="text-white font-bold text-lg">SD</span>
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900">Samuel D.</h3>
-                            <div className="flex items-center mt-1">
-                              {[...Array(5)].map((_, i) => (
-                                <svg
-                                  key={i}
-                                  className="w-4 h-4 text-yellow-400"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              ))}
-                              <span className="ml-2 text-sm text-gray-600 font-medium">5.0 (4)</span>
-                            </div>
-                          </div>
-                        </div>
-                        <button className="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors">
-                          Contact Owner
                         </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Technical Features - Enhanced layout with better spacing */}
-                  <div className="mb-8">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">Technical features</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="text-sm text-gray-500 mb-2">Fuel type</div>
-                        <div className="font-semibold text-gray-900 text-lg">{selectedCar.fuel}</div>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="text-sm text-gray-500 mb-2">Transmission</div>
-                        <div className="font-semibold text-gray-900 text-lg">{selectedCar.transmission}</div>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="text-sm text-gray-500 mb-2">Mileage</div>
-                        <div className="font-semibold text-gray-900 text-lg">15-50,000 km</div>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="text-sm text-gray-500 mb-2">Seats</div>
-                        <div className="font-semibold text-gray-900 text-lg">{selectedCar.seats} seats</div>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="text-sm text-gray-500 mb-2">Year</div>
-                        <div className="font-semibold text-gray-900 text-lg">2024</div>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="text-sm text-gray-500 mb-2">Engine</div>
-                        <div className="font-semibold text-gray-900 text-lg">1.6L</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Options & Accessories - Enhanced with better visual hierarchy */}
-                  <div className="mb-8">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">Options & accessories</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {selectedCar.features.map((feature, index) => (
-                        <div key={index} className="flex items-center py-2">
-                          <svg className="w-5 h-5 text-orange-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        <button
+                          onClick={nextImage}
+                          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors"
+                        >
+                          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
-                          <span className="text-gray-700 font-medium">{feature}</span>
-                        </div>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* Image Thumbnails */}
+                  {selectedCar.images.length > 1 && (
+                    <div className="flex space-x-2 mt-4 overflow-x-auto">
+                      {selectedCar.images.map((image, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentImageIndex(index)}
+                          className={`flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                            index === currentImageIndex ? 'border-orange-500' : 'border-gray-200'
+                          }`}
+                        >
+                          <img
+                            src={image}
+                            alt={`${selectedCar.name} ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
                       ))}
-                      
-                      {/* Additional common features */}
-                      <div className="flex items-center py-2">
-                        <svg className="w-5 h-5 text-orange-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="text-gray-700 font-medium">Power steering</span>
-                      </div>
-                      <div className="flex items-center py-2">
-                        <svg className="w-5 h-5 text-orange-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="text-gray-700 font-medium">Central locking</span>
-                      </div>
-                      <div className="flex items-center py-2">
-                        <svg className="w-5 h-5 text-orange-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="text-gray-700 font-medium">Electric windows</span>
-                      </div>
-                      <div className="flex items-center py-2">
-                        <svg className="w-5 h-5 text-orange-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="text-gray-700 font-medium">Anti-lock braking system (ABS)</span>
-                      </div>
                     </div>
+                  )}
+                </div>
+
+                {/* Car Basic Info */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900">{selectedCar.name}</h3>
+                      <p className="text-gray-600">Model Year: {selectedCar.modelYear}</p>
+                    </div>
+                    {selectedCar.verified && (
+                      <span className="bg-green-500 text-white text-sm px-3 py-1 rounded-full flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        Verified
+                      </span>
+                    )}
                   </div>
 
-                  {/* Reviews Section - Enhanced with better layout */}
-                  <div className="mb-8">
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-bold text-gray-900">Reviews</h2>
-                      <button className="text-orange-500 hover:text-orange-600 text-sm font-medium">
-                        See the 4 reviews
-                      </button>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <svg className="w-6 h-6 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                      </svg>
+                      <div className="text-sm font-medium text-gray-900">{selectedCar.seats}</div>
+                      <div className="text-xs text-gray-500">Seats</div>
                     </div>
-                    
-                    <div className="flex items-center mb-6">
-                      <div className="text-4xl font-bold text-gray-900 mr-4">{selectedCar.rating}</div>
-                      <div>
-                        <div className="flex items-center mb-1">
-                          {[...Array(5)].map((_, i) => (
-                            <svg
-                              key={i}
-                              className={`w-5 h-5 ${i < Math.floor(selectedCar.rating) ? 'text-yellow-400' : 'text-gray-300'}`}
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                          ))}
-                        </div>
-                        <div className="text-sm text-gray-600">{selectedCar.reviews} reviews</div>
-                      </div>
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <svg className="w-6 h-6 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      <div className="text-sm font-medium text-gray-900">{selectedCar.fuel}</div>
+                      <div className="text-xs text-gray-500">Fuel</div>
                     </div>
-                    
-                    {/* Sample Reviews */}
-                    <div className="space-y-4">
-                      <div className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center mb-3">
-                          <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">
-                            <span className="text-orange-600 font-semibold text-sm">OB</span>
-                          </div>
-                          <div>
-                            <div className="font-semibold text-gray-900">Omar B.</div>
-                            <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <svg
-                                  key={i}
-                                  className="w-4 h-4 text-yellow-400"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              ))}
-                              <span className="ml-2 text-sm text-gray-600">• 3 day rental in July 2024</span>
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-gray-700 mb-2 font-medium">Car in good condition. Good value for money</p>
-                        <p className="text-gray-600 text-sm">
-                          Quick response from the very friendly owner, the car was really clean and delivered as asked. We 
-                          thank Samuel for this opportunity. Really great service!
-                        </p>
-                      </div>
-
-                      <div className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center mb-3">
-                          <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">
-                            <span className="text-orange-600 font-semibold text-sm">LF</span>
-                          </div>
-                          <div>
-                            <div className="font-semibold text-gray-900">Lucas F.</div>
-                            <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <svg
-                                  key={i}
-                                  className="w-4 h-4 text-yellow-400"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              ))}
-                              <span className="ml-2 text-sm text-gray-600">• 5 day rental in May 2024</span>
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-gray-700 mb-2 font-medium">Excellent experience with great service</p>
-                        <p className="text-gray-600 text-sm">
-                          Todo excelente con Samuel. Excelente lo recomiendo, buena gente! Perfect rental experience 
-                          with responsive communication and clean vehicle.
-                        </p>
-                      </div>
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <svg className="w-6 h-6 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      </svg>
+                      <div className="text-sm font-medium text-gray-900">{selectedCar.transmission}</div>
+                      <div className="text-xs text-gray-500">Transmission</div>
                     </div>
-                  </div>
-
-                  {/* Insurance and Protection - Enhanced layout with proper sections */}
-                  <div className="mb-8">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">Insurance and protection</h2>
-                    
-                    {/* Main insurance info card */}
-                    <div className="bg-green-50 rounded-lg p-6 mb-6 border border-green-200">
-                      <div className="flex items-start">
-                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0">
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900 mb-2">Insurance is always included when you rent on Getaround</h3>
-                          <p className="text-sm text-gray-600 mb-4">
-                            Insurance is provided by our partner Allianz. Additional insurance options are available at 
-                            booking and until the start of rental.
-                          </p>
-                        </div>
-                      </div>
-                      
-                      {/* Roadside assistance info */}
-                      <div className="flex items-start mt-4 pt-4 border-t border-green-200">
-                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0">
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 mb-1">All cars are covered by roadside assistance</h4>
-                          <p className="text-sm text-gray-600">
-                            In the event of a breakdown or incident, our 24/7 roadside assistance takes care of you and 
-                            your passengers and transports you to your destination or home.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="font-semibold text-gray-900 mb-4">What the insurance covers</h4>
-                        <ul className="space-y-3">
-                          <li className="flex items-center text-sm text-gray-700">
-                            <svg className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Accidents
-                          </li>
-                          <li className="flex items-center text-sm text-gray-700">
-                            <svg className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Theft and attempted theft
-                          </li>
-                          <li className="flex items-center text-sm text-gray-700">
-                            <svg className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Arson
-                          </li>
-                          <li className="flex items-center text-sm text-gray-700">
-                            <svg className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Glass breakage
-                          </li>
-                          <li className="flex items-center text-sm text-gray-700">
-                            <svg className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Liability insurance
-                          </li>
-                        </ul>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900 mb-4">Insurance conditions</h4>
-                        <div className="space-y-3 text-sm text-gray-700">
-                          <div className="flex items-center">
-                            <svg className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            21 years old
-                          </div>
-                          <div className="flex items-center">
-                            <svg className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0118 12a8 8 0 01-8 8 8 8 0 01-8-8 8 8 0 018-8c.28 0 .556.014.827.042l2.651-9.529z" />
-                            </svg>
-                            2 years of driving history
-                          </div>
-                          <div className="flex items-start">
-                            <svg className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            </svg>
-                            <div>
-                              <div>Stay in the following countries:</div>
-                              <div className="text-xs text-gray-500 mt-1">
-                                Andorra, Austria, Belgium, Czech Republic, Denmark, Finland...
-                                <button className="text-orange-500 hover:text-orange-600 ml-1">Learn more</button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Additional section for rental advantages */}
-                    <div className="mt-8 pt-6 border-t border-gray-200">
-                      <h4 className="font-semibold text-gray-900 mb-4">Les avantages à chaque location</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex items-start">
-                          <svg className="w-5 h-5 text-orange-500 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                          </svg>
-                          <div>
-                            <div className="font-medium text-gray-900">Extend your rental easily</div>
-                            <div className="text-sm text-gray-600">Adjust start and return times in just a few clicks.</div>
-                          </div>
-                        </div>
-                        <div className="flex items-start">
-                          <svg className="w-5 h-5 text-orange-500 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <div>
-                            <div className="font-medium text-gray-900">30-minute margin for late returns</div>
-                            <div className="text-sm text-gray-600">Avoid stress when the unexpected happens thanks to a little extra time.</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Learn more button */}
-                    <div className="mt-6">
-                      <button className="text-orange-500 hover:text-orange-600 text-sm font-medium border border-orange-300 hover:border-orange-500 px-4 py-2 rounded-lg transition-colors">
-                        Learn more
-                      </button>
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <svg className="w-6 h-6 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      <div className="text-sm font-medium text-gray-900">{selectedCar.mileage}</div>
+                      <div className="text-xs text-gray-500">Mileage</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Column - Booking Sidebar (1/4 width) - Orange theme design */}
-                <div className="lg:col-span-1 bg-white p-6 border border-gray-200 rounded-lg">
-                  <div className="sticky top-6">
-                    {/* Price section */}
+                {/* Additional Cards */}
+                <div className="space-y-6">
+                  {/* Pickup Process Card */}
+                  <div className="bg-gray-50 rounded-xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-lg font-semibold text-gray-900">Pickup Process</h4>
+                      <button
+                        onClick={() => setShowPickupProcess(!showPickupProcess)}
+                        className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm"
+                      >
+                        {showPickupProcess ? 'Hide Details' : 'View Details'}
+                      </button>
+                    </div>
+                    {showPickupProcess && (
+                      <div className="space-y-4">
+                        <div>
+                          <h5 className="font-medium text-gray-900 mb-2">Process Steps:</h5>
+                          <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+                            {selectedCar.pickupProcess.steps.map((step, index) => (
+                              <li key={index}>{step}</li>
+                            ))}
+                          </ol>
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-gray-900 mb-2">Duration:</h5>
+                          <p className="text-sm text-gray-600">{selectedCar.pickupProcess.duration}</p>
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-gray-900 mb-2">Requirements:</h5>
+                          <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                            {selectedCar.pickupProcess.requirements.map((req, index) => (
+                              <li key={index}>{req}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Description Card */}
+                  <div className="bg-gray-50 rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Description</h4>
+                    <p className="text-gray-600 leading-relaxed">{selectedCar.description}</p>
+                  </div>
+
+                  {/* Owner Rules Card */}
+                  <div className="bg-gray-50 rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Owner Rules</h4>
+                    <ul className="space-y-2">
+                      {selectedCar.ownerRules.map((rule, index) => (
+                        <li key={index} className="flex items-start">
+                          <svg className="w-4 h-4 text-orange-500 mt-1 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          <span className="text-gray-600 text-sm">{rule}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Fuel & Transmission Info Card */}
+                  <div className="bg-gray-50 rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Fuel & Transmission Info</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h5 className="font-medium text-gray-900 mb-2">Fuel Type</h5>
+                        <p className="text-gray-600">{selectedCar.fuel}</p>
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-gray-900 mb-2">Transmission</h5>
+                        <p className="text-gray-600">{selectedCar.transmission}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Technical Features Card */}
+                  <div className="bg-gray-50 rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Technical Features</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {selectedCar.technicalFeatures.map((feature, index) => (
+                        <div key={index} className="flex items-center">
+                          <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          <span className="text-gray-600 text-sm">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Options & Accessories Card */}
+                  <div className="bg-gray-50 rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Options & Accessories</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {selectedCar.optionsAccessories.map((option, index) => (
+                        <div key={index} className="flex items-center">
+                          <svg className="w-4 h-4 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          <span className="text-gray-600 text-sm">{option}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Side - Booking Sidebar */}
+              <div className="lg:w-1/3 bg-gray-50 p-6">
+                <div className="sticky top-6">
+                  <div className="bg-white rounded-xl p-6 shadow-sm border">
                     <div className="text-center mb-6">
-                      <div className="text-4xl font-bold text-gray-900 mb-1">{selectedCar.price} MAD</div>
-                      <div className="text-gray-600">For 1 day ⓘ</div>
+                      <div className="text-3xl font-bold text-orange-500 mb-2">
+                        {selectedCar.price} MAD
+                      </div>
+                      <div className="text-gray-500">per day</div>
                     </div>
 
-                    {/* Booking button - Orange gradient to match theme */}
-                    <button 
-                      onClick={() => {
-                        closeCarModal()
-                        router.push(`/booking?carId=${selectedCar.id}`)
-                      }}
-                      className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-semibold mb-4 shadow-lg"
-                    >
-                      Send booking request
+                    <div className="mb-6">
+                      <h5 className="font-semibold text-gray-900 mb-3">Duration</h5>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600">Pickup:</span>
+                          <span className="font-medium">Wed, Aug 20 - 01:30 PM</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600">Return:</span>
+                          <span className="font-medium">Thu, Aug 21 - 01:30 PM</span>
+                        </div>
+                        <div className="border-t pt-2 flex justify-between items-center">
+                          <span className="font-medium text-gray-900">Total Duration:</span>
+                          <span className="font-bold">1 day</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <h5 className="font-semibold text-gray-900 mb-3">Total Price</h5>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">{selectedCar.price} MAD × 1 day</span>
+                          <span>{selectedCar.price} MAD</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Service fee</span>
+                          <span>50 MAD</span>
+                        </div>
+                        <div className="border-t pt-2 flex justify-between font-semibold">
+                          <span>Total</span>
+                          <span>{selectedCar.price + 50} MAD</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button className="w-full bg-orange-500 text-white py-4 rounded-xl hover:bg-orange-600 transition-colors font-semibold mb-4">
+                      Request Booking
                     </button>
 
-                    {/* Free cancellation */}
-                    <div className="text-center mb-6">
-                      <div className="flex items-center justify-center text-sm text-green-600 mb-2">
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Free cancellation
-                      </div>
-                      <p className="text-xs text-gray-500">Up to 1 hour after payment</p>
-                    </div>
-
-                    {/* Included in price section */}
-                    <div className="border-t border-gray-200 pt-6">
-                      <h5 className="font-semibold text-gray-900 mb-4">Included in the price</h5>
-                      <ul className="space-y-3 text-sm text-gray-700">
-                        <li className="flex items-start">
-                          <svg className="w-4 h-4 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          <div>
-                            <div className="font-medium">200 km included</div>
-                            <div className="text-xs text-orange-500 cursor-pointer hover:text-orange-600">Add extra kilometres</div>
-                          </div>
-                        </li>
-                        <li className="flex items-start">
-                          <svg className="w-4 h-4 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          <div className="font-medium">Comprehensive vehicle and passenger insurance provided by Allianz</div>
-                        </li>
-                        <li className="flex items-start">
-                          <svg className="w-4 h-4 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          <div className="font-medium">24/7 roadside assistance</div>
-                        </li>
-                        <li className="flex items-start">
-                          <svg className="w-4 h-4 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          <div className="font-medium">Free secondary drivers</div>
-                        </li>
-                      </ul>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h6 className="font-semibold text-gray-900 mb-2">Cancellation Policy</h6>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        {selectedCar.cancellationPolicy}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1085,40 +1097,8 @@ function SearchContent() {
       )}
 
       <Footer />
-
-      <style jsx>{`
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #f97316;
-          cursor: pointer;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        .slider::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #f97316;
-          cursor: pointer;
-          border: none;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-      `}</style>
     </div>
-  )
+  );
 }
 
 export default function SearchResults() {
