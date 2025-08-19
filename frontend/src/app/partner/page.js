@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import './partner-styles.css';
-import { size } from 'zod';
+// Removed unused import
 
 export default function BecomePartner() {
   const [formData, setFormData] = useState({
