@@ -5,8 +5,11 @@ services:
       POSTGRES_DB: airbcar_db
       POSTGRES_USER: airbcar_user
       POSTGRES_PASSWORD: amineamine
+    ports:
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      # - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
     networks:
       - airbo
 
@@ -22,6 +25,10 @@ services:
       DATABASE_PASSWORD: amineamine
       DATABASE_HOST: db
       DATABASE_PORT: 5432
+      DJANGO_SUPERUSER_USERNAME: amine
+      DJANGO_SUPERUSER_EMAIL: amine@a.com
+      DJANGO_SUPERUSER_PASSWORD: amineamine
+      LOAD_INITIAL_FIXTURE: "1"
     depends_on:
       - db
     restart: unless-stopped
@@ -35,6 +42,8 @@ services:
       - NEXT_PUBLIC_DJANGO_API_URL=http://localhost:8000
       - NEXTAUTH_URL=http://localhost:3000
       - NEXTAUTH_SECRET=your-secret-key-here-replace-in-production
+      - DATABASE_URL=postgresql://airbcar_user:amineamine@db:5432/airbcar_db
+
       # Override these in .env file or docker-compose.override.yml
       # - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-tmp_env_var_name_by_amine}
       # - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-tmp_env_var_name_by_amine}

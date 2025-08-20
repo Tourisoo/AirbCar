@@ -16,8 +16,8 @@ COPY package.json pnpm-lock.yaml ./
 # Copy Prisma schema for database setup
 COPY prisma ./prisma/
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install dependencies (allow lockfile refresh if package.json updated)
+RUN pnpm install --no-frozen-lockfile
 
 # Copy only the necessary files for the application
 COPY .env.example ./
@@ -31,16 +31,8 @@ COPY start.sh ./
 COPY src ./src/
 COPY public ./public/
 
-# Create .env.local from example and set default DATABASE_URL
-RUN cp .env.example .env.local && \
-    sed -i 's/your-nextauth-secret-here/temp-secret-for-build/' .env.local
-
-# Generate Prisma client
-RUN pnpm dlx prisma generate
-
-# Set default environment variables
-ENV DATABASE_URL="file:./prisma/dev.db"
-ENV NEXTAUTH_URL="http://localhost:3000"
+# (Removed automatic .env.local generation & SQLite DATABASE_URL override)
+# Prisma Client will be generated at runtime if needed.
 ENV NODE_ENV="development"
 
 # Make the startup script executable

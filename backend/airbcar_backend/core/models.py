@@ -1,10 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-
-# Create your models here.
-
-from django.contrib.auth.models import AbstractUser
-from django.db import models
+from django.utils import timezone
 
 class User(AbstractUser):
     phone_number = models.CharField(max_length=15, blank=True)  # Maps to phone
@@ -74,9 +70,9 @@ class Listing(models.Model):
 class Booking(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Maps to renter_id
     listing = models.ForeignKey('Listing', on_delete=models.CASCADE)  # Maps to car_id
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    start_time = models.DateTimeField(default=timezone.now)
+    end_time = models.DateTimeField(default=timezone.now)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     status = models.CharField(max_length=20, default='pending')  # e.g., pending, confirmed, canceled
     date = models.DateField(auto_now_add=True)
 
