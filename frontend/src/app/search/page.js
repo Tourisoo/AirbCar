@@ -15,6 +15,9 @@ function SearchContent() {
     transmission: '',
     fuelType: '',
     seats: '',
+    style: '',
+    brand: '',
+    features: [],
     verified: false
   })
   const [sortBy, setSortBy] = useState('relevance')
@@ -72,23 +75,26 @@ function SearchContent() {
       id: 1,
       name: 'Dacia Duster',
       modelYear: 2020,
-      image: '/api/placeholder/300/200',
+      image: '/carsymbol.jpg',
       images: [
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600'
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg'
       ],
       price: 420,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Diesel',
       seats: 5,
+      style: 'SUV',
+      brand: 'Dacia',
       mileage: '45,000 km',
       verified: true,
       rating: 4.8,
       reviews: 124,
       features: ['Air Conditioning', 'GPS', 'Bluetooth'],
+      availableFeatures: ['GPS', 'AC', '4WD', 'Child Seat', 'Roof Box'],
       description: 'Perfect for exploring Morocco! This reliable Dacia Duster offers great comfort and performance for both city drives and mountain adventures. Well-maintained with all necessary equipment.',
       ownerRules: [
         'No smoking in the vehicle',
@@ -128,22 +134,25 @@ function SearchContent() {
       id: 2,
       name: 'Vauxhall Corsa',
       modelYear: 2019,
-      image: '/api/placeholder/300/200',
+      image: '/carsymbol.jpg',
       images: [
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600'
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg'
       ],
       price: 600,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Diesel',
       seats: 5,
+      style: 'City',
+      brand: 'Vauxhall',
       mileage: '38,000 km',
       verified: true,
       rating: 4.6,
       reviews: 89,
       features: ['Air Conditioning', 'GPS', 'USB Port'],
+      availableFeatures: ['GPS', 'AC', 'Child Seat'],
       description: 'Compact and efficient city car perfect for urban exploration and short trips around Morocco.',
       ownerRules: [
         'No smoking in the vehicle',
@@ -179,24 +188,27 @@ function SearchContent() {
       id: 3,
       name: 'Mercedes E Class',
       modelYear: 2021,
-      image: '/api/placeholder/300/200',
+      image: '/carsymbol.jpg',
       images: [
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600'
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg'
       ],
       price: 550,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Diesel',
       seats: 5,
+      style: 'Sedan',
+      brand: 'Mercedes-Benz',
       mileage: '25,000 km',
       verified: true,
       rating: 4.9,
       reviews: 156,
       features: ['Air Conditioning', 'GPS', 'Leather Seats', 'Premium Audio'],
+      availableFeatures: ['GPS', 'AC', 'Cruise Control', 'CarPlay/Android Auto', 'Child Seat'],
       description: 'Luxury executive sedan perfect for business trips and comfortable long-distance travel. Premium comfort with all modern amenities.',
       ownerRules: [
         'No smoking in the vehicle',
@@ -238,22 +250,25 @@ function SearchContent() {
       id: 4,
       name: 'Toyota Aygo',
       modelYear: 2018,
-      image: '/api/placeholder/300/200',
+      image: '/carsymbol.jpg',
       images: [
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600'
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg'
       ],
       price: 380,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Petrol',
       seats: 4,
+      style: 'City',
+      brand: 'Toyota',
       mileage: '52,000 km',
       verified: false,
       rating: 4.3,
       reviews: 67,
       features: ['Air Conditioning', 'Bluetooth'],
+      availableFeatures: ['AC', 'Child Seat'],
       description: 'Compact and economical city car, perfect for urban exploration and short trips. Great fuel efficiency and easy parking.',
       ownerRules: [
         'No smoking in the vehicle',
@@ -289,25 +304,28 @@ function SearchContent() {
       id: 5,
       name: 'BMW X3',
       modelYear: 2022,
-      image: '/api/placeholder/300/200',
+      image: '/carsymbol.jpg',
       images: [
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600'
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg'
       ],
       price: 850,
       location: 'Casablanca',
       transmission: 'Automatic',
       fuel: 'Diesel',
       seats: 5,
+      style: 'SUV',
+      brand: 'BMW',
       mileage: '15,000 km',
       verified: true,
       rating: 4.7,
       reviews: 203,
       features: ['Air Conditioning', 'GPS', 'Leather Seats', 'Sunroof'],
+      availableFeatures: ['GPS', 'AC', '4WD', 'Cruise Control', 'CarPlay/Android Auto', 'Child Seat', 'Bike Rack', 'Roof Box', 'Snow Equipment'],
       description: 'Premium luxury SUV with all modern features. Perfect for family trips, mountain adventures, and luxury travel across Morocco.',
       ownerRules: [
         'No smoking in the vehicle',
@@ -354,22 +372,25 @@ function SearchContent() {
       id: 6,
       name: 'Renault Clio',
       modelYear: 2019,
-      image: '/api/placeholder/300/200',
+      image: '/carsymbol.jpg',
       images: [
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600'
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg'
       ],
       price: 320,
       location: 'Marrakesh',
       transmission: 'Manual',
       fuel: 'Petrol',
       seats: 5,
+      style: 'Family',
+      brand: 'Renault',
       mileage: '41,000 km',
       verified: true,
       rating: 4.4,
       reviews: 92,
       features: ['Air Conditioning', 'GPS'],
+      availableFeatures: ['GPS', 'AC', 'Child Seat', 'Bike Rack'],
       description: 'Reliable and economical compact car, ideal for city exploration and day trips. Great fuel economy and comfortable for small groups.',
       ownerRules: [
         'No smoking in the vehicle',
@@ -431,6 +452,9 @@ function SearchContent() {
         (filters.transmission === '' || car.transmission === filters.transmission) &&
         (filters.fuelType === '' || car.fuel === filters.fuelType) &&
         (filters.seats === '' || car.seats.toString() === filters.seats) &&
+        (filters.style === '' || car.style === filters.style) &&
+        (filters.brand === '' || car.brand === filters.brand) &&
+        (filters.features.length === 0 || filters.features.every(feature => car.availableFeatures && car.availableFeatures.includes(feature))) &&
         (!filters.verified || car.verified)
       )
     })
@@ -461,12 +485,24 @@ function SearchContent() {
     }))
   }
 
+  const handleFeatureToggle = (feature) => {
+    setFilters(prev => ({
+      ...prev,
+      features: prev.features.includes(feature)
+        ? prev.features.filter(f => f !== feature)
+        : [...prev.features, feature]
+    }))
+  }
+
   const clearFilters = () => {
     setFilters({
       priceRange: [0, 1000],
       transmission: '',
       fuelType: '',
       seats: '',
+      style: '',
+      brand: '',
+      features: [],
       verified: false
     })
   }
@@ -733,6 +769,104 @@ function SearchContent() {
                     />
                     <span className="ml-2 text-sm text-gray-700">Any</span>
                   </label>
+                </div>
+              </div>
+
+              {/* Style */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Style
+                </label>
+                <select
+                  value={filters.style}
+                  onChange={(e) => handleFilterChange('style', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                >
+                  <option value="">All Styles</option>
+                  <option value="Commercial">Commercial</option>
+                  <option value="City">City</option>
+                  <option value="Sedan">Sedan</option>
+                  <option value="Family">Family</option>
+                  <option value="Minibus">Minibus</option>
+                  <option value="4x4">4x4</option>
+                  <option value="Convertible">Convertible</option>
+                  <option value="Coupe">Coupe</option>
+                  <option value="Antique">Antique</option>
+                  <option value="Campervan">Campervan</option>
+                  <option value="SUV">SUV</option>
+                </select>
+              </div>
+
+              {/* Brand */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Brand
+                </label>
+                <select
+                  value={filters.brand}
+                  onChange={(e) => handleFilterChange('brand', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                >
+                  <option value="">All Brands</option>
+                  <option value="Toyota">Toyota</option>
+                  <option value="Chevrolet">Chevrolet</option>
+                  <option value="Nissan">Nissan</option>
+                  <option value="Jeep">Jeep</option>
+                  <option value="Alfa-Romeo">Alfa-Romeo</option>
+                  <option value="Audi">Audi</option>
+                  <option value="BMW">BMW</option>
+                  <option value="Chrysler">Chrysler</option>
+                  <option value="Dacia">Dacia</option>
+                  <option value="Dodge">Dodge</option>
+                  <option value="Fiat">Fiat</option>
+                  <option value="Ford">Ford</option>
+                  <option value="Honda">Honda</option>
+                  <option value="Hyundai">Hyundai</option>
+                  <option value="Kia">Kia</option>
+                  <option value="Land-Rover">Land-Rover</option>
+                  <option value="Lexus">Lexus</option>
+                  <option value="Mazda">Mazda</option>
+                  <option value="Mercedes-Benz">Mercedes-Benz</option>
+                  <option value="Mini">Mini</option>
+                  <option value="Mitsubishi">Mitsubishi</option>
+                  <option value="Opel">Opel</option>
+                  <option value="Seat">Seat</option>
+                  <option value="Skoda">Skoda</option>
+                  <option value="Smart">Smart</option>
+                  <option value="Suzuki">Suzuki</option>
+                  <option value="Tesla">Tesla</option>
+                  <option value="Volkswagen">Volkswagen</option>
+                  <option value="Volvo">Volvo</option>
+                </select>
+              </div>
+
+              {/* Features */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Features
+                </label>
+                <div className="space-y-2">
+                  {[
+                    'Child Seat',
+                    'GPS',
+                    'AC',
+                    'Bike Rack',
+                    'Roof Box',
+                    'Cruise Control',
+                    'Snow Equipment',
+                    'CarPlay/Android Auto',
+                    '4WD'
+                  ].map(feature => (
+                    <label key={feature} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.features.includes(feature)}
+                        onChange={() => handleFeatureToggle(feature)}
+                        className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">{feature}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
