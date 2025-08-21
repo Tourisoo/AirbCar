@@ -80,7 +80,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'phone_number', 'default_currency', 'is_partner', 'is_verified', 'password', 'profile_picture', 'email_verified']
+        fields = ['id', 'username', 'email', 'phone_number', 'default_currency',
+            'is_partner', 'is_verified', 'password', 'profile_picture', 'email_verified',
+            'name', 'license_info', 'address', 'role']
         read_only_fields = ['id', 'is_partner', 'is_verified', 'email_verified']
 
     def create(self, validated_data):
@@ -105,15 +107,20 @@ class ListingSerializer(serializers.ModelSerializer):
     partner = PartnerSerializer(read_only=True)
     class Meta:
         model = Listing
-        fields = ['id', 'partner', 'make', 'model', 'year', 'price_per_day', 'availability', 'created_at']
+        fields = [
+            'id', 'partner', 'make', 'model', 'year', 'location', 
+            'features', 'price_per_day', 'availability', 'rating', 'created_at']
+        read_only_fields = ['partner', 'created_at']
 
 class BookingSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     listing = ListingSerializer(read_only=True)
     class Meta:
         model = Booking
-        fields = ["id", "user", "listing", "date"]
-
+        fields = [
+            'id', 'user', 'listing', 'start_time', 'end_time', 
+            'price', 'status', 'date']
+        read_only_fields = ['user', 'date']
 class PasswordResetConfirmSerializer(serializers.Serializer):
     password = serializers.CharField(min_length=6, required=True)
     

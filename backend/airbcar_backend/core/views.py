@@ -18,7 +18,6 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth.tokens import default_token_generator
 
 
-
 User = get_user_model()
 
 def verify_email(request):
@@ -64,6 +63,17 @@ class UserVerificationView(generics.GenericAPIView):
             user.save()
             return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self):
+        return self.request.user  # Always return the authenticated user
+    
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
 
 
 class AdminVerificationView(APIView):
