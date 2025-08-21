@@ -21,7 +21,7 @@ from rest_framework.routers import DefaultRouter
 from core.views import home_view, user_list, booking_list, UserViewSet, \
     PartnerViewSet, ListingViewSet, BookingViewSet, UserRegisterView, \
     PasswordResetRequestView, PasswordResetConfirmView, UserVerificationView, \
-    TokenVerifyView, AdminVerificationView, CustomLoginView
+    TokenVerifyView, AdminVerificationView, CustomLoginView, verify_email
 from rest_framework_simplejwt.views import TokenRefreshView
 from django.conf import settings
 from django.conf.urls.static import static
@@ -47,6 +47,7 @@ urlpatterns = [
     path('api/password-reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
     path('api/reset-password/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('api/verify-email/', UserVerificationView.as_view(), name='user_verify_email'),
+    path("verify-email/", verify_email, name="verify_email"),
     # path('api-auth/', include('rest_framework.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

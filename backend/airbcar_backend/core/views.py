@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from django.http import HttpResponse
+from django.shortcuts import render, redirect
+from django.http import HttpResponse, HttpResponseBadRequest
 from .models import User, Booking, Partner, Listing
 from .serializers import UserSerializer, BookingSerializer, PartnerSerializer, ListingSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer
 from rest_framework import viewsets, generics, status
@@ -8,12 +8,31 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
 import uuid
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
+from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.auth.tokens import default_token_generator
+
+
+
+User = get_user_model()
+
+def verify_email(request):
+    token = request.GET.get("token")
+    if not token:
+        return HttpResponse("Invalid token", status=400)
+
+    try:
+        user = User.objects.get(email_verification_token=token)
+        user.is_verified = True
+        user.email_verification_token = None
+        user.save()
+        return HttpResponse("Email successfully verified!")
+    except User.DoesNotExist:
+        return HttpResponse("Invalid or expired token", status=400)
 
 
 class UserVerificationView(generics.GenericAPIView):
@@ -143,6 +162,13 @@ class UserViewSet(viewsets.ModelViewSet):
 class PartnerViewSet(viewsets.ModelViewSet):
     queryset = Partner.objects.all()
     serializer_class = PartnerSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        partner = serializer.save(user=self.request.user)
+        if not self.request.user.is_partner:
+            self.request.user.is_partner = True
+            self.request.user.save(update_fields=['is_partner'])
 
 class ListingViewSet(viewsets.ModelViewSet):
     queryset = Listing.objects.all()
