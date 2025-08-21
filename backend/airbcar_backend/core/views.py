@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseBadRequest
 from .models import User, Booking, Partner, Listing
-from .serializers import UserSerializer, BookingSerializer, PartnerSerializer, ListingSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer
+from .serializers import UserSerializer, BookingSerializer, PartnerSerializer, \
+    ListingSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer
 from rest_framework import viewsets, generics, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -130,8 +131,6 @@ class CustomLoginView(APIView):
         else:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-
-
 class TokenVerifyView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
@@ -173,6 +172,24 @@ class PartnerViewSet(viewsets.ModelViewSet):
 class ListingViewSet(viewsets.ModelViewSet):
     queryset = Listing.objects.all()
     serializer_class = ListingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        # Get or create partner for the authenticated user
+        partner, created = Partner.objects.get_or_create(
+            user=self.request.user,
+            defaults={
+                'company_name': f"{self.request.user.username}'s Company",
+                'tax_id': 'PENDING',
+            }
+        )
+        
+        # Ensure user is marked as partner
+        if not self.request.user.is_partner:
+            self.request.user.is_partner = True
+            self.request.user.save(update_fields=['is_partner'])
+        
+        serializer.save(partner=partner)
 
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all()
