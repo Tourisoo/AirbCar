@@ -450,7 +450,7 @@ export default function Booking() {
   )
 }
 
-export default function BookingPage() {
+export function BookingPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
