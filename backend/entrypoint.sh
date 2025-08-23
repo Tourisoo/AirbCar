@@ -13,7 +13,6 @@ echo "PostgreSQL is up! Running the app..."
 
 exec "$@"
 
-
 # set -euo pipefail
 
 # export DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-airbcar_backend.settings}

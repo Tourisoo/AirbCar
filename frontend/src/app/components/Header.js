@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useRouter, usePathname } from 'next/navigation'
+import z from 'zod'
 
 export default function Header() {
   const { user, loading, logout } = useAuth()
@@ -14,6 +16,44 @@ export default function Header() {
     country: 'Belgium',
     currency: 'EUR - €'
   })
+  const [isPartnerUser, setIsPartnerUser] = useState(false)
+  const pathname = usePathname()
+  const isPartnerDashboard = pathname === '/partner/dashboard'
+  
+  // Check if user is a partner based on user properties or if they've been to partner dashboard
+  const isPartner = user && (
+    user.is_partner === true || 
+    user.role === 'partner' || 
+    user.userType === 'partner' ||
+    isPartnerUser // Persistent partner status
+  )
+
+  // Persist partner status when user visits partner dashboard
+  useEffect(() => {
+    if (isPartnerDashboard && user) {
+      setIsPartnerUser(true)
+      // Store in localStorage for persistence across sessions
+      localStorage.setItem('isPartnerUser', 'true')
+    }
+  }, [isPartnerDashboard, user])
+
+  // Check localStorage on component mount
+  useEffect(() => {
+    const storedPartnerStatus = localStorage.getItem('isPartnerUser')
+    if (storedPartnerStatus === 'true') {
+      setIsPartnerUser(true)
+    }
+  }, [])
+
+  // Debug logging
+  useEffect(() => {
+    if (user) {
+      console.log('User object:', user)
+      console.log('Is partner dashboard:', isPartnerDashboard)
+      console.log('Is partner user (stored):', isPartnerUser)
+      console.log('Is partner (final):', isPartner)
+    }
+  }, [user, isPartnerDashboard, isPartnerUser, isPartner])
 
   // Check if user is admin
   useEffect(() => {
@@ -57,6 +97,9 @@ export default function Header() {
   const handleSignOut = () => {
     logout()
     setIsDropdownOpen(false)
+    // Clear partner status on logout
+    setIsPartnerUser(false)
+    localStorage.removeItem('isPartnerUser')
   }
 
   return (
@@ -104,7 +147,9 @@ export default function Header() {
               </button>
 
               {isRegionalSettingsOpen && (
-                <div className="absolute right-0 mt-3 w-80 bg-white rounded-lg shadow-xl border border-gray-200 py-4 z-50">
+                <div className="absolute right-0 mt-3 w-80 bg-white rounded-lg shadow-xl border border-gray-200 py-4 z-100"
+                 style={{zIndex: 1000}}
+                 >
                   {/* Header */}
                   <div className="px-4 pb-3 border-b border-gray-100">
                     <h3 className="text-lg font-semibold text-gray-900">Regional settings</h3>
@@ -254,13 +299,38 @@ export default function Header() {
                       <p className="text-sm font-medium text-gray-900">{user.username || 'User'}</p>
                       <p className="text-sm text-gray-500 truncate">{user.email}</p>
                     </div>
+                    
                     <Link href="/account" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
                       <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                       Profile
                     </Link>
-                    {!isAdmin && (
+                    
+                    {/* My Bookings - shown for both normal users and partners */}
+                    {isPartner ? (
+                      isPartnerDashboard ? (
+                        <button 
+                          onClick={() => {
+                            setIsDropdownOpen(false)
+                            window.dispatchEvent(new CustomEvent('switchTab', { detail: 'bookings' }))
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                        >
+                          <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                          </svg>
+                          My Bookings
+                        </button>
+                      ) : (
+                        <Link href="/partner/dashboard?tab=bookings" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
+                          <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                          </svg>
+                          My Bookings
+                        </Link>
+                      )
+                    ) : (
                       <Link href="/account?section=bookings" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
                         <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -268,6 +338,78 @@ export default function Header() {
                         My Bookings
                       </Link>
                     )}
+                    
+                    {/* Partner-only menu items */}
+                    {isPartner && (
+                      <>
+                        {isPartnerDashboard ? (
+                          <button 
+                            onClick={() => {
+                              setIsDropdownOpen(false)
+                              window.dispatchEvent(new CustomEvent('switchTab', { detail: 'bookings' }))
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                          >
+                            <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Reservations
+                          </button>
+                        ) : (
+                          <Link href="/partner/dashboard?tab=bookings" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
+                            <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Reservations
+                          </Link>
+                        )}
+                        
+                        {isPartnerDashboard ? (
+                          <button 
+                            onClick={() => {
+                              setIsDropdownOpen(false)
+                              window.dispatchEvent(new CustomEvent('switchTab', { detail: 'earnings' }))
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                          >
+                            <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                            </svg>
+                            Earnings
+                          </button>
+                        ) : (
+                          <Link href="/partner/dashboard?tab=earnings" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
+                            <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                            </svg>
+                            Earnings
+                          </Link>
+                        )}
+                        
+                        {isPartnerDashboard ? (
+                          <button 
+                            onClick={() => {
+                              setIsDropdownOpen(false)
+                              window.dispatchEvent(new CustomEvent('openAddVehicle'))
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                          >
+                            <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Create New Listing
+                          </button>
+                        ) : (
+                          <Link href="/partner/dashboard" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
+                            <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Create New Listing
+                          </Link>
+                        )}
+                      </>
+                    )}
+                    
                     {isAdmin && (
                       <Link href="/admin" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
                         <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -276,6 +418,7 @@ export default function Header() {
                         Admin Dashboard
                       </Link>
                     )}
+                    
                     <Link href="/account" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
                       <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -283,7 +426,7 @@ export default function Header() {
                       </svg>
                       Account Settings
                     </Link>
-                    <hr className="my-2 border-gray-100" />
+                    
                     <button
                       onClick={handleSignOut}
                       className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150"
