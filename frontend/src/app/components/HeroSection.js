@@ -11,7 +11,7 @@ export default function HeroSection() {
   }, []);
 
   const benefits = [
-    "It's free to list your motorbikes online.",
+    "It's free to list your Vehicle online.",
     "You set your prices, its your business.",
     "Manage online & offline bookings.",
     "Powerful earnings dashboard.",
