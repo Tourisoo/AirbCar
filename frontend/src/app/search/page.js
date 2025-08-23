@@ -12,17 +12,20 @@ function SearchContent() {
   const [filteredCars, setFilteredCars] = useState([])
   const [filters, setFilters] = useState({
     priceRange: [0, 1000],
-    transmission: '',
-    fuelType: '',
-    seats: '',
-    style: '',
-    brand: '',
+    transmission: [],
+    fuelType: [],
+    seats: [],
+    style: [],
+    brand: [],
     features: [],
     verified: false
   })
   const [sortBy, setSortBy] = useState('relevance')
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
+  const [showAllFeatures, setShowAllFeatures] = useState(false)
+  const [showAllBrands, setShowAllBrands] = useState(false)
+  const [showAllStyles, setShowAllStyles] = useState(false)
   const [selectedCar, setSelectedCar] = useState(null)
   const [showCarModal, setShowCarModal] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -202,7 +205,7 @@ function SearchContent() {
       fuel: 'Diesel',
       seats: 5,
       style: 'Sedan',
-      brand: 'Mercedes-Benz',
+      brand: 'Mercedes',
       mileage: '25,000 km',
       verified: true,
       rating: 4.9,
@@ -449,11 +452,11 @@ function SearchContent() {
       return (
         car.price >= filters.priceRange[0] &&
         car.price <= filters.priceRange[1] &&
-        (filters.transmission === '' || car.transmission === filters.transmission) &&
-        (filters.fuelType === '' || car.fuel === filters.fuelType) &&
-        (filters.seats === '' || car.seats.toString() === filters.seats) &&
-        (filters.style === '' || car.style === filters.style) &&
-        (filters.brand === '' || car.brand === filters.brand) &&
+        (filters.transmission.length === 0 || filters.transmission.includes(car.transmission)) &&
+        (filters.fuelType.length === 0 || filters.fuelType.includes(car.fuel)) &&
+        (filters.seats.length === 0 || filters.seats.includes(car.seats.toString())) &&
+        (filters.style.length === 0 || filters.style.includes(car.style)) &&
+        (filters.brand.length === 0 || filters.brand.includes(car.brand)) &&
         (filters.features.length === 0 || filters.features.every(feature => car.availableFeatures && car.availableFeatures.includes(feature))) &&
         (!filters.verified || car.verified)
       )
@@ -494,17 +497,65 @@ function SearchContent() {
     }))
   }
 
+  const handleBrandToggle = (brand) => {
+    setFilters(prev => ({
+      ...prev,
+      brand: prev.brand.includes(brand)
+        ? prev.brand.filter(b => b !== brand)
+        : [...prev.brand, brand]
+    }))
+  }
+
+  const handleStyleToggle = (style) => {
+    setFilters(prev => ({
+      ...prev,
+      style: prev.style.includes(style)
+        ? prev.style.filter(s => s !== style)
+        : [...prev.style, style]
+    }))
+  }
+
+  const handleTransmissionToggle = (transmission) => {
+    setFilters(prev => ({
+      ...prev,
+      transmission: prev.transmission.includes(transmission)
+        ? prev.transmission.filter(t => t !== transmission)
+        : [...prev.transmission, transmission]
+    }))
+  }
+
+  const handleFuelTypeToggle = (fuelType) => {
+    setFilters(prev => ({
+      ...prev,
+      fuelType: prev.fuelType.includes(fuelType)
+        ? prev.fuelType.filter(f => f !== fuelType)
+        : [...prev.fuelType, fuelType]
+    }))
+  }
+
+  const handleSeatsToggle = (seats) => {
+    setFilters(prev => ({
+      ...prev,
+      seats: prev.seats.includes(seats)
+        ? prev.seats.filter(s => s !== seats)
+        : [...prev.seats, seats]
+    }))
+  }
+
   const clearFilters = () => {
     setFilters({
       priceRange: [0, 1000],
-      transmission: '',
-      fuelType: '',
-      seats: '',
-      style: '',
-      brand: '',
+      transmission: [],
+      fuelType: [],
+      seats: [],
+      style: [],
+      brand: [],
       features: [],
       verified: false
     })
+    setShowAllFeatures(false)
+    setShowAllBrands(false)
+    setShowAllStyles(false)
   }
 
   const handleViewDetails = (car) => {
@@ -697,11 +748,14 @@ function SearchContent() {
                     max="1000"
                     value={filters.priceRange[1]}
                     onChange={(e) => handleFilterChange('priceRange', [0, parseInt(e.target.value)])}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    className="w-full h-3 bg-gradient-to-r from-orange-100 to-orange-300 rounded-lg appearance-none cursor-pointer slider"
+                    style={{
+                      background: `linear-gradient(to right, #F97316 0%, #F97316 ${(filters.priceRange[1] / 1000) * 100}%, #E5E7EB ${(filters.priceRange[1] / 1000) * 100}%, #E5E7EB 100%)`
+                    }}
                   />
-                  <div className="flex justify-between text-sm text-gray-500 mt-2">
-                    <span>0 MAD</span>
-                    <span>{filters.priceRange[1]} MAD</span>
+                  <div className="flex justify-between text-sm mt-2">
+                    <span className="text-gray-600 font-medium bg-gray-50 px-2 py-1 rounded">0 MAD</span>
+                    <span className="text-orange-600 font-medium bg-orange-50 px-2 py-1 rounded">{filters.priceRange[1]} MAD</span>
                   </div>
                 </div>
               </div>
@@ -711,31 +765,20 @@ function SearchContent() {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Transmission
                 </label>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {['Manual', 'Automatic'].map(type => (
-                    <label key={type} className="flex items-center">
-                      <input
-                        type="radio"
-                        name="transmission"
-                        value={type}
-                        checked={filters.transmission === type}
-                        onChange={(e) => handleFilterChange('transmission', e.target.value)}
-                        className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">{type}</span>
-                    </label>
+                    <button
+                      key={type}
+                      onClick={() => handleTransmissionToggle(type)}
+                      className={`px-3 py-2 text-sm rounded-lg border transition-colors flex-shrink-0 ${
+                        filters.transmission.includes(type)
+                          ? 'bg-orange-500 text-white border-orange-500'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
+                      }`}
+                    >
+                      {type}
+                    </button>
                   ))}
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="transmission"
-                      value=""
-                      checked={filters.transmission === ''}
-                      onChange={(e) => handleFilterChange('transmission', e.target.value)}
-                      className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Any</span>
-                  </label>
                 </div>
               </div>
 
@@ -744,31 +787,20 @@ function SearchContent() {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Fuel Type
                 </label>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {['Petrol', 'Diesel', 'Electric', 'Hybrid'].map(fuel => (
-                    <label key={fuel} className="flex items-center">
-                      <input
-                        type="radio"
-                        name="fuelType"
-                        value={fuel}
-                        checked={filters.fuelType === fuel}
-                        onChange={(e) => handleFilterChange('fuelType', e.target.value)}
-                        className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">{fuel}</span>
-                    </label>
+                    <button
+                      key={fuel}
+                      onClick={() => handleFuelTypeToggle(fuel)}
+                      className={`px-3 py-2 text-sm rounded-lg border transition-colors flex-shrink-0 ${
+                        filters.fuelType.includes(fuel)
+                          ? 'bg-orange-500 text-white border-orange-500'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
+                      }`}
+                    >
+                      {fuel}
+                    </button>
                   ))}
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="fuelType"
-                      value=""
-                      checked={filters.fuelType === ''}
-                      onChange={(e) => handleFilterChange('fuelType', e.target.value)}
-                      className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Any</span>
-                  </label>
                 </div>
               </div>
 
@@ -777,24 +809,64 @@ function SearchContent() {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Style
                 </label>
-                <select
-                  value={filters.style}
-                  onChange={(e) => handleFilterChange('style', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-                >
-                  <option value="">All Styles</option>
-                  <option value="Commercial">Commercial</option>
-                  <option value="City">City</option>
-                  <option value="Sedan">Sedan</option>
-                  <option value="Family">Family</option>
-                  <option value="Minibus">Minibus</option>
-                  <option value="4x4">4x4</option>
-                  <option value="Convertible">Convertible</option>
-                  <option value="Coupe">Coupe</option>
-                  <option value="Antique">Antique</option>
-                  <option value="Campervan">Campervan</option>
-                  <option value="SUV">SUV</option>
-                </select>
+                <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    const allStyles = [
+                      'Commercial',
+                      'City',
+                      'Sedan',
+                      'Family',
+                      'Minibus',
+                      '4x4',
+                      'Convertible',
+                      'Coupe',
+                      'Antique',
+                      'Campervan',
+                      'SUV'
+                    ]
+                    const stylesToShow = showAllStyles ? allStyles : allStyles.slice(0, 3)
+                    
+                    return (
+                      <>
+                        {stylesToShow.map(style => (
+                          <button
+                            key={style}
+                            onClick={() => handleStyleToggle(style)}
+                            className={`px-3 py-2 text-sm rounded-lg border transition-colors flex-shrink-0 ${
+                              filters.style.includes(style)
+                                ? 'bg-orange-500 text-white border-orange-500'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
+                            }`}
+                          >
+                            {style}
+                          </button>
+                        ))}
+                        {!showAllStyles && (
+                          <button
+                            onClick={() => setShowAllStyles(true)}
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-orange-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                            Show More
+                          </button>
+                        )}
+                        {showAllStyles && (
+                          <button
+                            onClick={() => setShowAllStyles(false)}
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                            Show Less
+                          </button>
+                        )}
+                      </>
+                    )
+                  })()}
+                </div>
               </div>
 
               {/* Brand */}
@@ -802,42 +874,82 @@ function SearchContent() {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Brand
                 </label>
-                <select
-                  value={filters.brand}
-                  onChange={(e) => handleFilterChange('brand', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-                >
-                  <option value="">All Brands</option>
-                  <option value="Toyota">Toyota</option>
-                  <option value="Chevrolet">Chevrolet</option>
-                  <option value="Nissan">Nissan</option>
-                  <option value="Jeep">Jeep</option>
-                  <option value="Alfa-Romeo">Alfa-Romeo</option>
-                  <option value="Audi">Audi</option>
-                  <option value="BMW">BMW</option>
-                  <option value="Chrysler">Chrysler</option>
-                  <option value="Dacia">Dacia</option>
-                  <option value="Dodge">Dodge</option>
-                  <option value="Fiat">Fiat</option>
-                  <option value="Ford">Ford</option>
-                  <option value="Honda">Honda</option>
-                  <option value="Hyundai">Hyundai</option>
-                  <option value="Kia">Kia</option>
-                  <option value="Land-Rover">Land-Rover</option>
-                  <option value="Lexus">Lexus</option>
-                  <option value="Mazda">Mazda</option>
-                  <option value="Mercedes-Benz">Mercedes-Benz</option>
-                  <option value="Mini">Mini</option>
-                  <option value="Mitsubishi">Mitsubishi</option>
-                  <option value="Opel">Opel</option>
-                  <option value="Seat">Seat</option>
-                  <option value="Skoda">Skoda</option>
-                  <option value="Smart">Smart</option>
-                  <option value="Suzuki">Suzuki</option>
-                  <option value="Tesla">Tesla</option>
-                  <option value="Volkswagen">Volkswagen</option>
-                  <option value="Volvo">Volvo</option>
-                </select>
+                <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    const allBrands = [
+                      'Toyota',
+                      'BMW',
+                      'Mercedes',
+                      'Audi',
+                      'Volkswagen',
+                      'Ford',
+                      'Honda',
+                      'Nissan',
+                      'Chevrolet',
+                      'Hyundai',
+                      'Kia',
+                      'Mazda',
+                      'Jeep',
+                      'Alfa-Romeo',
+                      'Chrysler',
+                      'Dacia',
+                      'Dodge',
+                      'Fiat',
+                      'Land-Rover',
+                      'Lexus',
+                      'Mini',
+                      'Mitsubishi',
+                      'Opel',
+                      'Seat',
+                      'Skoda',
+                      'Smart',
+                      'Suzuki',
+                      'Tesla',
+                      'Volvo'
+                    ]
+                    const brandsToShow = showAllBrands ? allBrands : allBrands.slice(0, 3)
+                    
+                    return (
+                      <>
+                        {brandsToShow.map(brand => (
+                          <button
+                            key={brand}
+                            onClick={() => handleBrandToggle(brand)}
+                            className={`px-3 py-2 text-sm rounded-lg border transition-colors flex-shrink-0 ${
+                              filters.brand.includes(brand)
+                                ? 'bg-orange-500 text-white border-orange-500'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
+                            }`}
+                          >
+                            {brand}
+                          </button>
+                        ))}
+                        {!showAllBrands && (
+                          <button
+                            onClick={() => setShowAllBrands(true)}
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-orange-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                            Show More
+                          </button>
+                        )}
+                        {showAllBrands && (
+                          <button
+                            onClick={() => setShowAllBrands(false)}
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                            Show Less
+                          </button>
+                        )}
+                      </>
+                    )
+                  })()}
+                </div>
               </div>
 
               {/* Features */}
@@ -845,28 +957,63 @@ function SearchContent() {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Features
                 </label>
-                <div className="space-y-2">
-                  {[
-                    'Child Seat',
-                    'GPS',
-                    'AC',
-                    'Bike Rack',
-                    'Roof Box',
-                    'Cruise Control',
-                    'Snow Equipment',
-                    'CarPlay/Android Auto',
-                    '4WD'
-                  ].map(feature => (
-                    <label key={feature} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={filters.features.includes(feature)}
-                        onChange={() => handleFeatureToggle(feature)}
-                        className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">{feature}</span>
-                    </label>
-                  ))}
+                <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    const allFeatures = [
+                      'Child seat',
+                      'GPS',
+                      'Air conditioning',
+                      'Bike rack',
+                      'Roof box',
+                      'Cruise control',
+                      'Snow tires',
+                      'Snow chains',
+                      'Apple CarPlay',
+                      'Android Auto',
+                      'Four-wheel drive'
+                    ]
+                    const featuresToShow = showAllFeatures ? allFeatures : allFeatures.slice(0, 3)
+                    
+                    return (
+                      <>
+                        {featuresToShow.map(feature => (
+                          <button
+                            key={feature}
+                            onClick={() => handleFeatureToggle(feature)}
+                            className={`px-3 py-2 text-sm rounded-lg border transition-colors flex-shrink-0 ${
+                              filters.features.includes(feature)
+                                ? 'bg-orange-500 text-white border-orange-500'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
+                            }`}
+                          >
+                            {feature}
+                          </button>
+                        ))}
+                        {!showAllFeatures && (
+                          <button
+                            onClick={() => setShowAllFeatures(true)}
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-orange-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                            Show More
+                          </button>
+                        )}
+                        {showAllFeatures && (
+                          <button
+                            onClick={() => setShowAllFeatures(false)}
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                            Show Less
+                          </button>
+                        )}
+                      </>
+                    )
+                  })()}
                 </div>
               </div>
 
@@ -875,13 +1022,13 @@ function SearchContent() {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Seats
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-wrap gap-2">
                   {['2', '4', '5', '7', '8+'].map(seats => (
                     <button
                       key={seats}
-                      onClick={() => handleFilterChange('seats', filters.seats === seats ? '' : seats)}
-                      className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
-                        filters.seats === seats
+                      onClick={() => handleSeatsToggle(seats)}
+                      className={`px-3 py-2 text-sm rounded-lg border transition-colors flex-shrink-0 ${
+                        filters.seats.includes(seats)
                           ? 'bg-orange-500 text-white border-orange-500'
                           : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
                       }`}
