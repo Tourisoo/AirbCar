@@ -7,7 +7,7 @@ export default function InfoSection() {
         <div className="relative bg-slate-800 rounded-lg md:rounded-2xl overflow-hidden mb-16 min-h-[300px] md:min-h-[400px]" style={{ aspectRatio: '16 / 9' }}>
           {/* Background Image */}
           <div 
-						className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+						className="absolute inset-0 bg-cover bg-center bg-no-repeat z-10"
 						style={{ backgroundImage: "url('/info-background.png')" }}></div>
           
           {/* Overlay */}

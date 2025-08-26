@@ -12,14 +12,20 @@ function SearchContent() {
   const [filteredCars, setFilteredCars] = useState([])
   const [filters, setFilters] = useState({
     priceRange: [0, 1000],
-    transmission: '',
-    fuelType: '',
-    seats: '',
+    transmission: [],
+    fuelType: [],
+    seats: [],
+    style: [],
+    brand: [],
+    features: [],
     verified: false
   })
   const [sortBy, setSortBy] = useState('relevance')
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
+  const [showAllFeatures, setShowAllFeatures] = useState(false)
+  const [showAllBrands, setShowAllBrands] = useState(false)
+  const [showAllStyles, setShowAllStyles] = useState(false)
   const [selectedCar, setSelectedCar] = useState(null)
   const [showCarModal, setShowCarModal] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -72,23 +78,26 @@ function SearchContent() {
       id: 1,
       name: 'Dacia Duster',
       modelYear: 2020,
-      image: '/api/placeholder/300/200',
+      image: '/carsymbol.jpg',
       images: [
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600'
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg'
       ],
       price: 420,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Diesel',
       seats: 5,
+      style: 'SUV',
+      brand: 'Dacia',
       mileage: '45,000 km',
       verified: true,
       rating: 4.8,
       reviews: 124,
       features: ['Air Conditioning', 'GPS', 'Bluetooth'],
+      availableFeatures: ['GPS', 'AC', '4WD', 'Child Seat', 'Roof Box'],
       description: 'Perfect for exploring Morocco! This reliable Dacia Duster offers great comfort and performance for both city drives and mountain adventures. Well-maintained with all necessary equipment.',
       ownerRules: [
         'No smoking in the vehicle',
@@ -128,22 +137,25 @@ function SearchContent() {
       id: 2,
       name: 'Vauxhall Corsa',
       modelYear: 2019,
-      image: '/api/placeholder/300/200',
+      image: '/carsymbol.jpg',
       images: [
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600'
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg'
       ],
       price: 600,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Diesel',
       seats: 5,
+      style: 'City',
+      brand: 'Vauxhall',
       mileage: '38,000 km',
       verified: true,
       rating: 4.6,
       reviews: 89,
       features: ['Air Conditioning', 'GPS', 'USB Port'],
+      availableFeatures: ['GPS', 'AC', 'Child Seat'],
       description: 'Compact and efficient city car perfect for urban exploration and short trips around Morocco.',
       ownerRules: [
         'No smoking in the vehicle',
@@ -179,24 +191,27 @@ function SearchContent() {
       id: 3,
       name: 'Mercedes E Class',
       modelYear: 2021,
-      image: '/api/placeholder/300/200',
+      image: '/carsymbol.jpg',
       images: [
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600'
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg'
       ],
       price: 550,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Diesel',
       seats: 5,
+      style: 'Sedan',
+      brand: 'Mercedes',
       mileage: '25,000 km',
       verified: true,
       rating: 4.9,
       reviews: 156,
       features: ['Air Conditioning', 'GPS', 'Leather Seats', 'Premium Audio'],
+      availableFeatures: ['GPS', 'AC', 'Cruise Control', 'CarPlay/Android Auto', 'Child Seat'],
       description: 'Luxury executive sedan perfect for business trips and comfortable long-distance travel. Premium comfort with all modern amenities.',
       ownerRules: [
         'No smoking in the vehicle',
@@ -238,22 +253,25 @@ function SearchContent() {
       id: 4,
       name: 'Toyota Aygo',
       modelYear: 2018,
-      image: '/api/placeholder/300/200',
+      image: '/carsymbol.jpg',
       images: [
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600'
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg'
       ],
       price: 380,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Petrol',
       seats: 4,
+      style: 'City',
+      brand: 'Toyota',
       mileage: '52,000 km',
       verified: false,
       rating: 4.3,
       reviews: 67,
       features: ['Air Conditioning', 'Bluetooth'],
+      availableFeatures: ['AC', 'Child Seat'],
       description: 'Compact and economical city car, perfect for urban exploration and short trips. Great fuel efficiency and easy parking.',
       ownerRules: [
         'No smoking in the vehicle',
@@ -289,25 +307,28 @@ function SearchContent() {
       id: 5,
       name: 'BMW X3',
       modelYear: 2022,
-      image: '/api/placeholder/300/200',
+      image: '/carsymbol.jpg',
       images: [
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600'
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg'
       ],
       price: 850,
       location: 'Casablanca',
       transmission: 'Automatic',
       fuel: 'Diesel',
       seats: 5,
+      style: 'SUV',
+      brand: 'BMW',
       mileage: '15,000 km',
       verified: true,
       rating: 4.7,
       reviews: 203,
       features: ['Air Conditioning', 'GPS', 'Leather Seats', 'Sunroof'],
+      availableFeatures: ['GPS', 'AC', '4WD', 'Cruise Control', 'CarPlay/Android Auto', 'Child Seat', 'Bike Rack', 'Roof Box', 'Snow Equipment'],
       description: 'Premium luxury SUV with all modern features. Perfect for family trips, mountain adventures, and luxury travel across Morocco.',
       ownerRules: [
         'No smoking in the vehicle',
@@ -354,22 +375,25 @@ function SearchContent() {
       id: 6,
       name: 'Renault Clio',
       modelYear: 2019,
-      image: '/api/placeholder/300/200',
+      image: '/carsymbol.jpg',
       images: [
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600'
+        '/carsymbol.jpg',
+        '/carsymbol.jpg',
+        '/carsymbol.jpg'
       ],
       price: 320,
       location: 'Marrakesh',
       transmission: 'Manual',
       fuel: 'Petrol',
       seats: 5,
+      style: 'Family',
+      brand: 'Renault',
       mileage: '41,000 km',
       verified: true,
       rating: 4.4,
       reviews: 92,
       features: ['Air Conditioning', 'GPS'],
+      availableFeatures: ['GPS', 'AC', 'Child Seat', 'Bike Rack'],
       description: 'Reliable and economical compact car, ideal for city exploration and day trips. Great fuel economy and comfortable for small groups.',
       ownerRules: [
         'No smoking in the vehicle',
@@ -428,9 +452,12 @@ function SearchContent() {
       return (
         car.price >= filters.priceRange[0] &&
         car.price <= filters.priceRange[1] &&
-        (filters.transmission === '' || car.transmission === filters.transmission) &&
-        (filters.fuelType === '' || car.fuel === filters.fuelType) &&
-        (filters.seats === '' || car.seats.toString() === filters.seats) &&
+        (filters.transmission.length === 0 || filters.transmission.includes(car.transmission)) &&
+        (filters.fuelType.length === 0 || filters.fuelType.includes(car.fuel)) &&
+        (filters.seats.length === 0 || filters.seats.includes(car.seats.toString())) &&
+        (filters.style.length === 0 || filters.style.includes(car.style)) &&
+        (filters.brand.length === 0 || filters.brand.includes(car.brand)) &&
+        (filters.features.length === 0 || filters.features.every(feature => car.availableFeatures && car.availableFeatures.includes(feature))) &&
         (!filters.verified || car.verified)
       )
     })
@@ -461,14 +488,74 @@ function SearchContent() {
     }))
   }
 
+  const handleFeatureToggle = (feature) => {
+    setFilters(prev => ({
+      ...prev,
+      features: prev.features.includes(feature)
+        ? prev.features.filter(f => f !== feature)
+        : [...prev.features, feature]
+    }))
+  }
+
+  const handleBrandToggle = (brand) => {
+    setFilters(prev => ({
+      ...prev,
+      brand: prev.brand.includes(brand)
+        ? prev.brand.filter(b => b !== brand)
+        : [...prev.brand, brand]
+    }))
+  }
+
+  const handleStyleToggle = (style) => {
+    setFilters(prev => ({
+      ...prev,
+      style: prev.style.includes(style)
+        ? prev.style.filter(s => s !== style)
+        : [...prev.style, style]
+    }))
+  }
+
+  const handleTransmissionToggle = (transmission) => {
+    setFilters(prev => ({
+      ...prev,
+      transmission: prev.transmission.includes(transmission)
+        ? prev.transmission.filter(t => t !== transmission)
+        : [...prev.transmission, transmission]
+    }))
+  }
+
+  const handleFuelTypeToggle = (fuelType) => {
+    setFilters(prev => ({
+      ...prev,
+      fuelType: prev.fuelType.includes(fuelType)
+        ? prev.fuelType.filter(f => f !== fuelType)
+        : [...prev.fuelType, fuelType]
+    }))
+  }
+
+  const handleSeatsToggle = (seats) => {
+    setFilters(prev => ({
+      ...prev,
+      seats: prev.seats.includes(seats)
+        ? prev.seats.filter(s => s !== seats)
+        : [...prev.seats, seats]
+    }))
+  }
+
   const clearFilters = () => {
     setFilters({
       priceRange: [0, 1000],
-      transmission: '',
-      fuelType: '',
-      seats: '',
+      transmission: [],
+      fuelType: [],
+      seats: [],
+      style: [],
+      brand: [],
+      features: [],
       verified: false
     })
+    setShowAllFeatures(false)
+    setShowAllBrands(false)
+    setShowAllStyles(false)
   }
 
   const handleViewDetails = (car) => {
@@ -661,11 +748,14 @@ function SearchContent() {
                     max="1000"
                     value={filters.priceRange[1]}
                     onChange={(e) => handleFilterChange('priceRange', [0, parseInt(e.target.value)])}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    className="w-full h-3 bg-gradient-to-r from-orange-100 to-orange-300 rounded-lg appearance-none cursor-pointer slider"
+                    style={{
+                      background: `linear-gradient(to right, #F97316 0%, #F97316 ${(filters.priceRange[1] / 1000) * 100}%, #E5E7EB ${(filters.priceRange[1] / 1000) * 100}%, #E5E7EB 100%)`
+                    }}
                   />
-                  <div className="flex justify-between text-sm text-gray-500 mt-2">
-                    <span>0 MAD</span>
-                    <span>{filters.priceRange[1]} MAD</span>
+                  <div className="flex justify-between text-sm mt-2">
+                    <span className="text-gray-600 font-medium bg-gray-50 px-2 py-1 rounded">0 MAD</span>
+                    <span className="text-orange-600 font-medium bg-orange-50 px-2 py-1 rounded">{filters.priceRange[1]} MAD</span>
                   </div>
                 </div>
               </div>
@@ -675,31 +765,20 @@ function SearchContent() {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Transmission
                 </label>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {['Manual', 'Automatic'].map(type => (
-                    <label key={type} className="flex items-center">
-                      <input
-                        type="radio"
-                        name="transmission"
-                        value={type}
-                        checked={filters.transmission === type}
-                        onChange={(e) => handleFilterChange('transmission', e.target.value)}
-                        className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">{type}</span>
-                    </label>
+                    <button
+                      key={type}
+                      onClick={() => handleTransmissionToggle(type)}
+                      className={`px-3 py-2 text-sm rounded-lg border transition-colors flex-shrink-0 ${
+                        filters.transmission.includes(type)
+                          ? 'bg-orange-500 text-white border-orange-500'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
+                      }`}
+                    >
+                      {type}
+                    </button>
                   ))}
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="transmission"
-                      value=""
-                      checked={filters.transmission === ''}
-                      onChange={(e) => handleFilterChange('transmission', e.target.value)}
-                      className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Any</span>
-                  </label>
                 </div>
               </div>
 
@@ -708,31 +787,233 @@ function SearchContent() {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Fuel Type
                 </label>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {['Petrol', 'Diesel', 'Electric', 'Hybrid'].map(fuel => (
-                    <label key={fuel} className="flex items-center">
-                      <input
-                        type="radio"
-                        name="fuelType"
-                        value={fuel}
-                        checked={filters.fuelType === fuel}
-                        onChange={(e) => handleFilterChange('fuelType', e.target.value)}
-                        className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">{fuel}</span>
-                    </label>
+                    <button
+                      key={fuel}
+                      onClick={() => handleFuelTypeToggle(fuel)}
+                      className={`px-3 py-2 text-sm rounded-lg border transition-colors flex-shrink-0 ${
+                        filters.fuelType.includes(fuel)
+                          ? 'bg-orange-500 text-white border-orange-500'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
+                      }`}
+                    >
+                      {fuel}
+                    </button>
                   ))}
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="fuelType"
-                      value=""
-                      checked={filters.fuelType === ''}
-                      onChange={(e) => handleFilterChange('fuelType', e.target.value)}
-                      className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Any</span>
-                  </label>
+                </div>
+              </div>
+
+              {/* Style */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Style
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    const allStyles = [
+                      'Commercial',
+                      'City',
+                      'Sedan',
+                      'Family',
+                      'Minibus',
+                      '4x4',
+                      'Convertible',
+                      'Coupe',
+                      'Antique',
+                      'Campervan',
+                      'SUV'
+                    ]
+                    const stylesToShow = showAllStyles ? allStyles : allStyles.slice(0, 3)
+                    
+                    return (
+                      <>
+                        {stylesToShow.map(style => (
+                          <button
+                            key={style}
+                            onClick={() => handleStyleToggle(style)}
+                            className={`px-3 py-2 text-sm rounded-lg border transition-colors flex-shrink-0 ${
+                              filters.style.includes(style)
+                                ? 'bg-orange-500 text-white border-orange-500'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
+                            }`}
+                          >
+                            {style}
+                          </button>
+                        ))}
+                        {!showAllStyles && (
+                          <button
+                            onClick={() => setShowAllStyles(true)}
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-orange-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                            Show More
+                          </button>
+                        )}
+                        {showAllStyles && (
+                          <button
+                            onClick={() => setShowAllStyles(false)}
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                            Show Less
+                          </button>
+                        )}
+                      </>
+                    )
+                  })()}
+                </div>
+              </div>
+
+              {/* Brand */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Brand
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    const allBrands = [
+                      'Toyota',
+                      'BMW',
+                      'Mercedes',
+                      'Audi',
+                      'Volkswagen',
+                      'Ford',
+                      'Honda',
+                      'Nissan',
+                      'Chevrolet',
+                      'Hyundai',
+                      'Kia',
+                      'Mazda',
+                      'Jeep',
+                      'Alfa-Romeo',
+                      'Chrysler',
+                      'Dacia',
+                      'Dodge',
+                      'Fiat',
+                      'Land-Rover',
+                      'Lexus',
+                      'Mini',
+                      'Mitsubishi',
+                      'Opel',
+                      'Seat',
+                      'Skoda',
+                      'Smart',
+                      'Suzuki',
+                      'Tesla',
+                      'Volvo'
+                    ]
+                    const brandsToShow = showAllBrands ? allBrands : allBrands.slice(0, 3)
+                    
+                    return (
+                      <>
+                        {brandsToShow.map(brand => (
+                          <button
+                            key={brand}
+                            onClick={() => handleBrandToggle(brand)}
+                            className={`px-3 py-2 text-sm rounded-lg border transition-colors flex-shrink-0 ${
+                              filters.brand.includes(brand)
+                                ? 'bg-orange-500 text-white border-orange-500'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
+                            }`}
+                          >
+                            {brand}
+                          </button>
+                        ))}
+                        {!showAllBrands && (
+                          <button
+                            onClick={() => setShowAllBrands(true)}
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-orange-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                            Show More
+                          </button>
+                        )}
+                        {showAllBrands && (
+                          <button
+                            onClick={() => setShowAllBrands(false)}
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                            Show Less
+                          </button>
+                        )}
+                      </>
+                    )
+                  })()}
+                </div>
+              </div>
+
+              {/* Features */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Features
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    const allFeatures = [
+                      'Child seat',
+                      'GPS',
+                      'Air conditioning',
+                      'Bike rack',
+                      'Roof box',
+                      'Cruise control',
+                      'Snow tires',
+                      'Snow chains',
+                      'Apple CarPlay',
+                      'Android Auto',
+                      'Four-wheel drive'
+                    ]
+                    const featuresToShow = showAllFeatures ? allFeatures : allFeatures.slice(0, 3)
+                    
+                    return (
+                      <>
+                        {featuresToShow.map(feature => (
+                          <button
+                            key={feature}
+                            onClick={() => handleFeatureToggle(feature)}
+                            className={`px-3 py-2 text-sm rounded-lg border transition-colors flex-shrink-0 ${
+                              filters.features.includes(feature)
+                                ? 'bg-orange-500 text-white border-orange-500'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
+                            }`}
+                          >
+                            {feature}
+                          </button>
+                        ))}
+                        {!showAllFeatures && (
+                          <button
+                            onClick={() => setShowAllFeatures(true)}
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-orange-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                            Show More
+                          </button>
+                        )}
+                        {showAllFeatures && (
+                          <button
+                            onClick={() => setShowAllFeatures(false)}
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                            Show Less
+                          </button>
+                        )}
+                      </>
+                    )
+                  })()}
                 </div>
               </div>
 
@@ -741,13 +1022,13 @@ function SearchContent() {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Seats
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-wrap gap-2">
                   {['2', '4', '5', '7', '8+'].map(seats => (
                     <button
                       key={seats}
-                      onClick={() => handleFilterChange('seats', filters.seats === seats ? '' : seats)}
-                      className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
-                        filters.seats === seats
+                      onClick={() => handleSeatsToggle(seats)}
+                      className={`px-3 py-2 text-sm rounded-lg border transition-colors flex-shrink-0 ${
+                        filters.seats.includes(seats)
                           ? 'bg-orange-500 text-white border-orange-500'
                           : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
                       }`}
