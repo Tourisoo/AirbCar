@@ -101,7 +101,7 @@ class PartnerSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     class Meta:
         model = Partner
-        fields = ['id', 'user', 'company_name', 'tax_id', 'verification_status', 'created_at']
+        fields = ['id', 'user', 'company_name', 'tax_id', 'verification_status', 'created_at', 'agree_on_terms']
 
 class ListingSerializer(serializers.ModelSerializer):
     partner = PartnerSerializer(read_only=True)

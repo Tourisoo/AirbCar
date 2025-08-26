@@ -3,7 +3,7 @@ from django.db import models
 from django.utils import timezone
 
 class User(AbstractUser):
-    phone_number = models.CharField(max_length=15, blank=True)  # Maps to phone
+    phone_number = models.CharField(max_length=15, blank=True)
     profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
     default_currency = models.CharField(max_length=3, default='USD')
     is_partner = models.BooleanField(default=False)
@@ -12,12 +12,11 @@ class User(AbstractUser):
     email_verification_token = models.CharField(max_length=36, blank=True, null=True)
     email_verified = models.BooleanField(default=False)
 
-    name = models.CharField(max_length=100, blank=True)  # New field
-    license_info = models.TextField(blank=True, null=True)  # New field
-    address = models.TextField(blank=True, null=True)  # New field
-    role = models.CharField(max_length=50, default='user')  # New field, e.g., user, admin, partner
+    name = models.CharField(max_length=100, blank=True)
+    license_info = models.TextField(blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    role = models.CharField(max_length=50, default='user')
 
-    # Override the email field to make it unique
     email = models.EmailField(unique=True)
 
     USERNAME_FIELD = 'email'
@@ -40,6 +39,7 @@ class Partner(models.Model):
         ('approved', 'Approved'),
         ('rejected', 'Rejected')
     ], default='pending')
+    agree_on_terms = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     verification_document = models.FileField(upload_to='partner_docs/', blank=True, null=True)
 
@@ -52,28 +52,41 @@ class Partner(models.Model):
         ]
 
 class Listing(models.Model):
-    partner = models.ForeignKey('Partner', on_delete=models.CASCADE, related_name='listings')  # Maps to owner_id
+    partner = models.ForeignKey('Partner', on_delete=models.CASCADE, related_name='listings')
     make = models.CharField(max_length=50)
     model = models.CharField(max_length=50)
     year = models.IntegerField()
-    location = models.CharField(max_length=100, blank=True, null=True)  # New field
-    features = models.JSONField(default=list)  # New field for array-like data
-    price_per_day = models.DecimalField(max_digits=10, decimal_places=2)  # Maps to pricing
-    availability = models.BooleanField(default=True)  # Matches availability
-    rating = models.FloatField(default=0.0, blank=True, null=True)  # New field
+    location = models.CharField(max_length=100, blank=True, null=True)
+    price_per_day = models.DecimalField(max_digits=10, decimal_places=2)
+    availability = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    fuel_type = models.CharField(max_length=20, blank=False, null=False)
+    transmission = models.CharField(max_length=25, blank=False, null=False)
+    seating_capacity = models.IntegerField(blank=False, null=False)
+    vehicle_condition = models.CharField(max_length=50, blank=False, null=False)
+    vehicle_description = models.CharField(max_length=500, blank=True, null=True)
+    available_features = models.JSONField(default=list)
+
+    rating = models.FloatField(default=0.0, blank=True, null=True)
+    features = models.JSONField(default=list)
 
     def __str__(self):
         return f"{self.make} {self.model} ({self.year})"
 
+# class ListingImage(models.Model):
+#     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="pictures")
+#     image = models.ImageField(upload_to="listing_pictures/")
+
+#     def __str__(self):
+#         return f"Image for {self.listing.make} {self.listing.model}"
 
 class Booking(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Maps to renter_id
-    listing = models.ForeignKey('Listing', on_delete=models.CASCADE)  # Maps to car_id
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    listing = models.ForeignKey('Listing', on_delete=models.CASCADE)
     start_time = models.DateTimeField(default=timezone.now)
     end_time = models.DateTimeField(default=timezone.now)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
-    status = models.CharField(max_length=20, default='pending')  # e.g., pending, confirmed, canceled
+    status = models.CharField(max_length=20, default='pending')
     date = models.DateField(auto_now_add=True)
 
     def __str__(self):
