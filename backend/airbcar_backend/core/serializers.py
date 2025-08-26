@@ -121,6 +121,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'id', 'user', 'listing', 'start_time', 'end_time', 
             'price', 'status', 'date']
         read_only_fields = ['user', 'date']
+
 class PasswordResetConfirmSerializer(serializers.Serializer):
     password = serializers.CharField(min_length=6, required=True)
     

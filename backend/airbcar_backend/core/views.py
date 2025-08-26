@@ -204,6 +204,15 @@ class ListingViewSet(viewsets.ModelViewSet):
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
+    permission_classes = [IsAuthenticated]
+    def perform_create(self, serializer):
+        listing_id = self.request.data.get('listing')
+        try:
+            listing = Listing.objects.get(id=listing_id)
+        except Listing.DoesNotExist:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'listing': 'Listing not found'})
+        serializer.save(user=self.request.user, listing=listing)
 
 def user_list(request):
     users = User.objects.all()
