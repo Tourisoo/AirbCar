@@ -101,7 +101,7 @@ class PartnerSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     class Meta:
         model = Partner
-        fields = ['id', 'user', 'company_name', 'tax_id', 'verification_status', 'created_at', 'agree_on_terms']
+        fields = ['id', 'user', 'company_name', 'tax_id', 'verification_status', 'created_at', 'agree_on_terms', 'verification_document']
 
 class ListingSerializer(serializers.ModelSerializer):
     partner = PartnerSerializer(read_only=True)
@@ -109,7 +109,8 @@ class ListingSerializer(serializers.ModelSerializer):
         model = Listing
         fields = [
             'id', 'partner', 'make', 'model', 'year', 'location', 
-            'features', 'price_per_day', 'availability', 'rating', 'created_at']
+            'features', 'price_per_day', 'availability', 'rating', 'created_at',
+            'fuel_type', 'transmission', 'seating_capacity', 'vehicle_condition', 'available_features']
         read_only_fields = ['partner', 'created_at']
 
 class BookingSerializer(serializers.ModelSerializer):
