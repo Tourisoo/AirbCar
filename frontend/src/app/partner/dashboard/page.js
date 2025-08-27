@@ -1459,7 +1459,7 @@ export default function PartnerDashboard() {
       
       {/* Account Settings Modal */}
       {showAccountSettings && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-opacity-50 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
               <div className="flex items-center justify-between">
@@ -1480,7 +1480,7 @@ export default function PartnerDashboard() {
               <form onSubmit={handleAccountSubmit} className="space-y-8">
                 {/* Profile Section */}
                 <div className="border-b border-gray-200 pb-8">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Information</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Owner Information</h3>
                   <div className="flex items-center mb-6">
                     <div className="w-24 h-24 bg-gray-200 rounded-full mr-6 flex items-center justify-center overflow-hidden">
                       <img 
@@ -1734,12 +1734,6 @@ export default function PartnerDashboard() {
                     Cancel
                   </button>
                   <div className="flex space-x-3">
-                    <button
-                      type="button"
-                      className="bg-red-500 text-white py-3 px-6 rounded-lg hover:bg-red-600 transition-colors font-medium"
-                    >
-                      Delete Account
-                    </button>
                     <button
                       type="submit"
                       className="bg-orange-500 text-white py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors font-medium"
