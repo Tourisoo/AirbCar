@@ -101,7 +101,10 @@ class PartnerSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     class Meta:
         model = Partner
-        fields = ['id', 'user', 'company_name', 'tax_id', 'verification_status', 'created_at', 'agree_on_terms', 'verification_document']
+        fields = ['id', 'user', 'company_name', 'tax_id', 'contact_email', 'contact_username', 'login_email', 'login_username', 'login_password', 'verification_status', 'created_at', 'agree_on_terms', 'verification_document']
+        extra_kwargs = {
+            'login_password': { 'write_only': True }
+        }
 
 class ListingSerializer(serializers.ModelSerializer):
     partner = PartnerSerializer(read_only=True)

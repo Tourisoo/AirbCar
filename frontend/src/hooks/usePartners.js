@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
-const PARTNERS_API_URL = '/api/partners';
+const PARTNERS_API_URL = 'http://localhost:8000/partners/';
+const PARTNER_REGISTER_API_URL = 'http://localhost:8000/api/partners/register/';
 
 // Get partner data (hook)
 export function usePartners() {
@@ -31,12 +32,80 @@ export function usePartners() {
 
 // Post partner data
 export async function createPartner(partner) {
+  let token = null;
+  if (typeof window !== 'undefined') {
+    try {
+      token = localStorage.getItem('access_token') || localStorage.getItem('token');
+    } catch (e) {}
+  }
   const response = await fetch(PARTNERS_API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify(partner),
   });
   if (!response.ok) throw new Error('Failed to create partner');
+  return response.json();
+}
+
+// Register or convert current user to partner (auth required)
+export async function registerPartner(partner) {
+  let token = null;
+  if (typeof window !== 'undefined') {
+    try {
+      token = localStorage.getItem('access_token') || localStorage.getItem('token');
+    } catch (e) {}
+  }
+  if (!token) {
+    throw new Error('Please sign in to continue.');
+  }
+  // Include current user's email/username from token if available
+  let payload;
+  try {
+    payload = JSON.parse(atob(token.split('.')[1]));
+  } catch {}
+  const enriched = {
+    ...partner,
+    user_email: payload?.email,
+    user_username: payload?.username
+  };
+  let response = await fetch('http://localhost:8000/partners/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(enriched),
+  });
+  // Fallback: if the dedicated register endpoint is missing, try the DRF viewset route
+  if (response.status === 404) {
+    response = await fetch(PARTNERS_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(enriched),
+    });
+  }
+  if (!response.ok) {
+    let errText = 'Failed to register partner';
+    try {
+      const errBody = await response.json();
+      if (errBody?.errors) {
+        errText = typeof errBody.errors === 'string' ? errBody.errors : JSON.stringify(errBody.errors);
+      } else if (errBody?.detail) {
+        errText = errBody.detail;
+      }
+    } catch (_) {
+      try { errText = await response.text(); } catch {}
+    }
+    if (response.status === 401) errText = 'Your session expired. Please sign in again.';
+    if (response.status === 400 && !errText) errText = 'Please check the form fields and try again.';
+    throw new Error(errText);
+  }
   return response.json();
 }
 

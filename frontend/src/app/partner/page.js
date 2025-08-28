@@ -3,9 +3,13 @@ import { useState, useRef, useEffect } from 'react';
 
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { useAuth } from '../../contexts/AuthContext';
+import { registerPartner } from '../../hooks/usePartners';
+import { createListing } from '../../hooks/useListYourVehicle';
 
 // Partner registration form component using the custom hook
-function PartnerFormWithHook() {
+function PartnerFormWithHook({ onSuccess }) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     company_name: '',
     tax_id: '',
@@ -47,6 +51,7 @@ function PartnerFormWithHook() {
     const errors = {};
     const currentToken = getToken();
     if (!formData.company_name) errors.company_name = 'Business name is required';
+    if (!formData.tax_id) errors.tax_id = 'Tax ID is required';
     if (!formData.agree_on_terms) errors.agree_on_terms = 'You must agree to terms and conditions';
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -54,7 +59,10 @@ function PartnerFormWithHook() {
     }
     setToken(currentToken); // update state for UI if needed
     try {
-      await postPartner(formData, currentToken); // token may be null for guests
+      const result = await postPartner(formData, currentToken);
+      if (result && typeof onSuccess === 'function') {
+        onSuccess();
+      }
     } catch (err) {
       // Error handled in hook
     }
@@ -62,6 +70,29 @@ function PartnerFormWithHook() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Authenticated user info (read-only) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="relative">
+          <input
+            type="text"
+            name="username"
+            placeholder="Username"
+            value={user?.username || ''}
+            disabled
+            className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl bg-gray-100 text-gray-700"
+          />
+        </div>
+        <div className="relative">
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={user?.email || ''}
+            disabled
+            className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl bg-gray-100 text-gray-700"
+          />
+        </div>
+      </div>
       <div className="relative">
         <input
           type="text"
@@ -136,47 +167,13 @@ function useCreatePartner() {
     setError(null);
     setSuccess(false);
     try {
-      // If token is present, PATCH user profile; otherwise, POST to /api/partners as guest
-      let res;
-      if (token) {
-        res = await fetch('/api/users/me', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ ...partnerData, is_partner: true }),
-        });
-      } else {
-        res = await fetch('/api/partners', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(partnerData),
-        });
-      }
-      if (!res.ok) {
-        let errMsg = 'Submission failed';
-        let err = {};
-        try {
-          err = await res.json();
-          if (err && (err.error || err.message)) {
-            errMsg = err.error || err.message;
-          } else if (err.errors) {
-            errMsg = typeof err.errors === 'string' ? err.errors : JSON.stringify(err.errors);
-          }
-        } catch (e) {
-          // ignore
-        }
-        setError({ general: errMsg });
-        setSuccess(false);
-        return null;
-      }
+      // Post using dedicated partner register endpoint (auth required)
+      const created = await registerPartner(partnerData);
       setSuccess(true);
-      return await res.json();
+      return created;
     } catch (error) {
-      setError({ general: 'Network error. Please try again.' });
+      const message = (error && error.message) ? error.message : 'Network error. Please try again.';
+      setError({ general: message });
       setSuccess(false);
       return null;
     } finally {
@@ -225,25 +222,13 @@ export default function BecomePartner() {
     year: '',
     fuelType: '',
     transmission: '',
-    engineSize: '',
-    mileage: '',
-    maxSpeed: '',
     seatingCapacity: '',
     features: [],
     condition: '',
-    lastService: '',
-    insuranceValid: '',
     location: '',
-    address: '',
-    dailyRate: '',
-    weeklyRate: '',
-    monthlyRate: '',
-    securityDeposit: '',
-    registrationNumber: '',
-    photos: [],
     description: '',
-    rules: '',
-    availability: 'available'
+    dailyRate: '',
+    photos: [],
   });
   const [formErrors, setFormErrors] = useState({});
   const testimonialsRef = useRef(null);
@@ -561,25 +546,16 @@ async function fetchPartners() {
   // Vehicle registration form submit
   const handleVehicleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateStep(5)) return;
+    if (!validateStep(5)) {
+      alert('Please complete all required fields in Step 5 (documents and at least one photo).');
+      return;
+    }
     setIsSubmitting(true);
     setFormErrors({});
     try {
-      const data = new FormData();
-      Object.entries(vehicleData).forEach(([key, value]) => {
-        if (key === 'photos' && Array.isArray(value)) {
-          value.forEach((file) => data.append('photos', file));
-        } else if (value instanceof File) {
-          data.append(key, value);
-        } else {
-          data.append(key, value);
-        }
-      });
-      const res = await fetch('/api/vehicle/register', {
-        method: 'POST',
-        body: data
-      });
-      if (res.ok) {
+      // Use API to create listing directly in Django backend
+      await createListing(vehicleData);
+      {
         alert('🎉 Vehicle added successfully! Our team will review and approve it within 24 hours. You\'ll receive a confirmation email shortly.');
         setShowAddVehicleForm(false);
         setCurrentStep(1);
@@ -592,12 +568,10 @@ async function fetchPartners() {
           registrationNumber: '', photos: [],
           description: '', rules: '', availability: 'available'
         });
-      } else {
-        const err = await res.json().catch(() => ({}));
-        setFormErrors(err.errors || { general: 'Submission failed' });
       }
     } catch (error) {
-      setFormErrors({ general: 'Network error. Please try again.' });
+      const message = (error && error.message) ? error.message : 'Network error. Please try again.';
+      setFormErrors({ general: message });
     } finally {
       setIsSubmitting(false);
     }
@@ -734,7 +708,7 @@ async function fetchPartners() {
                   </div>
                 </div>
                 {/* Partner registration form using useCreatePartner hook */}
-                <PartnerFormWithHook />
+                <PartnerFormWithHook onSuccess={() => setShowAddVehicleForm(true)} />
                 {/* The old form code has been removed in favor of the hook-based form above */}
               </div>
             </div>

@@ -34,6 +34,13 @@ class Partner(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='partner')
     company_name = models.CharField(max_length=100)
     tax_id = models.CharField(max_length=50, blank=False)
+    # Store a snapshot of the user's identifying info at the time of registration
+    contact_email = models.EmailField(blank=True, null=True)
+    contact_username = models.CharField(max_length=150, blank=True, null=True)
+    # Optional standalone credentials for partners (not used for Django auth)
+    login_email = models.EmailField(blank=True, null=True)
+    login_username = models.CharField(max_length=150, blank=True, null=True)
+    login_password = models.CharField(max_length=128, blank=True, null=True)  # hashed
     verification_status = models.CharField(max_length=20, choices=[
         ('pending', 'Pending'),
         ('approved', 'Approved'),
