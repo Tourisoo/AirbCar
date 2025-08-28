@@ -28,10 +28,10 @@ from django.conf.urls.static import static
 
 
 router = DefaultRouter()
-router.register(r'users', UserViewSet)
-router.register(r'partners', PartnerViewSet) # add partner
-router.register(r'listings', ListingViewSet) # add a listing
-router.register(r'bookings', BookingViewSet) # add a booking
+router.register(r'users', UserViewSet) # Get: get user info
+router.register(r'partners', PartnerViewSet) # Post: add partner
+router.register(r'listings', ListingViewSet) # Post: add a listing
+router.register(r'bookings', BookingViewSet) # Post: add a booking
 
 
 urlpatterns = [
