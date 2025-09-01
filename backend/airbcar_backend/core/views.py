@@ -70,7 +70,7 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
     
     def get_object(self):
-        return self.request.user  # Always return the authenticated user
+        return self.request.user
     
     def patch(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
@@ -165,8 +165,8 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.is_staff:
-            return User.objects.all()  # Admins see all users
-        return User.objects.filter(id=user.id)  # Users see only their profile
+            return User.objects.all()
+        return User.objects.filter(id=user.id)
 
 class PartnerViewSet(viewsets.ModelViewSet):
     queryset = Partner.objects.all()
@@ -179,53 +179,69 @@ class PartnerViewSet(viewsets.ModelViewSet):
             self.request.user.is_partner = True
             self.request.user.save(update_fields=['is_partner'])
 
+    def get_queryset(self):
+        # Ensure that only the logged-in user's partner info is shown
+        user = self.request.user
+        if user.is_partner:
+            return Partner.objects.filter(user=user)  # Return the partner of the logged-in user
+        return Partner.objects.none()  # Return an empty queryset if user is not a partner
 
-class PartnerRegisterView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
+    def list(self, request, *args, **kwargs):
+        # Override the list method to handle the "not a partner" case
         user = request.user
-        data = request.data.copy()
+        if not user.is_partner:
+            return Response({'error': 'You are not a partner'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # If the user is a partner, proceed with the normal behavior
+        return super().list(request, *args, **kwargs)
 
-        # Ensure required fields; default tax_id if not provided
-        company_name = data.get('company_name')
-        if not company_name:
-            return Response({'errors': {'company_name': 'This field is required.'}}, status=status.HTTP_400_BAD_REQUEST)
 
-        if 'tax_id' not in data or not data.get('tax_id'):
-            data['tax_id'] = 'PENDING'
+# class PartnerRegisterView(APIView):
+#     permission_classes = [IsAuthenticated]
 
-        data.setdefault('agree_on_terms', False)
+#     def post(self, request):
+#         user = request.user
+#         data = request.data.copy()
 
-        # If partner already exists, update it; else create new
-        partner = Partner.objects.filter(user=user).first()
-        # Always set contact fields from user unless explicitly provided
-        data.setdefault('contact_email', user.email)
-        data.setdefault('contact_username', user.username)
-        if partner:
-            serializer = PartnerSerializer(partner, data=data, partial=True)
-        else:
-            serializer = PartnerSerializer(data=data)
+#         # Ensure required fields; default tax_id if not provided
+#         company_name = data.get('company_name')
+#         if not company_name:
+#             return Response({'errors': {'company_name': 'This field is required.'}}, status=status.HTTP_400_BAD_REQUEST)
 
-        if serializer.is_valid():
-            # Hash partner login password if provided
-            login_password = data.get('login_password')
-            if login_password:
-                from django.contrib.auth.hashers import make_password
-                data['login_password'] = make_password(login_password)
-                # re-bind serializer with hashed password
-                if partner:
-                    serializer = PartnerSerializer(partner, data=data, partial=True)
-                else:
-                    serializer = PartnerSerializer(data=data)
-                serializer.is_valid(raise_exception=True)
-            saved = serializer.save(user=user)
-            if not user.is_partner:
-                user.is_partner = True
-                user.save(update_fields=['is_partner'])
-            return Response(PartnerSerializer(saved).data, status=status.HTTP_201_CREATED if not partner else status.HTTP_200_OK)
+#         if 'tax_id' not in data or not data.get('tax_id'):
+#             data['tax_id'] = 'PENDING'
 
-        return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+#         data.setdefault('agree_on_terms', False)
+
+#         # If partner already exists, update it; else create new
+#         partner = Partner.objects.filter(user=user).first()
+#         # Always set contact fields from user unless explicitly provided
+#         data.setdefault('contact_email', user.email)
+#         data.setdefault('contact_username', user.username)
+#         if partner:
+#             serializer = PartnerSerializer(partner, data=data, partial=True)
+#         else:
+#             serializer = PartnerSerializer(data=data)
+
+#         if serializer.is_valid():
+#             # Hash partner login password if provided
+#             login_password = data.get('login_password')
+#             if login_password:
+#                 from django.contrib.auth.hashers import make_password
+#                 data['login_password'] = make_password(login_password)
+#                 # re-bind serializer with hashed password
+#                 if partner:
+#                     serializer = PartnerSerializer(partner, data=data, partial=True)
+#                 else:
+#                     serializer = PartnerSerializer(data=data)
+#                 serializer.is_valid(raise_exception=True)
+#             saved = serializer.save(user=user)
+#             if not user.is_partner:
+#                 user.is_partner = True
+#                 user.save(update_fields=['is_partner'])
+#             return Response(PartnerSerializer(saved).data, status=status.HTTP_201_CREATED if not partner else status.HTTP_200_OK)
+
+#         return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class ListingViewSet(viewsets.ModelViewSet):
     queryset = Listing.objects.all()
@@ -313,6 +329,74 @@ def booking_list(request):
     
     greeting = [f"booking ID: {booking.id}, user: {booking.user.username}, Car: {booking.listing}, Date: {booking.date}" for booking in bookings]
     return HttpResponse("<br>".join(greeting))
+
+# def home_view(request):
+#     return HttpResponse("<h1>Welcome Home<h1>")
+
+class UserRegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def perform_create(self, serializer):
+        user = serializer.save()
+        user.email_verification_token = str(uuid.uuid4())
+        user.save()
+
+        verification_url = f"{self.request.build_absolute_uri('/verify-email/')}?token={user.email_verification_token}"
+        send_mail(
+            subject='Verify your email',
+            message=f'Click the link to verify your email: {verification_url}',
+            from_email='no-reply@airbcar.com',
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class PasswordResetRequestView(generics.GenericAPIView):
+    serializer_class = PasswordResetRequestSerializer
+    
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        email = serializer.validated_data['email']
+        user = User.objects.filter(email=email).first()
+        if user:
+            token_generator = PasswordResetTokenGenerator()
+            token = token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            # Send user to frontend reset page with uid and token as URL parameters
+            reset_url = f"http://localhost:3000/auth/reset-password?uid={uid}&token={token}"
+            send_mail(
+                'Password Reset Request',
+                f'Use this link to reset your password: {reset_url}',
+                'from@airbcar.com',
+                [email],
+                fail_silently=False,
+            )
+            return Response({'message': 'Password reset email sent'}, status=status.HTTP_200_OK)
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+class PasswordResetConfirmView(generics.GenericAPIView):
+    serializer_class = PasswordResetConfirmSerializer
+    
+    def post(self, request, uidb64, token):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+            
+        token_generator = PasswordResetTokenGenerator()
+        if user and token_generator.check_token(user, token):
+            user.set_password(serializer.validated_data['password'])
+            user.save()
+            return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
+        return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)
 
 def home_view(request):
     html_content = """
@@ -436,70 +520,3 @@ python manage.py runserver
     """
     return HttpResponse(html_content)
 
-# def home_view(request):
-#     return HttpResponse("<h1>Welcome Home<h1>")
-
-class UserRegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    def perform_create(self, serializer):
-        user = serializer.save()
-        user.email_verification_token = str(uuid.uuid4())
-        user.save()
-
-        verification_url = f"{self.request.build_absolute_uri('/verify-email/')}?token={user.email_verification_token}"
-        send_mail(
-            subject='Verify your email',
-            message=f'Click the link to verify your email: {verification_url}',
-            from_email='no-reply@airbcar.com',
-            recipient_list=[user.email],
-            fail_silently=False,
-        )
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-class PasswordResetRequestView(generics.GenericAPIView):
-    serializer_class = PasswordResetRequestSerializer
-    
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        email = serializer.validated_data['email']
-        user = User.objects.filter(email=email).first()
-        if user:
-            token_generator = PasswordResetTokenGenerator()
-            token = token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            # Send user to frontend reset page with uid and token as URL parameters
-            reset_url = f"http://localhost:3000/auth/reset-password?uid={uid}&token={token}"
-            send_mail(
-                'Password Reset Request',
-                f'Use this link to reset your password: {reset_url}',
-                'from@airbcar.com',
-                [email],
-                fail_silently=False,
-            )
-            return Response({'message': 'Password reset email sent'}, status=status.HTTP_200_OK)
-        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-    
-class PasswordResetConfirmView(generics.GenericAPIView):
-    serializer_class = PasswordResetConfirmSerializer
-    
-    def post(self, request, uidb64, token):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        try:
-            uid = urlsafe_base64_decode(uidb64).decode()
-            user = User.objects.get(pk=uid)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            user = None
-            
-        token_generator = PasswordResetTokenGenerator()
-        if user and token_generator.check_token(user, token):
-            user.set_password(serializer.validated_data['password'])
-            user.save()
-            return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
-        return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)
