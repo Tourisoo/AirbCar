@@ -2,12 +2,14 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
 function SearchContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { user, loading: authLoading, login, register } = useAuth()
   const [cars, setCars] = useState([])
   const [filteredCars, setFilteredCars] = useState([])
   const [filters, setFilters] = useState({
@@ -33,8 +35,12 @@ function SearchContent() {
   const [showBookingFlow, setShowBookingFlow] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [bookingStep, setBookingStep] = useState('auth') // auth, license, personal, contact, verification, payment
+  const [authError, setAuthError] = useState('')
+  const [validationError, setValidationError] = useState('')
+  const [authSubmitLoading, setAuthSubmitLoading] = useState(false)
   const [bookingData, setBookingData] = useState({
     // Auth data
+    name: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -447,6 +453,19 @@ function SearchContent() {
     }, 1000)
   }, []) // Empty dependency array is correct here since mockCars is static
 
+  // Check if user is authenticated and skip auth step
+  useEffect(() => {
+    if (user && !authLoading) {
+      setIsLoggedIn(true)
+      if (bookingStep === 'auth') {
+        setBookingStep('license')
+      }
+    } else if (!user && !authLoading) {
+      setIsLoggedIn(false)
+      setBookingStep('auth')
+    }
+  }, [user, authLoading, bookingStep])
+
   useEffect(() => {
     let filtered = cars.filter(car => {
       return (
@@ -572,7 +591,10 @@ function SearchContent() {
     setShowPickupProcess(false)
     setShowBookingFlow(false)
     setBookingStep('auth')
+    setAuthError('')
+    setAuthSubmitLoading(false)
     setBookingData({
+      name: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -631,6 +653,14 @@ function SearchContent() {
   }
 
   const handleBookingDataChange = (field, value) => {
+    // Clear validation errors when user starts typing
+    if (validationError) {
+      setValidationError('')
+    }
+    if (authError && (field === 'email' || field === 'password' || field === 'name' || field === 'confirmPassword')) {
+      setAuthError('')
+    }
+    
     setBookingData(prev => ({
       ...prev,
       [field]: value
@@ -639,22 +669,184 @@ function SearchContent() {
 
   const handleAuthSubmit = async (e) => {
     e.preventDefault()
-    // Simulate authentication
-    setTimeout(() => {
-      setIsLoggedIn(true)
-      setBookingStep('license')
-    }, 1000)
+    setAuthSubmitLoading(true)
+    setAuthError('')
+
+    try {
+      let result
+      if (bookingData.isSignUp) {
+        // Sign up flow
+        if (bookingData.password !== bookingData.confirmPassword) {
+          setAuthError("Passwords don't match")
+          setAuthSubmitLoading(false)
+          return
+        }
+        
+        if (!bookingData.name.trim()) {
+          setAuthError("Name is required")
+          setAuthSubmitLoading(false)
+          return
+        }
+        
+        result = await register(
+          bookingData.name.trim(),
+          bookingData.email,
+          bookingData.password
+        )
+      } else {
+        // Sign in flow
+        result = await login(bookingData.email, bookingData.password)
+      }
+
+      if (result.success) {
+        setIsLoggedIn(true)
+        setBookingStep('license')
+        setAuthError('')
+      } else {
+        setAuthError(result.error || 'Authentication failed')
+      }
+    } catch (error) {
+      setAuthError('Something went wrong. Please try again.')
+      console.error('Auth error:', error)
+    } finally {
+      setAuthSubmitLoading(false)
+    }
   }
 
   const handleGoogleAuth = () => {
-    // Simulate Google authentication
-    setTimeout(() => {
-      setIsLoggedIn(true)
-      setBookingStep('license')
-    }, 1000)
+    // TODO: Implement Google OAuth integration
+    setAuthError('Google authentication not implemented yet')
+  }
+
+  // Validation function for each step
+  const validateCurrentStep = (step) => {
+    const currentDate = new Date()
+    
+    switch (step) {
+      case 'auth':
+        if (!isLoggedIn) {
+          setAuthError('Please sign in or create an account to continue')
+          return false
+        }
+        return true
+
+      case 'license':
+        if (!bookingData.licenseCountry) {
+          setValidationError('Please select your license origin country')
+          return false
+        }
+        if (!bookingData.licenseNumber.trim()) {
+          setValidationError('Please enter your license number')
+          return false
+        }
+        if (!bookingData.licenseIssueDate) {
+          setValidationError('Please select your license issue date')
+          return false
+        }
+        if (!bookingData.licenseExpiryDate) {
+          setValidationError('Please select your license expiry date')
+          return false
+        }
+        // Check if license is not expired
+        const expiryDate = new Date(bookingData.licenseExpiryDate)
+        if (expiryDate < currentDate) {
+          setValidationError('Your license appears to be expired. Please use a valid license.')
+          return false
+        }
+        return true
+
+      case 'personal':
+        if (!bookingData.firstName.trim()) {
+          setValidationError('Please enter your first name')
+          return false
+        }
+        if (!bookingData.lastName.trim()) {
+          setValidationError('Please enter your last name')
+          return false
+        }
+        if (!bookingData.dateOfBirth) {
+          setValidationError('Please select your date of birth')
+          return false
+        }
+        if (!bookingData.nationality) {
+          setValidationError('Please select your nationality')
+          return false
+        }
+        // Check if user is at least 18 years old
+        const birthDate = new Date(bookingData.dateOfBirth)
+        const age = (currentDate - birthDate) / (365.25 * 24 * 60 * 60 * 1000)
+        if (age < 18) {
+          setValidationError('You must be at least 18 years old to rent a car')
+          return false
+        }
+        return true
+
+      case 'contact':
+        if (!bookingData.phoneNumber.trim()) {
+          setValidationError('Please enter your phone number')
+          return false
+        }
+        if (!bookingData.address.trim()) {
+          setValidationError('Please enter your address')
+          return false
+        }
+        if (!bookingData.city.trim()) {
+          setValidationError('Please enter your city')
+          return false
+        }
+        if (!bookingData.country) {
+          setValidationError('Please select your country')
+          return false
+        }
+        // Basic phone number validation
+        const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/
+        if (!phoneRegex.test(bookingData.phoneNumber.replace(/[\s\-\(\)]/g, ''))) {
+          setValidationError('Please enter a valid phone number')
+          return false
+        }
+        return true
+
+      case 'verification':
+        if (!bookingData.idType) {
+          setValidationError('Please select an ID type')
+          return false
+        }
+        if (!bookingData.idNumber.trim()) {
+          setValidationError('Please enter your ID number')
+          return false
+        }
+        if (!bookingData.idExpiryDate) {
+          setValidationError('Please select your ID expiry date')
+          return false
+        }
+        // Check if ID is not expired
+        const idExpiryDate = new Date(bookingData.idExpiryDate)
+        if (idExpiryDate < currentDate) {
+          setValidationError('Your ID appears to be expired. Please use a valid ID.')
+          return false
+        }
+        return true
+
+      case 'payment':
+        // For payment step, we might want to validate payment method selection
+        // This would depend on your payment implementation
+        return true
+
+      default:
+        return true
+    }
   }
 
   const handleNextStep = () => {
+    // Clear previous validation errors
+    setValidationError('')
+    setAuthError('')
+
+    // Validate current step before proceeding
+    if (!validateCurrentStep(bookingStep)) {
+      return
+    }
+
     const steps = ['auth', 'license', 'personal', 'contact', 'verification', 'payment', 'confirmation']
     const currentIndex = steps.indexOf(bookingStep)
     if (currentIndex < steps.length - 1) {
@@ -663,6 +855,10 @@ function SearchContent() {
   }
 
   const handlePrevStep = () => {
+    // Clear errors when going back
+    setValidationError('')
+    setAuthError('')
+    
     const steps = ['auth', 'license', 'personal', 'contact', 'verification', 'payment', 'confirmation']
     const currentIndex = steps.indexOf(bookingStep)
     if (currentIndex > 0) {
@@ -1576,6 +1772,35 @@ function SearchContent() {
                   </div>
 
                   <form onSubmit={handleAuthSubmit} className="space-y-4">
+                    {authError && (
+                      <div className="rounded-md bg-red-50 p-4">
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-sm text-red-700">{authError}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {bookingData.isSignUp && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <input
+                          type="text"
+                          value={bookingData.name}
+                          onChange={(e) => handleBookingDataChange('name', e.target.value)}
+                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="Enter your full name"
+                          required
+                        />
+                      </div>
+                    )}
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                       <input
@@ -1616,9 +1841,13 @@ function SearchContent() {
 
                     <button
                       type="submit"
-                      className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium"
+                      disabled={authSubmitLoading}
+                      className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {bookingData.isSignUp ? 'Create Account' : 'Sign In'}
+                      {authSubmitLoading 
+                        ? (bookingData.isSignUp ? 'Creating Account...' : 'Signing In...') 
+                        : (bookingData.isSignUp ? 'Create Account' : 'Sign In')
+                      }
                     </button>
                   </form>
 
@@ -1640,6 +1869,21 @@ function SearchContent() {
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Driver License Information</h3>
                     <p className="text-gray-600">We need your license details for verification</p>
                   </div>
+
+                  {validationError && (
+                    <div className="rounded-md bg-red-50 p-4">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm text-red-700">{validationError}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-4">
                     <div>
@@ -1723,6 +1967,21 @@ function SearchContent() {
                     <p className="text-gray-600">Tell us more about yourself</p>
                   </div>
 
+                  {validationError && (
+                    <div className="rounded-md bg-red-50 p-4">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm text-red-700">{validationError}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -1805,6 +2064,21 @@ function SearchContent() {
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Contact Information</h3>
                     <p className="text-gray-600">We need your contact details and address</p>
                   </div>
+
+                  {validationError && (
+                    <div className="rounded-md bg-red-50 p-4">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm text-red-700">{validationError}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-4">
                     <div>
@@ -1923,6 +2197,21 @@ function SearchContent() {
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Identity Verification</h3>
                     <p className="text-gray-600">Please provide your identification details</p>
                   </div>
+
+                  {validationError && (
+                    <div className="rounded-md bg-red-50 p-4">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm text-red-700">{validationError}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-4">
                     <div>

@@ -2,6 +2,16 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from .models import User, Booking, Partner, Listing
 
+# The default TokenObtainPairSerializer provided by rest_framework_simplejwt
+#  generates JWT tokens with minimal user data (typically just the user ID). 
+#  By customizing it, you’ll enhance the token and response to include key fields
+#  from the User model, making the login process more informative for the frontend.
+
+
+#  This serializer class contains the logic for how to take the incoming 
+# data from the request and convert it into a model instance
+
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     email = serializers.EmailField(required=False)
     username = serializers.CharField(required=False)
@@ -18,9 +28,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['email'] = user.email
         token['is_partner'] = user.is_partner
         token['is_verified'] = user.is_verified
-        token['is_staff'] = user.is_staff
-        token['is_superuser'] = user.is_superuser
-        token['role'] = user.role
         return token
 
     def validate(self, attrs):
@@ -63,10 +70,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'username': self.user.username,
             'email': self.user.email,
             'is_partner': self.user.is_partner,
-            'is_verified': self.user.is_verified,
-            'is_staff': self.user.is_staff,
-            'is_superuser': self.user.is_superuser,
-            'role': self.user.role
+            'is_verified': self.user.is_verified
         }
         
         return data
@@ -78,7 +82,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'phone_number', 'default_currency',
             'is_partner', 'is_verified', 'password', 'profile_picture', 'email_verified',
-            'name', 'license_info', 'address', 'role', 'is_staff', 'is_superuser']
+            'name', 'license_info', 'address', 'role']
         read_only_fields = ['id', 'is_partner', 'is_verified', 'email_verified']
 
     def create(self, validated_data):
@@ -87,9 +91,7 @@ class UserSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             phone_number=validated_data.get('phone_number', ''),
             default_currency=validated_data.get('default_currency', 'USD'),
-            is_partner=validated_data.get('is_partner', False),
-            name=validated_data.get('name', ''),
-            role=validated_data.get('role', 'user')
+            is_partner=validated_data.get('is_partner', False)
         )
         user.set_password(validated_data['password'])
         user.save()
@@ -127,4 +129,5 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     password = serializers.CharField(min_length=6, required=True)
     
     def validate_password(self, value):
+        # You can add additional password validation here if needed
         return value

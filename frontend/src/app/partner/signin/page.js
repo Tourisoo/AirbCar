@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function AdminSignIn() {
+export default function PartnerSignIn() {
   const router = useRouter()
 
   useEffect(() => {

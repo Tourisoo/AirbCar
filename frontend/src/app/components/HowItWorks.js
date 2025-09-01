@@ -1,10 +1,4 @@
-'use client';
-import { useScrollAnimation, animations } from "../../hooks/useScrollAnimation";
-
 export default function HowItWorks() {
-  const [headerRef, headerVisible] = useScrollAnimation({ delay: 100 });
-  const [stepsRef, stepsVisible] = useScrollAnimation({ delay: 200 });
-  
   const steps = [
     {
       step: "Step 1: Search",
@@ -37,24 +31,20 @@ export default function HowItWorks() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-orange-50 rounded-2xl pt-8 pb-8 px-8">
           {/* Section Header */}
-          <div ref={headerRef} className="text-center mb-16" style={animations.fadeInDown(headerVisible)}>
+          <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Book a car rental in three simple steps
             </h2>
           </div>
 
           {/* Steps Grid */}
-          <div ref={stepsRef} className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {steps.map((step, index) => (
-            <div 
-              key={index} 
-              className="text-center"
-              style={animations.staggeredFadeInUp(stepsVisible, index)}
-            >
+            <div key={index} className="text-center">
               
               {/* Step Icon */}
               <div className="flex justify-center mb-8">
-                <div className={`w-32 h-32 ${step.bgColor} rounded-full flex items-center justify-center relative transform hover:scale-105 transition-transform duration-300`}>
+                <div className={`w-32 h-32 ${step.bgColor} rounded-full flex items-center justify-center relative`}>
                   <img 
                     src={step.image} 
                     alt={step.title}

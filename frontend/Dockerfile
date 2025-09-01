@@ -13,8 +13,8 @@ RUN npm install -g pnpm
 # Copy package files first for better caching
 COPY package.json pnpm-lock.yaml ./
 
-# Copy Prisma schema for database setup
-COPY prisma ./prisma/
+# Copy Prisma schema for database setup (optional - only if prisma directory exists)
+# COPY prisma ./prisma/
 
 # Install dependencies (allow lockfile refresh if package.json updated)
 RUN pnpm install --no-frozen-lockfile

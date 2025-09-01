@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from .models import User, Booking, Partner, Listing
 from .serializers import UserSerializer, BookingSerializer, PartnerSerializer, \
     ListingSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer
@@ -217,14 +217,52 @@ class BookingViewSet(viewsets.ModelViewSet):
 def user_list(request):
     users = User.objects.all()
     if not users:
+        if request.headers.get('Content-Type') == 'application/json':
+            return JsonResponse({'users': [], 'count': 0})
         return HttpResponse("No Users found.")
+    
+    if request.headers.get('Content-Type') == 'application/json':
+        user_data = [
+            {
+                'id': user.id,
+                'username': user.username, 
+                'email': user.email,
+                'name': user.name,
+                'is_partner': user.is_partner,
+                'is_verified': user.is_verified,
+                'role': user.role
+            } 
+            for user in users
+        ]
+        return JsonResponse({'users': user_data, 'count': len(user_data)})
+    
     greetings = [f"Hi my name is {user.username}, with the id {user.id}, im using {user.email}" for user in users]
     return HttpResponse("<br>".join(greetings))
 
 def booking_list(request):
     bookings = Booking.objects.all()
     if not bookings:
+        if request.headers.get('Content-Type') == 'application/json':
+            return JsonResponse({'bookings': [], 'count': 0})
         return HttpResponse("No bookings found.")
+    
+    if request.headers.get('Content-Type') == 'application/json':
+        booking_data = [
+            {
+                'id': booking.id,
+                'user': booking.user.username,
+                'user_id': booking.user.id,
+                'listing': str(booking.listing),
+                'date': booking.date.isoformat() if booking.date else None,
+                'start_time': booking.start_time.isoformat() if booking.start_time else None,
+                'end_time': booking.end_time.isoformat() if booking.end_time else None,
+                'price': booking.price,
+                'status': booking.status
+            }
+            for booking in bookings
+        ]
+        return JsonResponse({'bookings': booking_data, 'count': len(booking_data)})
+    
     greeting = [f"booking ID: {booking.id}, user: {booking.user.username}, Car: {booking.listing}, Date: {booking.date}" for booking in bookings]
     return HttpResponse("<br>".join(greeting))
 
