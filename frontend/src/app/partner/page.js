@@ -1,19 +1,210 @@
-'use client';
-
+"use client";
 import { useState, useRef, useEffect } from 'react';
+
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { useAuth } from '../../contexts/AuthContext';
+import { registerPartner } from '../../hooks/usePartners';
+import { createListing } from '../../hooks/useListYourVehicle';
+
+// Partner registration form component using the custom hook
+function PartnerFormWithHook({ onSuccess }) {
+  const { user } = useAuth();
+  const [formData, setFormData] = useState({
+    company_name: '',
+    tax_id: '',
+    agree_on_terms: true,
+  });
+  const [formErrors, setFormErrors] = useState({});
+  const [token, setToken] = useState(null);
+  const { postPartner, loading, error, success } = useCreatePartner();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const t = localStorage.getItem('token');
+      setToken(t);
+    }
+  }, []);
+
+  // Helper to ensure token is always up-to-date before submit
+  const getToken = () => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('token');
+    }
+    return null;
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFormErrors({});
+    const errors = {};
+    const currentToken = getToken();
+    if (!formData.company_name) errors.company_name = 'Business name is required';
+    if (!formData.tax_id) errors.tax_id = 'Tax ID is required';
+    if (!formData.agree_on_terms) errors.agree_on_terms = 'You must agree to terms and conditions';
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setToken(currentToken); // update state for UI if needed
+    try {
+      const result = await postPartner(formData, currentToken);
+      if (result && typeof onSuccess === 'function') {
+        onSuccess();
+      }
+    } catch (err) {
+      // Error handled in hook
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Authenticated user info (read-only) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="relative">
+          <input
+            type="text"
+            name="username"
+            placeholder="Username"
+            value={user?.username || ''}
+            disabled
+            className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl bg-gray-100 text-gray-700"
+          />
+        </div>
+        <div className="relative">
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={user?.email || ''}
+            disabled
+            className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl bg-gray-100 text-gray-700"
+          />
+        </div>
+      </div>
+      <div className="relative">
+        <input
+          type="text"
+          name="company_name"
+          placeholder="Business Name"
+          value={formData.company_name || ""}
+          onChange={handleInputChange}
+          className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 transition-all duration-300 hover:border-gray-300 bg-gray-50 focus:bg-white"
+          required
+        />
+      </div>
+      <div className="relative">
+        <input
+          type="text"
+          name="tax_id"
+          placeholder="Tax ID"
+          value={formData.tax_id || ""}
+          onChange={handleInputChange}
+          className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 transition-all duration-300 hover:border-gray-300 bg-gray-50 focus:bg-white"
+          required
+        />
+      </div>
+      <div className="flex items-start space-x-3 pt-2">
+        <input
+          type="checkbox"
+          name="agree_on_terms"
+          checked={formData.agree_on_terms || false}
+          onChange={handleInputChange}
+          className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mt-0.5"
+          required
+        />
+        <label className="text-sm text-gray-600 leading-relaxed">
+          I agree to AirbCar's <span className="text-blue-600 hover:underline cursor-pointer">Terms of Service</span> and <span className="text-blue-600 hover:underline cursor-pointer">Privacy Policy</span>. I consent to receive marketing communications.
+        </label>
+      </div>
+      <button
+        type="submit"
+        className="w-full text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center space-x-2"
+        style={{backgroundColor: 'var(--color-orange-500)' }}
+        disabled={loading}
+      >
+        {loading ? 'Submitting...' : <span>START EARNING TODAY - FREE</span>}
+      </button>
+      {error && <p className="text-red-500 text-center text-sm">{error.general || 'Submission failed'}</p>}
+      {formErrors.company_name && <p className="text-red-500 text-xs mt-1">{formErrors.company_name}</p>}
+      {formErrors.agree_on_terms && <p className="text-red-500 text-xs mt-1">{formErrors.agree_on_terms}</p>}
+      {formErrors.general && <p className="text-red-500 text-xs mt-1">{formErrors.general}</p>}
+      {success && <p className="text-green-600 text-center text-sm">Registration successful!</p>}
+      <p className="text-xs text-gray-500 text-center mt-3">
+        Quick approval in 24 hours • Start earning immediately • Secure & trusted platform
+      </p>
+    </form>
+  );
+}
+  // ...existing code...
+  // Render the partner registration form at the appropriate place in your JSX:
+  // <PartnerFormWithHook />
 import './partner-styles.css';
 const front_img = '/pictures_car_example/image_front.png';
 const side_img = '/pictures_car_example/image_side.png';
 const back_img = '/pictures_car_example/image_back.png';
 const interior_img = '/pictures_car_example/image_interior.png';
 
+// Custom hook for posting partner data
+function useCreatePartner() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const postPartner = async (partnerData, token) => {
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    try {
+      // Post using dedicated partner register endpoint (auth required)
+      const created = await registerPartner(partnerData);
+      setSuccess(true);
+      return created;
+    } catch (error) {
+      const message = (error && error.message) ? error.message : 'Network error. Please try again.';
+      setError({ general: message });
+      setSuccess(false);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { postPartner, loading, error, success };
+}
+
 export default function BecomePartner() {
+  
   // Submission state for disabling submit button and showing loading spinner
   const [isSubmitting, setIsSubmitting] = useState(false);
   // For previewing uploaded vehicle photos
   const [photoPreviews, setPhotoPreviews] = useState([]);
+
+  // Store token - initialize as null, no hydration check needed
+  const [token, setToken] = useState(null);
+
+  const [inputValue, setInputValue] = useState(''); // not undefined or null
+
+
+  // Remove the problematic hasMounted pattern
+  useEffect(() => {
+    // Only access localStorage on client side
+    if (typeof window !== 'undefined') {
+      const t = localStorage.getItem('token');
+      setToken(t);
+    }
+  }, []);
 
   // Moroccan cities
   const moroccanCities = [
@@ -29,28 +220,15 @@ export default function BecomePartner() {
     brand: '',
     model: '',
     year: '',
-    color: '',
     fuelType: '',
     transmission: '',
-    engineSize: '',
-    mileage: '',
-    maxSpeed: '',
     seatingCapacity: '',
     features: [],
     condition: '',
-    lastService: '',
-    insuranceValid: '',
     location: '',
-    address: '',
-    dailyRate: '',
-    weeklyRate: '',
-    monthlyRate: '',
-    securityDeposit: '',
-    registrationNumber: '',
-    photos: [],
     description: '',
-    rules: '',
-    availability: 'available'
+    dailyRate: '',
+    photos: [],
   });
   const [formErrors, setFormErrors] = useState({});
   const testimonialsRef = useRef(null);
@@ -67,27 +245,6 @@ export default function BecomePartner() {
     side: null,
     back: null,
     interior: null
-  });
-
-  const [formData, setFormData] = useState({
-    // Step 1: Business Information
-    businessName: '',
-    email: '',
-    phone: '',
-    businessType: '',
-    experience: '',
-    // Step 2: Fleet Information
-    vehicleCount: '',
-    vehicleTypes: [],
-    operatingAreas: [],
-    // Step 3: Business Documents
-    businessLicense: null,
-    gstNumber: '',
-    panCard: null,
-    bankDetails: '',
-    // Step 4: Agreement
-    agreeToTerms: false,
-    agreeToMarketing: false
   });
 
   useEffect(() => {
@@ -124,43 +281,20 @@ export default function BecomePartner() {
     }
   };
 
-
+  const [formData, setFormData] = useState({
+    company_name: '',
+    tax_id: '',
+    agree_on_terms: true,
+    // add other fields as needed
+  });
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-
-    if (type === 'checkbox') {
-      if (name === 'vehicleTypes' || name === 'operatingAreas') {
-        const updatedArray = checked
-          ? [...formData[name], value]
-          : formData[name].filter(item => item !== value);
-        setFormData({
-          ...formData,
-          [name]: updatedArray
-        });
-      } else {
-        setFormData({
-          ...formData,
-          [name]: checked
-        });
-      }
-    } else if (type === 'file') {
-      setFormData({
-        ...formData,
-        [name]: e.target.files[0]
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value
-      });
-    }
-
-    // Clear specific field error when user starts typing
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
     if (formErrors[name]) {
-      setFormErrors({
-        ...formErrors,
-        [name]: null
-      });
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }));
     }
   };
 
@@ -175,15 +309,15 @@ export default function BecomePartner() {
         break;
       case 2:
         if (!formData.vehicleCount) errors.vehicleCount = 'Vehicle count is required';
-        if (formData.vehicleTypes.length === 0) errors.vehicleTypes = 'Select at least one vehicle type';
-        if (formData.operatingAreas.length === 0) errors.operatingAreas = 'Select at least one operating area';
+        if (formData.vehicleTypes?.length === 0) errors.vehicleTypes = 'Select at least one vehicle type';
+        if (formData.operatingAreas?.length === 0) errors.operatingAreas = 'Select at least one operating area';
         break;
       case 3:
         if (!formData.gstNumber) errors.gstNumber = 'GST number is required';
         if (!formData.bankDetails) errors.bankDetails = 'Bank details are required';
         break;
       case 4:
-        if (!formData.agreeToTerms) errors.agreeToTerms = 'You must agree to terms and conditions';
+        if (!formData.agree_on_terms) errors.agree_on_terms = 'You must agree to terms and conditions';
         break;
     }
 
@@ -306,39 +440,60 @@ export default function BecomePartner() {
     }
   };
 
+  async function registerPartner(partnerData) {
+  const response = await fetch('http://localhost:8000/partners/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      // Add Authorization header if needed
+    },
+    body: JSON.stringify(partnerData),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to register partner');
+  }
+  return await response.json();
+}
+
+async function fetchPartners() {
+  const response = await fetch('http://localhost:8000/partners/');
+  if (!response.ok) {
+    throw new Error('Failed to fetch partners');
+  }
+  return await response.json();
+}
 
   // Partner registration form submit (Step 1 form)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    e.preventDefault();
     setIsSubmitting(true);
     setFormErrors({});
-    // Simple validation for businessName and agreeToTerms
+    // Simple validation for company_name and agree_on_terms
     const errors = {};
-    if (!formData.businessName) errors.businessName = 'Business name is required';
-    if (!formData.agreeToTerms) errors.agreeToTerms = 'You must agree to terms and conditions';
+    if (!formData.company_name) errors.company_name = 'Business name is required';
+    if (!formData.agree_on_terms) errors.agree_on_terms = 'You must agree to terms and conditions';
+    if (!token) errors.general = 'You must be logged in to register as a partner.';
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       setIsSubmitting(false);
       return;
     }
+    // Set a cookie with the company_name when submitting the form
+    Cookies.set('company_name', formData.company_name, { expires: 7 });
     try {
-      const data = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value instanceof File) {
-          data.append(key, value);
-        } else if (Array.isArray(value)) {
-          value.forEach((v) => data.append(key, v));
-        } else {
-          data.append(key, value);
-        }
-      });
-      const res = await fetch('/api/partner/register', {
+      // Only submit if token is loaded (client-side)
+      const res = await fetch('http://localhost:8000/partners/', {
         method: 'POST',
-        body: data
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(formData)
       });
+      
       if (res.ok) {
         setShowAddVehicleForm(true);
+        // Optionally reset the form or show a message here
       } else {
         const err = await res.json().catch(() => ({}));
         setFormErrors(err.errors || { general: 'Submission failed' });
@@ -349,7 +504,6 @@ export default function BecomePartner() {
       setIsSubmitting(false);
     }
   };
-
 
   // Partner multi-step form submit (Step 2-4)
   const handlePartnerSubmit = async (e) => {
@@ -389,29 +543,19 @@ export default function BecomePartner() {
     }
   };
 
-
   // Vehicle registration form submit
   const handleVehicleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateStep(5)) return;
+    if (!validateStep(5)) {
+      alert('Please complete all required fields in Step 5 (documents and at least one photo).');
+      return;
+    }
     setIsSubmitting(true);
     setFormErrors({});
     try {
-      const data = new FormData();
-      Object.entries(vehicleData).forEach(([key, value]) => {
-        if (key === 'photos' && Array.isArray(value)) {
-          value.forEach((file) => data.append('photos', file));
-        } else if (value instanceof File) {
-          data.append(key, value);
-        } else {
-          data.append(key, value);
-        }
-      });
-      const res = await fetch('/api/vehicle/register', {
-        method: 'POST',
-        body: data
-      });
-      if (res.ok) {
+      // Use API to create listing directly in Django backend
+      await createListing(vehicleData);
+      {
         alert('🎉 Vehicle added successfully! Our team will review and approve it within 24 hours. You\'ll receive a confirmation email shortly.');
         setShowAddVehicleForm(false);
         setCurrentStep(1);
@@ -424,17 +568,14 @@ export default function BecomePartner() {
           registrationNumber: '', photos: [],
           description: '', rules: '', availability: 'available'
         });
-      } else {
-        const err = await res.json().catch(() => ({}));
-        setFormErrors(err.errors || { general: 'Submission failed' });
       }
     } catch (error) {
-      setFormErrors({ general: 'Network error. Please try again.' });
+      const message = (error && error.message) ? error.message : 'Network error. Please try again.';
+      setFormErrors({ general: message });
     } finally {
       setIsSubmitting(false);
     }
   };
-
 
   // Handle vehicle photo drop/upload
   const handleVehiclePhotoDrop = (files) => {
@@ -494,6 +635,7 @@ export default function BecomePartner() {
                 Put your <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">vehicle</span> in<br />
               </h3>
 
+
               {/* Feature List */}
               <div className="space-y-5 text-lg">
                 <div className="flex items-center space-x-4 group hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition-all duration-300">
@@ -536,13 +678,13 @@ export default function BecomePartner() {
             <div className="relative animate-fade-in-right">
               <div className="bg-white rounded-2xl p-8 shadow-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
                 <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{backgroundColor: 'var(--color-orange-500);' }}>
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{backgroundColor: 'var(--color-orange-500)' }}>
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-bold bg-clip-text text-transparent mb-2" style={{color: 'var(--color-orange-500);' }}>Join AirbCar Partner Network</h3>
-                  <p className="text-gray-600">Start earning from your motorbike fleet today</p>
+                  <h3 className="text-2xl font-bold bg-clip-text text-transparent mb-2" style={{color: 'var(--color-orange-500)' }}>Join AirbCar Partner Network</h3>
+                  <p className="text-gray-600">Start earning from your vehicle fleet today</p>
 
                   <div className="flex items-center justify-center space-x-4 mt-4 text-sm text-gray-500">
                     <div className="flex items-center">
@@ -565,49 +707,9 @@ export default function BecomePartner() {
                     </div>
                   </div>
                 </div>
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="businessName"
-                      placeholder="Business Name"
-                      value={formData.businessName}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 transition-all duration-300 hover:border-gray-300 bg-gray-50 focus:bg-white"
-                      required
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 pt-2">
-                    <input
-                      type="checkbox"
-                      name="agreeToTerms"
-                      checked={formData.agreeToTerms}
-                      onChange={handleInputChange}
-                      className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mt-0.5"
-                      required
-                    />
-                    <label className="text-sm text-gray-600 leading-relaxed">
-                      I agree to AirbCar's <span className="text-blue-600 hover:underline cursor-pointer">Terms of Service</span> and <span className="text-blue-600 hover:underline cursor-pointer">Privacy Policy</span>. I consent to receive marketing communications.
-                    </label>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center space-x-2"
-                    style={{backgroundColor: 'var(--color-orange-500);' }}
-                  >
-                    <span>START EARNING TODAY - FREE</span>
-                  </button>
-
-                  <p className="text-xs text-gray-500 text-center mt-3">
-                    Quick approval in 24 hours • Start earning immediately • Secure & trusted platform
-                  </p>
-                </form>
+                {/* Partner registration form using useCreatePartner hook */}
+                <PartnerFormWithHook onSuccess={() => setShowAddVehicleForm(true)} />
+                {/* The old form code has been removed in favor of the hook-based form above */}
               </div>
             </div>
           </div>
@@ -616,7 +718,7 @@ export default function BecomePartner() {
 
       {/* Add Vehicle Form Modal */}
       {showAddVehicleForm && (
-        <div className="fixed inset-0 bg-opacity-50 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+        <div className="fixed inset-0 bg-opacity-50 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
               <div className="flex items-center justify-between">
@@ -2129,7 +2231,7 @@ export default function BecomePartner() {
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <div className="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 rounded-full text-white text-sm font-medium mb-6"
-          style={{color: 'var(--color-orange-500);' }} >
+          style={{color: 'var(--color-orange-500)' }} >
             <span className="w-2 h-2 rounded-full mr-2 animate-pulse"></span>
             Limited Time: Zero Setup Fees
           </div>
@@ -2145,7 +2247,7 @@ export default function BecomePartner() {
             <button
               onClick={() => setShowAddVehicleForm(true)}
               className="bg-white py-4 px-8 rounded-xl font-bold text-lg hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:-translate-y-1 glow-on-hover flex items-center space-x-2"
-              style={{color: 'var(--color-orange-500);' }}
+              style={{color: 'var(--color-orange-500)' }}
             >
               <span>START EARNING TODAY - FREE</span>
             </button>

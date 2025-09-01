@@ -179,6 +179,54 @@ class PartnerViewSet(viewsets.ModelViewSet):
             self.request.user.is_partner = True
             self.request.user.save(update_fields=['is_partner'])
 
+
+class PartnerRegisterView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        data = request.data.copy()
+
+        # Ensure required fields; default tax_id if not provided
+        company_name = data.get('company_name')
+        if not company_name:
+            return Response({'errors': {'company_name': 'This field is required.'}}, status=status.HTTP_400_BAD_REQUEST)
+
+        if 'tax_id' not in data or not data.get('tax_id'):
+            data['tax_id'] = 'PENDING'
+
+        data.setdefault('agree_on_terms', False)
+
+        # If partner already exists, update it; else create new
+        partner = Partner.objects.filter(user=user).first()
+        # Always set contact fields from user unless explicitly provided
+        data.setdefault('contact_email', user.email)
+        data.setdefault('contact_username', user.username)
+        if partner:
+            serializer = PartnerSerializer(partner, data=data, partial=True)
+        else:
+            serializer = PartnerSerializer(data=data)
+
+        if serializer.is_valid():
+            # Hash partner login password if provided
+            login_password = data.get('login_password')
+            if login_password:
+                from django.contrib.auth.hashers import make_password
+                data['login_password'] = make_password(login_password)
+                # re-bind serializer with hashed password
+                if partner:
+                    serializer = PartnerSerializer(partner, data=data, partial=True)
+                else:
+                    serializer = PartnerSerializer(data=data)
+                serializer.is_valid(raise_exception=True)
+            saved = serializer.save(user=user)
+            if not user.is_partner:
+                user.is_partner = True
+                user.save(update_fields=['is_partner'])
+            return Response(PartnerSerializer(saved).data, status=status.HTTP_201_CREATED if not partner else status.HTTP_200_OK)
+
+        return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 class ListingViewSet(viewsets.ModelViewSet):
     queryset = Listing.objects.all()
     serializer_class = ListingSerializer
