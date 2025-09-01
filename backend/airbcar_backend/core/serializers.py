@@ -82,7 +82,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'phone_number', 'default_currency',
             'is_partner', 'is_verified', 'password', 'profile_picture', 'email_verified',
-            'name', 'license_info', 'address', 'role']
+            'name', 'license_number', 'address', 'role']
         read_only_fields = ['id', 'is_partner', 'is_verified', 'email_verified']
 
     def create(self, validated_data):
@@ -101,7 +101,10 @@ class PartnerSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     class Meta:
         model = Partner
-        fields = ['id', 'user', 'company_name', 'tax_id', 'contact_email', 'contact_username', 'login_email', 'login_username', 'login_password', 'verification_status', 'created_at', 'agree_on_terms', 'verification_document']
+        fields = ['id', 'user', 'company_name', 'tax_id', 'verification_status', 'created_at', 
+            'agree_on_terms', 'verification_document']
+            # 'contact_email', 'contact_username', 
+            # 'login_email', 'login_username', 'login_password']
         extra_kwargs = {
             'login_password': { 'write_only': True }
         }

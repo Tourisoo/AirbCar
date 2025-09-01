@@ -48,7 +48,7 @@ urlpatterns = [
     path('api/password-reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
     path('api/reset-password/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('api/verify-email/', UserVerificationView.as_view(), name='user_verify_email'),
-    path('api/partners/register/', PartnerRegisterView.as_view(), name='partner_register'),
+    # path('api/partners/register/', PartnerRegisterView.as_view(), name='partner_register'),
     path("verify-email/", verify_email, name="verify_email"),
     path('api/profile/', UserProfileView.as_view(), name='user_profile') # update user - patch req 
     # path('api-auth/', include('rest_framework.urls')),
