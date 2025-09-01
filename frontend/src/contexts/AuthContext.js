@@ -42,8 +42,13 @@ export function AuthProvider({ children }) {
           id: payload.user_id,
           username: payload.username,
           email: payload.email || '',
+          first_name: payload.first_name || '',
+          last_name: payload.last_name || '',
           is_partner: payload.is_partner || false,
-          is_verified: payload.is_verified || false
+          is_verified: payload.is_verified || false,
+          is_staff: payload.is_staff || false,
+          is_superuser: payload.is_superuser || false,
+          role: payload.role || 'user'
         })
       } catch {
         // Invalid token format

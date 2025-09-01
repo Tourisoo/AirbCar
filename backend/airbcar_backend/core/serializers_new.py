@@ -97,34 +97,40 @@ class UserSerializer(serializers.ModelSerializer):
 
 class PartnerSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+
     class Meta:
         model = Partner
-        fields = ['id', 'user', 'company_name', 'tax_id', 'verification_status', 'created_at']
+        fields = '__all__'
 
 class ListingSerializer(serializers.ModelSerializer):
-    partner = PartnerSerializer(read_only=True)
     class Meta:
         model = Listing
-        fields = [
-            'id', 'partner', 'make', 'model', 'year', 'location', 
-            'features', 'price_per_day', 'availability', 'rating', 'created_at']
-        read_only_fields = ['partner', 'created_at']
+        fields = '__all__'
+
 
 class BookingSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    listing = ListingSerializer(read_only=True)
     class Meta:
         model = Booking
-        fields = [
-            'id', 'user', 'listing', 'start_time', 'end_time', 
-            'price', 'status', 'date']
-        read_only_fields = ['user', 'date']
+        fields = '__all__'
+
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("No user with this email exists.")
+        return value
+
+
 class PasswordResetConfirmSerializer(serializers.Serializer):
     password = serializers.CharField(min_length=6, required=True)
+    confirm_password = serializers.CharField(min_length=6, required=True)
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['confirm_password']:
+            raise serializers.ValidationError("Passwords don't match.")
+        return attrs
     
     def validate_password(self, value):
         return value
