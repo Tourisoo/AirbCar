@@ -42,9 +42,36 @@ export default function SignUp() {
       
       if (result.success) {
         setSuccess(true)
-        // Redirect to home page after successful registration and auto-login
+        
+        // Get user data from the token to determine redirection
+        const token = localStorage.getItem('access_token')
+        let redirectPath = '/'
+        
+        if (token) {
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]))
+            const userRole = payload.role || 'user'
+            const isPartner = payload.is_partner || false
+            const isStaff = payload.is_staff || false
+            const isSuperuser = payload.is_superuser || false
+            
+            // Smart redirection based on user role (priority: admin > partner > user)
+            if (isStaff || isSuperuser || userRole === 'admin') {
+              redirectPath = '/admin/dashboard'
+            } else if (isPartner || userRole === 'partner') {
+              redirectPath = '/partner/dashboard'
+            } else {
+              redirectPath = '/'
+            }
+          } catch (tokenError) {
+            console.error('Error parsing token:', tokenError)
+            redirectPath = '/'
+          }
+        }
+        
+        // Redirect after successful registration and auto-login
         setTimeout(() => {
-          router.push('/')
+          router.push(redirectPath)
         }, 2000)
       } else {
         // Display the error message to the user

@@ -1,0 +1,28 @@
+/* Z-Index Management System */
+:root {
+  /* Base layers */
+  --z-background: -1;
+  --z-default: 0;
+  --z-content: 10;
+  
+  /* UI Components */
+  --z-header: 100;
+  --z-dropdown: 101;
+  --z-modal-backdrop: 200;
+  --z-modal: 201;
+  --z-tooltip: 300;
+  --z-toast: 400;
+  --z-loader: 500;
+}
+
+/* Utility classes for consistent z-index usage */
+.z-background { z-index: var(--z-background); }
+.z-default { z-index: var(--z-default); }
+.z-content { z-index: var(--z-content); }
+.z-header { z-index: var(--z-header); }
+.z-dropdown { z-index: var(--z-dropdown); }
+.z-modal-backdrop { z-index: var(--z-modal-backdrop); }
+.z-modal { z-index: var(--z-modal); }
+.z-tooltip { z-index: var(--z-tooltip); }
+.z-toast { z-index: var(--z-toast); }
+.z-loader { z-index: var(--z-loader); }
