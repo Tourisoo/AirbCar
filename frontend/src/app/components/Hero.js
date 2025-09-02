@@ -61,7 +61,7 @@ export default function Hero() {
                 onChange={handleInputChange}
                 placeholder="City, airport, or location"
                 className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600"
-                required
+                // required
               />
             </div>
             
@@ -76,7 +76,7 @@ export default function Hero() {
                 value={searchForm.pickupDate}
                 onChange={handleInputChange}
                 className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600"
-                required
+                // required
               />
             </div>
             
@@ -91,7 +91,7 @@ export default function Hero() {
                 value={searchForm.pickupTime}
                 onChange={handleInputChange}
                 className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600"
-                required
+                // required
               />
             </div>
             
@@ -106,7 +106,7 @@ export default function Hero() {
                 value={searchForm.dropoffDate}
                 onChange={handleInputChange}
                 className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600"
-                required
+                // required
               />
             </div>
             

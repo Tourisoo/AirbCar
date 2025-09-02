@@ -1402,7 +1402,8 @@ function SearchContent() {
 
       {/* Car Details Modal */}
       {showCarModal && selectedCar && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center p-4">
+        // <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white overflow-hidden max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between rounded-t-[40px] z-10">
@@ -1700,7 +1701,7 @@ function SearchContent() {
 
       {/* Booking Flow Modal */}
       {showBookingFlow && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-[40px] overflow-hidden max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between rounded-t-[40px] z-10">
