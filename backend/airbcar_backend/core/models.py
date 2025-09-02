@@ -14,7 +14,7 @@ class User(AbstractUser):
     email_verified = models.BooleanField(default=False)
 
     name = models.CharField(max_length=100, blank=True)
-    license_info = models.TextField(blank=True, null=True)
+    license_number = models.TextField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     role = models.CharField(max_length=50, default='user')
 
@@ -32,7 +32,7 @@ class User(AbstractUser):
 
 class Partner(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='partner')
-    company_name = models.CharField(max_length=100)
+    company_name = models.CharField(max_length=100, blank=False)
     tax_id = models.CharField(max_length=50, blank=False)
     verification_status = models.CharField(max_length=20, choices=[
         ('pending', 'Pending'),

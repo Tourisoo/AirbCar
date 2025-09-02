@@ -165,8 +165,8 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.is_staff:
-            return User.objects.all()  # Admins see all users
-        return User.objects.filter(id=user.id)  # Users see only their profile
+            return User.objects.all()
+        return User.objects.filter(id=user.id)
 
 class PartnerViewSet(viewsets.ModelViewSet):
     queryset = Partner.objects.all()
@@ -213,6 +213,73 @@ class BookingViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'listing': 'Listing not found'})
         serializer.save(user=self.request.user, listing=listing)
+
+# def home_view(request):
+#     return HttpResponse("<h1>Welcome Home<h1>")
+
+class UserRegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def perform_create(self, serializer):
+        user = serializer.save()
+        user.email_verification_token = str(uuid.uuid4())
+        user.save()
+
+        verification_url = f"{self.request.build_absolute_uri('/verify-email/')}?token={user.email_verification_token}"
+        send_mail(
+            subject='Verify your email',
+            message=f'Click the link to verify your email: {verification_url}',
+            from_email='no-reply@airbcar.com',
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class PasswordResetRequestView(generics.GenericAPIView):
+    serializer_class = PasswordResetRequestSerializer
+    
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        email = serializer.validated_data['email']
+        user = User.objects.filter(email=email).first()
+        if user:
+            token_generator = PasswordResetTokenGenerator()
+            token = token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            # Send user to frontend reset page with uid and token as URL parameters
+            reset_url = f"http://localhost:3000/auth/reset-password?uid={uid}&token={token}"
+            send_mail(
+                'Password Reset Request',
+                f'Use this link to reset your password: {reset_url}',
+                'from@airbcar.com',
+                [email],
+                fail_silently=False,
+            )
+            return Response({'message': 'Password reset email sent'}, status=status.HTTP_200_OK)
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+class PasswordResetConfirmView(generics.GenericAPIView):
+    serializer_class = PasswordResetConfirmSerializer
+    
+    def post(self, request, uidb64, token):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+            
+        token_generator = PasswordResetTokenGenerator()
+        if user and token_generator.check_token(user, token):
+            user.set_password(serializer.validated_data['password'])
+            user.save()
+            return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
+        return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)
 
 def user_list(request):
     users = User.objects.all()
@@ -349,71 +416,3 @@ python manage.py runserver
     </html>
     """
     return HttpResponse(html_content)
-
-# def home_view(request):
-#     return HttpResponse("<h1>Welcome Home<h1>")
-
-class UserRegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    def perform_create(self, serializer):
-        user = serializer.save()
-        user.email_verification_token = str(uuid.uuid4())
-        user.save()
-
-        verification_url = f"{self.request.build_absolute_uri('/verify-email/')}?token={user.email_verification_token}"
-        send_mail(
-            subject='Verify your email',
-            message=f'Click the link to verify your email: {verification_url}',
-            from_email='no-reply@airbcar.com',
-            recipient_list=[user.email],
-            fail_silently=False,
-        )
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-class PasswordResetRequestView(generics.GenericAPIView):
-    serializer_class = PasswordResetRequestSerializer
-    
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        email = serializer.validated_data['email']
-        user = User.objects.filter(email=email).first()
-        if user:
-            token_generator = PasswordResetTokenGenerator()
-            token = token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            # Send user to frontend reset page with uid and token as URL parameters
-            reset_url = f"http://localhost:3000/auth/reset-password?uid={uid}&token={token}"
-            send_mail(
-                'Password Reset Request',
-                f'Use this link to reset your password: {reset_url}',
-                'from@airbcar.com',
-                [email],
-                fail_silently=False,
-            )
-            return Response({'message': 'Password reset email sent'}, status=status.HTTP_200_OK)
-        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-    
-class PasswordResetConfirmView(generics.GenericAPIView):
-    serializer_class = PasswordResetConfirmSerializer
-    
-    def post(self, request, uidb64, token):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        try:
-            uid = urlsafe_base64_decode(uidb64).decode()
-            user = User.objects.get(pk=uid)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            user = None
-            
-        token_generator = PasswordResetTokenGenerator()
-        if user and token_generator.check_token(user, token):
-            user.set_password(serializer.validated_data['password'])
-            user.save()
-            return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
-        return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)

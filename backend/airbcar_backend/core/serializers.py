@@ -82,16 +82,25 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'email', 'phone_number', 'default_currency',
             'is_partner', 'is_verified', 'password', 'profile_picture', 'email_verified',
-            'name', 'license_info', 'address', 'role']
+            'name', 'license_number', 'address', 'role', 'first_name', 'last_name']
         read_only_fields = ['id', 'is_partner', 'is_verified', 'email_verified']
 
     def create(self, validated_data):
+        # Generate username from email if not provided
+        username = validated_data.get('username', validated_data['email'].split('@')[0])
+        
         user = User.objects.create(
-            username=validated_data['username'],
+            username=username,
             email=validated_data['email'],
             phone_number=validated_data.get('phone_number', ''),
             default_currency=validated_data.get('default_currency', 'USD'),
-            is_partner=validated_data.get('is_partner', False)
+            is_partner=validated_data.get('is_partner', False),
+            name=validated_data.get('name', ''),
+            license_number=validated_data.get('license_number', ''),
+            address=validated_data.get('address', ''),
+            role=validated_data.get('role', 'user'),
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', '')
         )
         user.set_password(validated_data['password'])
         user.save()
