@@ -4,6 +4,7 @@ from django.utils import timezone
 
 class User(AbstractUser):
     phone_number = models.CharField(max_length=15, blank=True)
+    email = models.EmailField(unique=True)
     profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
     default_currency = models.CharField(max_length=3, default='USD')
     is_partner = models.BooleanField(default=False)
@@ -13,11 +14,10 @@ class User(AbstractUser):
     email_verified = models.BooleanField(default=False)
 
     name = models.CharField(max_length=100, blank=True)
-    license_number = models.TextField(blank=True, null=True)
+    license_info = models.TextField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     role = models.CharField(max_length=50, default='user')
 
-    email = models.EmailField(unique=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
@@ -32,16 +32,13 @@ class User(AbstractUser):
 
 class Partner(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='partner')
-    company_name = models.CharField(max_length=100, blank=False)
+    company_name = models.CharField(max_length=100)
     tax_id = models.CharField(max_length=50, blank=False)
-    # # Store a snapshot of the user's identifying info at the time of registration
-    # contact_email = models.EmailField(blank=True, null=True)
-    # contact_username = models.CharField(max_length=150, blank=True, null=True)
-    # # Optional standalone credentials for partners (not used for Django auth)
-    # login_email = models.EmailField(blank=True, null=True)
-    # login_username = models.CharField(max_length=150, blank=True, null=True)
-    # login_password = models.CharField(max_length=128, blank=True, null=True)  # hashed
-    verification_status = models.CharField(max_length=20, default='pending')
+    verification_status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected')
+    ], default='pending')
     agree_on_terms = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     verification_document = models.FileField(upload_to='partner_docs/', blank=True, null=True)
