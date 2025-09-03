@@ -108,9 +108,21 @@ class UserSerializer(serializers.ModelSerializer):
 
 class PartnerSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    # Include partner's listings (brief form to avoid recursive partner nesting)
+    class ListingBriefSerializer(serializers.ModelSerializer):
+    #     class Meta:
+    #         model = Listing
+    #         fields = [
+    #             'id', 'make', 'model', 'year', 'location', 'price_per_day',
+    #             'availability', 'created_at', 'fuel_type', 'transmission',
+    #             'seating_capacity', 'vehicle_condition', 'rating', 'features',
+    #             'available_features'
+    #         ]
+
+    listings = ListingBriefSerializer(many=True, read_only=True)
     class Meta:
         model = Partner
-        fields = ['id', 'user', 'company_name', 'tax_id', 'verification_status', 'created_at', 'agree_on_terms', 'verification_document']
+        fields = ['id', 'user', 'company_name', 'tax_id', 'verification_status', 'created_at', 'agree_on_terms', 'verification_document', 'listings']
 
 class ListingSerializer(serializers.ModelSerializer):
     partner = PartnerSerializer(read_only=True)

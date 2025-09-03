@@ -169,7 +169,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return User.objects.filter(id=user.id)
 
 class PartnerViewSet(viewsets.ModelViewSet):
-    queryset = Partner.objects.all()
+    queryset = Partner.objects.all().prefetch_related('listings')
     serializer_class = PartnerSerializer
     permission_classes = [IsAuthenticated]
 
