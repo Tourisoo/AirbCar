@@ -101,14 +101,17 @@ export default function PopularDestinations() {
   }, [isDragging, startX, scrollLeft]);
 
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-20 bg-gradient-to-b from-white to-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Popular car rental destinations
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Popular Destinations
           </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Discover Morocco's most beautiful cities and find the perfect rental car for your adventure
+          </p>
         </div>
 
         {/* City Cards Horizontal Scroll */}
@@ -117,10 +120,10 @@ export default function PopularDestinations() {
           {showLeftArrow && (
             <button
               onClick={scrollToLeft}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-200 hover:scale-110"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 z-20 bg-white/95 hover:bg-white shadow-xl rounded-full p-4 transition-all duration-300 hover:scale-110 border border-gray-200"
               aria-label="Scroll left"
             >
-              <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -130,10 +133,10 @@ export default function PopularDestinations() {
           {showRightArrow && (
             <button
               onClick={scrollToRight}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-200 hover:scale-110"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 z-20 bg-white/95 hover:bg-white shadow-xl rounded-full p-4 transition-all duration-300 hover:scale-110 border border-gray-200"
               aria-label="Scroll right"
             >
-              <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -141,7 +144,7 @@ export default function PopularDestinations() {
 
           <div 
             ref={scrollContainerRef}
-            className="flex gap-6 overflow-x-auto scrollbar-hide cursor-grab select-none pb-4"
+            className="flex gap-8 overflow-x-auto scrollbar-hide cursor-grab select-none pb-6 px-4"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             <style jsx>{`
@@ -153,157 +156,226 @@ export default function PopularDestinations() {
           {/* Marrakech Card */}
           <div 
             onClick={() => handleDestinationClick('Marrakech')}
-            className="flex-shrink-0 w-72 relative bg-blue-600 rounded-lg overflow-hidden aspect-[9/14] group cursor-pointer hover:shadow-xl transition-shadow duration-300"
+            className="flex-shrink-0 w-80 relative rounded-2xl overflow-hidden aspect-[3/4] group cursor-pointer transform transition-all duration-500 hover:scale-105 hover:shadow-2xl shadow-lg h-[600px] w-[350px]"
           >
             {/* Background image */}
             <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: 'url(/cities/marrakesh.jpg)' }}
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat group-hover:scale-110 transition-transform duration-700"
+              style={{ 
+                backgroundImage: 'url(/cities/marrakesh.jpg)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center center',
+                backgroundRepeat: 'no-repeat'
+              }}
             ></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
-            <div className="absolute top-6 left-6 text-white z-10">
-              <h3 className="text-2xl font-bold mb-1">Marrakech</h3>
-              <p className="text-sm font-medium">Most popular car type: Economy</p>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/80 transition-all duration-300"></div>
+            
+            {/* Content */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform transition-transform duration-300 group-hover:-translate-y-2">
+              <div className="mb-4">
+                <h3 className="text-3xl font-bold mb-2 group-hover:text-orange-300 transition-colors duration-300">Marrakech</h3>
+                <p className="text-sm font-medium opacity-90 mb-1">Imperial City • Red City</p>
+                <p className="text-xs opacity-75">Most popular: Economy Cars</p>
+              </div>
+              
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDestinationClick('Marrakech');
                 }}
-                className="mt-3 bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded text-sm font-semibold transition-colors"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full"
               >
-                Search Cars
+                Explore Cars
               </button>
             </div>
+            
+            {/* Hover overlay */}
+            <div className="absolute inset-0 bg-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </div>
 
           {/* Agadir Card */}
           <div 
             onClick={() => handleDestinationClick('Agadir')}
-            className="flex-shrink-0 w-72 relative bg-blue-500 rounded-lg overflow-hidden aspect-[9/14] group cursor-pointer hover:shadow-xl transition-shadow duration-300"
+            className="flex-shrink-0 w-80 relative rounded-2xl overflow-hidden aspect-[3/4] group cursor-pointer transform transition-all duration-500 hover:scale-105 hover:shadow-2xl shadow-lg w-[350px]"
           >
-            {/* Background image */}
             <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: 'url(/cities/agadir.jpg)' }}
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat group-hover:scale-110 transition-transform duration-700"
+              style={{ 
+                backgroundImage: 'url(/cities/agadir.jpg)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center center',
+                backgroundRepeat: 'no-repeat'
+              }}
             ></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
-            <div className="absolute top-6 left-6 text-white z-10">
-              <h3 className="text-2xl font-bold mb-1">Agadir</h3>
-              <p className="text-sm font-medium">Most popular car type: Economy</p>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/80 transition-all duration-300"></div>
+            
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform transition-transform duration-300 group-hover:-translate-y-2">
+              <div className="mb-4">
+                <h3 className="text-3xl font-bold mb-2 group-hover:text-orange-300 transition-colors duration-300">Agadir</h3>
+                <p className="text-sm font-medium opacity-90 mb-1">Beach Resort • Atlantic Coast</p>
+                <p className="text-xs opacity-75">Most popular: SUV & Economy</p>
+              </div>
+              
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDestinationClick('Agadir');
                 }}
-                className="mt-3 bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded text-sm font-semibold transition-colors"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full"
               >
-                Search Cars
+                Explore Cars
               </button>
             </div>
+            
+            <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </div>
 
           {/* Tangier Card */}
           <div 
             onClick={() => handleDestinationClick('Tangier')}
-            className="flex-shrink-0 w-72 relative bg-teal-500 rounded-lg overflow-hidden aspect-[9/14] group cursor-pointer hover:shadow-xl transition-shadow duration-300"
+            className="flex-shrink-0 w-80 relative rounded-2xl overflow-hidden aspect-[3/4] group cursor-pointer transform transition-all duration-500 hover:scale-105 hover:shadow-2xl shadow-lg w-[350px]"
           >
-            {/* Background image */}
             <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: 'url(/cities/tangier.jpg)' }}
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat group-hover:scale-110 transition-transform duration-700"
+              style={{ 
+                backgroundImage: 'url(/cities/tangier.jpg)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center center',
+                backgroundRepeat: 'no-repeat'
+              }}
             ></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
-            <div className="absolute top-6 left-6 text-white z-10">
-              <h3 className="text-2xl font-bold mb-1">Tangier</h3>
-              <p className="text-sm font-medium">Most popular car type: Economy</p>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/80 transition-all duration-300"></div>
+            
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform transition-transform duration-300 group-hover:-translate-y-2">
+              <div className="mb-4">
+                <h3 className="text-3xl font-bold mb-2 group-hover:text-orange-300 transition-colors duration-300">Tangier</h3>
+                <p className="text-sm font-medium opacity-90 mb-1">Gateway to Africa • Mediterranean</p>
+                <p className="text-xs opacity-75">Most popular: Compact Cars</p>
+              </div>
+              
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDestinationClick('Tangier');
                 }}
-                className="mt-3 bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded text-sm font-semibold transition-colors"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full"
               >
-                Search Cars
+                Explore Cars
               </button>
             </div>
+            
+            <div className="absolute inset-0 bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </div>
 
           {/* Casablanca Card */}
           <div 
             onClick={() => handleDestinationClick('Casablanca')}
-            className="flex-shrink-0 w-72 relative bg-purple-500 rounded-lg overflow-hidden aspect-[9/14] group cursor-pointer hover:shadow-xl transition-shadow duration-300"
+            className="flex-shrink-0 w-80 relative rounded-2xl overflow-hidden aspect-[3/4] group cursor-pointer transform transition-all duration-500 hover:scale-105 hover:shadow-2xl shadow-lg w-[350px]"
           >
-            {/* Background image */}
             <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: 'url(/cities/casablanca.jpg)' }}
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat group-hover:scale-110 transition-transform duration-700"
+              style={{ 
+                backgroundImage: 'url(/cities/casablanca.jpg)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center center',
+                backgroundRepeat: 'no-repeat'
+              }}
             ></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
-            <div className="absolute top-6 left-6 text-white z-10">
-              <h3 className="text-2xl font-bold mb-1">Casablanca</h3>
-              <p className="text-sm font-medium">Most popular car type: Economy</p>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/80 transition-all duration-300"></div>
+            
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform transition-transform duration-300 group-hover:-translate-y-2">
+              <div className="mb-4">
+                <h3 className="text-3xl font-bold mb-2 group-hover:text-orange-300 transition-colors duration-300">Casablanca</h3>
+                <p className="text-sm font-medium opacity-90 mb-1">Economic Capital • Modern City</p>
+                <p className="text-xs opacity-75">Most popular: Business Class</p>
+              </div>
+              
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDestinationClick('Casablanca');
                 }}
-                className="mt-3 bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded text-sm font-semibold transition-colors"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full"
               >
-                Search Cars
+                Explore Cars
               </button>
             </div>
+            
+            <div className="absolute inset-0 bg-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </div>
 
           {/* Rabat Card */}
           <div 
             onClick={() => handleDestinationClick('Rabat')}
-            className="flex-shrink-0 w-72 relative bg-emerald-500 rounded-lg overflow-hidden aspect-[9/14] group cursor-pointer hover:shadow-xl transition-shadow duration-300"
+            className="flex-shrink-0 w-80 relative rounded-2xl overflow-hidden aspect-[3/4] group cursor-pointer transform transition-all duration-500 hover:scale-105 hover:shadow-2xl shadow-lg w-[350px]"
           >
-            {/* Background image */}
             <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: 'url(/cities/rabat.jpg)' }}
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat group-hover:scale-110 transition-transform duration-700"
+              style={{ 
+                backgroundImage: 'url(/cities/rabat.jpg)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center center',
+                backgroundRepeat: 'no-repeat'
+              }}
             ></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
-            <div className="absolute top-6 left-6 text-white z-10">
-              <h3 className="text-2xl font-bold mb-1">Rabat</h3>
-              <p className="text-sm font-medium">Most popular car type: Economy</p>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/80 transition-all duration-300"></div>
+            
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform transition-transform duration-300 group-hover:-translate-y-2">
+              <div className="mb-4">
+                <h3 className="text-3xl font-bold mb-2 group-hover:text-orange-300 transition-colors duration-300">Rabat</h3>
+                <p className="text-sm font-medium opacity-90 mb-1">Royal Capital • UNESCO Heritage</p>
+                <p className="text-xs opacity-75">Most popular: Luxury & Economy</p>
+              </div>
+              
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDestinationClick('Rabat');
                 }}
-                className="mt-3 bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded text-sm font-semibold transition-colors"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full"
               >
-                Search Cars
+                Explore Cars
               </button>
             </div>
+            
+            <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </div>
 
           {/* Tetouan Card */}
           <div 
             onClick={() => handleDestinationClick('Tetouan')}
-            className="flex-shrink-0 w-72 relative bg-indigo-500 rounded-lg overflow-hidden aspect-[9/14] group cursor-pointer hover:shadow-xl transition-shadow duration-300"
+            className="flex-shrink-0 w-80 relative rounded-2xl overflow-hidden aspect-[3/4] group cursor-pointer transform transition-all duration-500 hover:scale-105 hover:shadow-2xl shadow-lg w-[350px]"
           >
-            {/* Background image */}
             <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: 'url(/cities/tetouan.jpg)' }}
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat group-hover:scale-110 transition-transform duration-700"
+              style={{ 
+                backgroundImage: 'url(/cities/tetouan.jpg)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center center',
+                backgroundRepeat: 'no-repeat'
+              }}
             ></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
-            <div className="absolute top-6 left-6 text-white z-10">
-              <h3 className="text-2xl font-bold mb-1">Tetouan</h3>
-              <p className="text-sm font-medium">Most popular car type: Economy</p>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/80 transition-all duration-300"></div>
+            
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform transition-transform duration-300 group-hover:-translate-y-2">
+              <div className="mb-4">
+                <h3 className="text-3xl font-bold mb-2 group-hover:text-orange-300 transition-colors duration-300">Tetouan</h3>
+                <p className="text-sm font-medium opacity-90 mb-1">White Dove • Andalusian Heritage</p>
+                <p className="text-xs opacity-75">Most popular: Compact Cars</p>
+              </div>
+              
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDestinationClick('Tetouan');
                 }}
-                className="mt-3 bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded text-sm font-semibold transition-colors"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full"
               >
-                Search Cars
+                Explore Cars
               </button>
             </div>
+            
+            <div className="absolute inset-0 bg-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </div>
 
           </div>
