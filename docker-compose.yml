@@ -30,18 +30,8 @@ services:
       - NEXTAUTH_SECRET=your-secret-key-here-replace-in-production
       - DATABASE_URL=postgresql://postgres.wtbmqtmmdobfvvecinif:Mayache+123455@aws-1-eu-north-1.pooler.supabase.com:5432/postgres
 
-      # Override these in .env file or docker-compose.override.yml
-      # - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-tmp_env_var_name_by_amine}
-      # - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-tmp_env_var_name_by_amine}
-      # - EMAIL_SERVER_USER=${EMAIL_SERVER_USER:-tmp_env_var_name_by_amine}
-      # - EMAIL_SERVER_PASSWORD=${EMAIL_SERVER_PASSWORD:-tmp_env_var_name_by_amine}
-      # - EMAIL_SERVER_HOST=${EMAIL_SERVER_HOST:-smtp.gmail.com}
-      # - EMAIL_SERVER_PORT=${EMAIL_SERVER_PORT:-587}
-      # - EMAIL_FROM=${EMAIL_FROM:-tmp_env_var_name_by_amine}
     volumes:
-      # Mount the source code for development (hot reload)
       - ./frontend:/app
-      # Preserve node_modules in container
       - /app/node_modules
     networks:
       - airbo
