@@ -13,7 +13,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -103,16 +106,13 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        # Accept both DB_* (preferred) and DATABASE_* (legacy) env variable prefixes
-        'NAME': os.environ.get('DB_NAME') or os.environ.get('DATABASE_NAME', 'airbcar_db'),
-        'USER': os.environ.get('DB_USER') or os.environ.get('DATABASE_USER', 'airbcar_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD') or os.environ.get('DATABASE_PASSWORD', 'amineamine'),
-        'HOST': os.environ.get('DB_HOST') or os.environ.get('DATABASE_HOST', 'db'),
-        'PORT': os.environ.get('DB_PORT') or os.environ.get('DATABASE_PORT', '5432'),
+        'NAME': os.environ.get('DATABASE_NAME', 'airbcar_db'),
+        'USER': os.environ.get('DATABASE_USER', 'airbcar_user'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'amineamine'),
+        'HOST': os.environ.get('DATABASE_HOST', 'db'),
+        'PORT': os.environ.get('DATABASE_PORT', '5432'),
     }
 }
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

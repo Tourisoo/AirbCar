@@ -7,12 +7,24 @@ import sys
 from .settings import *
 
 # Override database settings for local development
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres.wtbmqtmmdobfvvecinif',
+        'PASSWORD': 'Mayache+123455',
+        'HOST': 'aws-1-eu-north-1.pooler.supabase.com',
+        'PORT': '5432',
     }
 }
+
 
 # For testing, you can also use an in-memory SQLite database
 if 'test' in sys.argv:
