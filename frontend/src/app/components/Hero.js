@@ -34,11 +34,11 @@ export default function Hero() {
 
   return (
     <section
-      className="bg-slate-800 py-20 px-4 relative"
-      style={{ backgroundImage: 'url(/background.webp)', backgroundSize: 'cover', backgroundPosition: 'center' }}
+      className="bg-slate-800 py-40 px-4 relative h-[800px]" 
+      style={{ backgroundImage: 'url(/image_homepage.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}
     >
       <div className="absolute inset-0 bg-black opacity-10"></div>
-      <div className="relative max-w-7xl mx-auto">
+      <div className="relative max-w-7xl mx-auto h-full flex flex-col justify-center items-center">
         {/* Headline */}
         <div className="text-center mb-12">
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-8">
@@ -47,11 +47,11 @@ export default function Hero() {
         </div>
         
         {/* Search Form */}
-        <form onSubmit={handleSearch} className="bg-orange-500 rounded-lg p-6 max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <form onSubmit={handleSearch} className="bg-white/95 backdrop-blur-sm rounded-2xl p-8 max-w-6xl w-full mx-auto shadow-2xl border border-white/20">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
             {/* Pickup Location */}
             <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-white mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Pickup location
               </label>
               <input
@@ -60,14 +60,14 @@ export default function Hero() {
                 value={searchForm.location}
                 onChange={handleInputChange}
                 placeholder="City, airport, or location"
-                className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600"
+                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-orange-500/50 focus:border-orange-500 transition-all duration-200 text-gray-700 placeholder-gray-400"
                 required
               />
             </div>
             
             {/* Pickup Date */}
             <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-white mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Pickup date
               </label>
               <input
@@ -75,14 +75,14 @@ export default function Hero() {
                 name="pickupDate"
                 value={searchForm.pickupDate}
                 onChange={handleInputChange}
-                className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600"
+                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-orange-500/50 focus:border-orange-500 transition-all duration-200 text-gray-700"
                 required
               />
             </div>
             
             {/* Pickup Time */}
             <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-white mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Time
               </label>
               <input
@@ -90,14 +90,14 @@ export default function Hero() {
                 name="pickupTime"
                 value={searchForm.pickupTime}
                 onChange={handleInputChange}
-                className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600"
+                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-orange-500/50 focus:border-orange-500 transition-all duration-200 text-gray-700"
                 required
               />
             </div>
             
             {/* Drop-off Date */}
             <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-white mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Drop-off date
               </label>
               <input
@@ -105,7 +105,7 @@ export default function Hero() {
                 name="dropoffDate"
                 value={searchForm.dropoffDate}
                 onChange={handleInputChange}
-                className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600"
+                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-orange-500/50 focus:border-orange-500 transition-all duration-200 text-gray-700"
                 required
               />
             </div>
@@ -114,9 +114,9 @@ export default function Hero() {
             <div className="md:col-span-1 flex items-end">
               <button 
                 type="submit"
-                className="w-full bg-black text-white py-3 px-6 rounded-md font-semibold hover:bg-gray-800 transition-colors"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-orange-600 hover:to-orange-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                Search
+                Search Cars
               </button>
             </div>
           </div>

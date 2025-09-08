@@ -69,9 +69,9 @@ function PartnerFormWithHook({ onSuccess }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
       {/* Authenticated user info (read-only) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="relative">
           <input
             type="text"
@@ -79,7 +79,7 @@ function PartnerFormWithHook({ onSuccess }) {
             placeholder="Username"
             value={user?.username || ''}
             disabled
-            className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl bg-gray-100 text-gray-700"
+            className="w-full px-3 sm:px-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl bg-gray-100 text-gray-700 text-sm sm:text-base"
           />
         </div>
         <div className="relative">
@@ -89,7 +89,7 @@ function PartnerFormWithHook({ onSuccess }) {
             placeholder="Email"
             value={user?.email || ''}
             disabled
-            className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl bg-gray-100 text-gray-700"
+            className="w-full px-3 sm:px-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl bg-gray-100 text-gray-700 text-sm sm:text-base"
           />
         </div>
       </div>
@@ -100,7 +100,7 @@ function PartnerFormWithHook({ onSuccess }) {
           placeholder="Business Name"
           value={formData.company_name || ""}
           onChange={handleInputChange}
-          className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 transition-all duration-300 hover:border-gray-300 bg-gray-50 focus:bg-white"
+          className="w-full px-3 sm:px-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 transition-all duration-300 hover:border-gray-300 bg-gray-50 focus:bg-white text-sm sm:text-base"
           required
         />
       </div>
@@ -111,7 +111,7 @@ function PartnerFormWithHook({ onSuccess }) {
           placeholder="Tax ID"
           value={formData.tax_id || ""}
           onChange={handleInputChange}
-          className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 transition-all duration-300 hover:border-gray-300 bg-gray-50 focus:bg-white"
+          className="w-full px-3 sm:px-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 transition-all duration-300 hover:border-gray-300 bg-gray-50 focus:bg-white text-sm sm:text-base"
           required
         />
       </div>
@@ -121,26 +121,26 @@ function PartnerFormWithHook({ onSuccess }) {
           name="agree_on_terms"
           checked={formData.agree_on_terms || false}
           onChange={handleInputChange}
-          className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mt-0.5"
+          className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mt-0.5 flex-shrink-0"
           required
         />
-        <label className="text-sm text-gray-600 leading-relaxed">
+        <label className="text-xs sm:text-sm text-gray-600 leading-relaxed">
           I agree to AirbCar's <span className="text-blue-600 hover:underline cursor-pointer">Terms of Service</span> and <span className="text-blue-600 hover:underline cursor-pointer">Privacy Policy</span>. I consent to receive marketing communications.
         </label>
       </div>
       <button
         type="submit"
-        className="w-full text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center space-x-2"
+        className="w-full text-white py-3 sm:py-4 rounded-xl font-bold text-sm sm:text-lg hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center space-x-2"
         style={{backgroundColor: 'var(--color-orange-500)' }}
         disabled={loading}
       >
         {loading ? 'Submitting...' : <span>START EARNING TODAY - FREE</span>}
       </button>
-      {error && <p className="text-red-500 text-center text-sm">{error.general || 'Submission failed'}</p>}
+      {error && <p className="text-red-500 text-center text-xs sm:text-sm">{error.general || 'Submission failed'}</p>}
       {formErrors.company_name && <p className="text-red-500 text-xs mt-1">{formErrors.company_name}</p>}
       {formErrors.agree_on_terms && <p className="text-red-500 text-xs mt-1">{formErrors.agree_on_terms}</p>}
       {formErrors.general && <p className="text-red-500 text-xs mt-1">{formErrors.general}</p>}
-      {success && <p className="text-green-600 text-center text-sm">Registration successful!</p>}
+      {success && <p className="text-green-600 text-center text-xs sm:text-sm">Registration successful!</p>}
       <p className="text-xs text-gray-500 text-center mt-3">
         Quick approval in 24 hours • Start earning immediately • Secure & trusted platform
       </p>
@@ -416,10 +416,10 @@ export default function BecomePartner() {
         if (!vehicleData.dailyRate) errors.dailyRate = 'Daily rate is required';
         break;
       case 5:
-        if (!vehicleData.registrationNumber) errors.registrationNumber = 'Registration number is required';
-        if (!vehicleData.ownershipProof) errors.ownershipProof = 'Ownership proof is required';
-        if (!vehicleData.insuranceDoc) errors.insuranceDoc = 'Insurance document is required';
-        if (vehicleData.photos.length === 0) errors.photos = 'At least one photo is required';
+        // Check for front photo - this is the most important requirement
+        if (!photos.front || photos.front === 'loading') {
+          errors.photos = 'Front photo is required - please upload at least one photo of your vehicle';
+        }
         break;
     }
 
@@ -546,32 +546,69 @@ async function fetchPartners() {
   // Vehicle registration form submit
   const handleVehicleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateStep(5)) {
-      alert('Please complete all required fields in Step 5 (documents and at least one photo).');
+    
+    // Validate that at least the front photo is uploaded
+    if (!photos.front || photos.front === 'loading') {
+      alert('❌ Please upload at least the front photo of your vehicle to continue.');
       return;
     }
+    
+    if (!validateStep(5)) {
+      alert('Please complete all required fields.');
+      return;
+    }
+    
     setIsSubmitting(true);
     setFormErrors({});
+    
     try {
+      // Combine the photos from the photos state with vehicleData
+      const photosArray = [];
+      if (photos.front && photos.front !== 'loading') photosArray.push(photos.front);
+      if (photos.side && photos.side !== 'loading') photosArray.push(photos.side);
+      if (photos.back && photos.back !== 'loading') photosArray.push(photos.back);
+      if (photos.interior && photos.interior !== 'loading') photosArray.push(photos.interior);
+      
+      const completeVehicleData = {
+        ...vehicleData,
+        photos: [...vehicleData.photos, ...photosArray]
+      };
+      
       // Use API to create listing directly in Django backend
-      await createListing(vehicleData);
-      {
-        alert('🎉 Vehicle added successfully! Our team will review and approve it within 24 hours. You\'ll receive a confirmation email shortly.');
-        setShowAddVehicleForm(false);
-        setCurrentStep(1);
-        setFormErrors({});
-        setVehicleData({
-          brand: '', model: '', year: '', fuelType: '', transmission: '',
-          engineSize: '', mileage: '', maxSpeed: '', seatingCapacity: '',
-          features: [], condition: '', lastService: '', insuranceValid: '',
-          location: '', address: '', dailyRate: '', weeklyRate: '', monthlyRate: '', securityDeposit: '',
-          registrationNumber: '', photos: [],
-          description: '', rules: '', availability: 'available'
-        });
-      }
+      const result = await createListing(completeVehicleData);
+      
+      console.log('✅ Vehicle added successfully:', result);
+      
+      alert('🎉 Vehicle added successfully! Our team will review and approve it within 24 hours. You\'ll receive a confirmation email shortly.');
+      
+      // Reset form and close modal
+      setShowAddVehicleForm(false);
+      setCurrentStep(1);
+      setFormErrors({});
+      
+      // Reset all form data
+      setVehicleData({
+        brand: '', model: '', year: '', fuelType: '', transmission: '',
+        engineSize: '', mileage: '', maxSpeed: '', seatingCapacity: '',
+        features: [], condition: '', lastService: '', insuranceValid: '',
+        location: '', address: '', dailyRate: '', weeklyRate: '', monthlyRate: '', securityDeposit: '',
+        registrationNumber: '', photos: [],
+        description: '', rules: '', availability: 'available'
+      });
+      
+      // Reset photos
+      setPhotos({
+        front: null,
+        side: null,
+        back: null,
+        interior: null
+      });
+      
     } catch (error) {
+      console.error('❌ Error adding vehicle:', error);
       const message = (error && error.message) ? error.message : 'Network error. Please try again.';
       setFormErrors({ general: message });
+      alert(`❌ Failed to add vehicle: ${message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -602,20 +639,12 @@ async function fetchPartners() {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative text-white py-20 lg:py-32 overflow-hidden" style={{
+      <section className="relative text-white py-12 sm:py-16 lg:py-32 overflow-hidden" style={{
         backgroundImage: 'url(/car-rental-tips.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}>
-
-        {/* Animated Background Pattern - Updated for orange theme */}
-        {/* <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-400 rounded-full animate-pulse"></div>
-          <div className="absolute top-32 right-20 w-16 h-16 bg-orange-400 rounded-full animate-bounce"></div>
-          <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-red-400 rounded-full animate-ping"></div>
-          <div className="absolute bottom-40 right-1/3 w-12 h-12 bg-amber-400 rounded-full animate-pulse"></div>
-        </div> */}
 
         {/* Background image overlay */}
         <div
@@ -627,80 +656,79 @@ async function fetchPartners() {
         ></div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
-            <div className="space-y-8 animate-fade-in-left">
+            <div className="space-y-6 sm:space-y-8 animate-fade-in-left text-center lg:text-left">
 
-              <h3 className="text-4xl lg:text-6xl font-bold leading-tight" style={{ fontSize: '45px' }}>
-                Put your <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">vehicle</span> in<br />
+              <h3 className="text-3xl sm:text-4xl lg:text-6xl font-bold leading-tight" style={{ fontSize: 'clamp(28px, 5vw, 45px)' }}>
+                Put your <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">vehicle</span> to work
               </h3>
 
-
               {/* Feature List */}
-              <div className="space-y-5 text-lg">
-                <div className="flex items-center space-x-4 group hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition-all duration-300">
-                  <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="space-y-4 sm:space-y-5 text-base sm:text-lg">
+                <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 group hover:bg-white hover:bg-opacity-10 rounded-lg p-2 sm:p-3 transition-all duration-300">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0 mt-1 sm:mt-0">
+                    <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <span className="text-gray-200 group-hover:text-white transition-colors duration-300">It's <span className="font-bold text-green-400">100% free</span> to list your motorbikes online.</span>
+                  <span className="text-gray-200 group-hover:text-white transition-colors duration-300 text-sm sm:text-base">It's <span className="font-bold text-green-400">100% free</span> to list your vehicles online.</span>
                 </div>
-                <div className="flex items-center space-x-4 group hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition-all duration-300">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 group hover:bg-white hover:bg-opacity-10 rounded-lg p-2 sm:p-3 transition-all duration-300">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0 mt-1 sm:mt-0">
+                    <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
                   </div>
-                  <span className="text-gray-200 group-hover:text-white transition-colors duration-300">You set your <span className="font-bold text-purple-400">own prices</span>, control your business.</span>
+                  <span className="text-gray-200 group-hover:text-white transition-colors duration-300 text-sm sm:text-base">You set your <span className="font-bold text-purple-400">own prices</span>, control your business.</span>
                 </div>
-                <div className="flex items-center space-x-4 group hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition-all duration-300">
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 group hover:bg-white hover:bg-opacity-10 rounded-lg p-2 sm:p-3 transition-all duration-300">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0 mt-1 sm:mt-0">
+                    <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                   </div>
-                  <span className="text-gray-200 group-hover:text-white transition-colors duration-300">Manage <span className="font-bold text-pink-400">online & offline</span> bookings seamlessly.</span>
+                  <span className="text-gray-200 group-hover:text-white transition-colors duration-300 text-sm sm:text-base">Manage <span className="font-bold text-pink-400">online & offline</span> bookings seamlessly.</span>
                 </div>
-                <div className="flex items-center space-x-4 group hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition-all duration-300">
-                  <div className="w-8 h-8 bg-gradient-to-r from-red-400 to-pink-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 group hover:bg-white hover:bg-opacity-10 rounded-lg p-2 sm:p-3 transition-all duration-300">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-red-400 to-pink-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0 mt-1 sm:mt-0">
+                    <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   </div>
-                  <span className="text-gray-200 group-hover:text-white transition-colors duration-300"><span className="font-bold text-red-400">24/7 premium support</span> by phone, email, or chat.</span>
+                  <span className="text-gray-200 group-hover:text-white transition-colors duration-300 text-sm sm:text-base"><span className="font-bold text-red-400">24/7 premium support</span> by phone, email, or chat.</span>
                 </div>
               </div>
 
             </div>
 
             {/* Right Side - Registration Form */}
-            <div className="relative animate-fade-in-right">
-              <div className="bg-white rounded-2xl p-8 shadow-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
-                <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{backgroundColor: 'var(--color-orange-500)' }}>
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="relative animate-fade-in-right mt-8 lg:mt-0">
+              <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 shadow-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
+                <div className="text-center mb-4 sm:mb-6">
+                  <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full mb-3 sm:mb-4" style={{backgroundColor: 'var(--color-orange-500)' }}>
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-bold bg-clip-text text-transparent mb-2" style={{color: 'var(--color-orange-500)' }}>Join AirbCar Partner Network</h3>
-                  <p className="text-gray-600">Start earning from your vehicle fleet today</p>
+                  <h3 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent mb-2" style={{color: 'var(--color-orange-500)' }}>Join AirbCar Partner Network</h3>
+                  <p className="text-gray-600 text-sm sm:text-base">Start earning from your vehicle fleet today</p>
 
-                  <div className="flex items-center justify-center space-x-4 mt-4 text-sm text-gray-500">
+                  <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500">
                     <div className="flex items-center">
-                      <svg className="w-4 h-4 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       Free Setup
                     </div>
                     <div className="flex items-center">
-                      <svg className="w-4 h-4 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       2-min Process
                     </div>
                     <div className="flex items-center">
-                      <svg className="w-4 h-4 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
                       Instant Approval
@@ -718,30 +746,36 @@ async function fetchPartners() {
 
       {/* Add Vehicle Form Modal */}
       {showAddVehicleForm && (
-        <div className="fixed inset-0 bg-opacity-50 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+        <div className="fixed inset-0 bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+          <div className="bg-white rounded-xl sm:rounded-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto" >
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 rounded-t-xl sm:rounded-t-2xl" style={{ zIndex: "1000" }} >
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Add Your Vehicle</h2>
-                  <p className="text-gray-600">Step {currentStep} of 5 - Let's get your vehicle listed!</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900" >Add Your Vehicle</h2>
+                  <p className="text-sm sm:text-base text-gray-600">Step {currentStep} of 5 - Let's get your vehicle listed!</p>
                 </div>
                 <button
                   onClick={() => setShowAddVehicleForm(false)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                  className="text-gray-400 hover:text-gray-600 text-xl sm:text-2xl p-2"
                 >
                   ×
                 </button>
               </div>
 
               {/* Progress Bar */}
-              <div className="mt-4">
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
-                  <span>Basic Info</span>
-                  <span>Specifications</span>
-                  <span>Features</span>
-                  <span>Pricing</span>
-                  <span>Documents</span>
+              <div className="mt-3 sm:mt-4">
+                <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500 mb-2">
+                  <span className="hidden sm:inline">Basic Info</span>
+                  <span className="hidden sm:inline">Specifications</span>
+                  <span className="hidden sm:inline">Features</span>
+                  <span className="hidden sm:inline">Pricing</span>
+                  <span className="hidden sm:inline">Documents</span>
+                  {/* Mobile simplified labels */}
+                  <span className="sm:hidden">Info</span>
+                  <span className="sm:hidden">Specs</span>
+                  <span className="sm:hidden">Features</span>
+                  <span className="sm:hidden">Price</span>
+                  <span className="sm:hidden">Docs</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
@@ -755,29 +789,28 @@ async function fetchPartners() {
               </div>
             </div>
 
-
-            <form onSubmit={handleVehicleSubmit} className="p-6">
+            <form onSubmit={handleVehicleSubmit} className="p-4 sm:p-6">
               {/* Step 1: Basic Information */}
               {currentStep === 1 && (
-                <div className="space-y-6">
-                  <div className="text-center mb-6">
-                    <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: '#ff4c25' }}>
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="text-center mb-4 sm:mb-6">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center" style={{ backgroundColor: '#ff4c25' }}>
+                      <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900">Vehicle Basic Information</h3>
-                    <p className="text-gray-600">Tell us about your vehicle's basic details</p>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Vehicle Basic Information</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Tell us about your vehicle's basic details</p>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Brand *</label>
                       <select
                         name="brand"
                         value={vehicleData.brand}
                         onChange={handleVehicleInputChange}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.brand ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                        className={`w-full px-3 sm:px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base ${formErrors.brand ? 'border-red-300 bg-red-50' : 'border-gray-300'
                           }`}
                         required
                       >
@@ -803,7 +836,7 @@ async function fetchPartners() {
                         value={vehicleData.model}
                         onChange={handleVehicleInputChange}
                         placeholder="e.g., Classic 350, R15 V4"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                         required
                       />
                     </div>
@@ -814,7 +847,7 @@ async function fetchPartners() {
                         name="year"
                         value={vehicleData.year}
                         onChange={handleVehicleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                         required
                       >
                         <option value="">Select Year</option>
@@ -830,7 +863,7 @@ async function fetchPartners() {
                         name="fuelType"
                         value={vehicleData.fuelType}
                         onChange={handleVehicleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                         required
                       >
                         <option value="">Select Fuel Type</option>
@@ -840,13 +873,13 @@ async function fetchPartners() {
                       </select>
                     </div>
 
-                    <div>
+                    <div className="sm:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Transmission *</label>
                       <select
                         name="transmission"
                         value={vehicleData.transmission}
                         onChange={handleVehicleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                         required
                       >
                         <option value="">Select Transmission</option>
@@ -860,33 +893,32 @@ async function fetchPartners() {
 
               {/* Step 2: Specifications */}
               {currentStep === 2 && (
-                <div className="space-y-6">
-                  <div className="text-center mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: 'rgb(255, 76, 37)' }}>
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="text-center mb-4 sm:mb-6">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-green-500 to-blue-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center" style={{ backgroundColor: 'rgb(255, 76, 37)' }}>
+                      <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900">Vehicle Specifications</h3>
-                    <p className="text-gray-600">Provide detailed specifications of your vehicle</p>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Vehicle Specifications</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Provide detailed specifications of your vehicle</p>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
-
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Seating Capacity *</label>
                       <select
                         name="seatingCapacity"
                         value={vehicleData.seatingCapacity}
                         onChange={handleVehicleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                         required
                       >
                         <option value="">Select Capacity</option>
                         <option value="2">2 People</option>
-                        <option value="3">4 People</option>
-                        <option value="3">5 People</option>
-                        <option value="3">+7 People</option>
+                        <option value="4">4 People</option>
+                        <option value="5">5 People</option>
+                        <option value="7+">7+ People</option>
                       </select>
                     </div>
 
@@ -896,7 +928,7 @@ async function fetchPartners() {
                         name="condition"
                         value={vehicleData.condition}
                         onChange={handleVehicleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                         required
                       >
                         <option value="">Select Condition</option>
@@ -905,27 +937,26 @@ async function fetchPartners() {
                         <option value="Fair">Fair (Some wear)</option>
                       </select>
                     </div>
-
                   </div>
                 </div>
               )}
 
               {/* Step 3: Features & Safety */}
               {currentStep === 3 && (
-                <div className="space-y-6">
-                  <div className="text-center mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="text-center mb-4 sm:mb-6">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center">
+                      <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900">Features & Safety</h3>
-                    <p className="text-gray-600">Highlight what makes your vehicle special</p>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Features & Safety</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Highlight what makes your vehicle special</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-4">Available Features (Select all that apply)</label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-3 sm:mb-4">Available Features (Select all that apply)</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                       {[
                         'GPS Navigation', 'Bluetooth Connectivity', 'USB Charging Port',
                         'LED Headlights', 'Digital Speedometer', 'Anti-theft System',
@@ -933,7 +964,7 @@ async function fetchPartners() {
                         'First Aid Kit', 'Tool Kit', 'Spare Helmet',
                         'Rain Cover', 'Phone Charger', 'Action Camera Mount'
                       ].map((feature) => (
-                        <label key={feature} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <label key={feature} className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                           <input
                             type="checkbox"
                             name="features"
@@ -942,12 +973,11 @@ async function fetchPartners() {
                             onChange={handleVehicleInputChange}
                             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                           />
-                          <span className="text-sm text-gray-700">{feature}</span>
+                          <span className="text-xs sm:text-sm text-gray-700">{feature}</span>
                         </label>
                       ))}
                     </div>
                   </div>
-
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Vehicle Description</label>
@@ -957,7 +987,7 @@ async function fetchPartners() {
                       onChange={handleVehicleInputChange}
                       rows="4"
                       placeholder="Describe your vehicle's unique features, recent upgrades, or any special aspects customers should know about..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                     ></textarea>
                   </div>
                 </div>
@@ -965,35 +995,35 @@ async function fetchPartners() {
 
               {/* Step 4: Location & Pricing */}
               {currentStep === 4 && (
-                <div className="space-y-6">
-                  <div className="text-center mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="text-center mb-4 sm:mb-6">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center">
+                      <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900">Location & Pricing</h3>
-                    <p className="text-gray-600">Set competitive rates to maximize your bookings</p>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Location & Pricing</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Set competitive rates to maximize your bookings</p>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6"><div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">City/Location *</label>
-                    <select
-                      name="location"
-                      value={vehicleData.location}
-                      onChange={handleVehicleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    >
-                      <option value="">Select City</option>
-                      {moroccanCities.map(city => (
-                        <option key={city} value={city}>{city}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="sm:col-span-2 sm:col-span-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">City/Location *</label>
+                      <select
+                        name="location"
+                        value={vehicleData.location}
+                        onChange={handleVehicleInputChange}
+                        className="w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                        required
+                      >
+                        <option value="">Select City</option>
+                        {moroccanCities.map(city => (
+                          <option key={city} value={city}>{city}</option>
+                        ))}
+                      </select>
+                    </div>
 
-
-                    <div>
+                    <div className="sm:col-span-2 sm:col-span-1">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Daily Rate (DH) *</label>
                       <input
                         type="number"
@@ -1001,7 +1031,7 @@ async function fetchPartners() {
                         value={vehicleData.dailyRate}
                         onChange={handleVehicleInputChange}
                         placeholder="e.g., 500, 750, 1000"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.dailyRate ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                        className={`w-full px-3 sm:px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base ${formErrors.dailyRate ? 'border-red-300 bg-red-50' : 'border-gray-300'
                           }`}
                         required
                       />
@@ -1010,37 +1040,36 @@ async function fetchPartners() {
                     </div>
                   </div>
 
-
-                  {/* Earnings Calculator */}
+                  {/* Earnings Calculator - Mobile Optimized */}
                   {vehicleData.dailyRate && (
-                    <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
-                      <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4 sm:p-6">
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                         </svg>
                         Potential Earnings Calculator
                       </h4>
 
-                      <div className="grid grid-cols-3 gap-4 text-center">
-                        <div className="bg-white p-4 rounded-lg">
-                          <div className="text-sm text-gray-600">If rented 15 days/month</div>
-                          <div className="text-xl font-bold text-green-600">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-center">
+                        <div className="bg-white p-3 sm:p-4 rounded-lg">
+                          <div className="text-xs sm:text-sm text-gray-600">If rented 15 days/month</div>
+                          <div className="text-lg sm:text-xl font-bold text-green-600">
                             DH{Math.round(vehicleData.dailyRate * 15 * 0.85).toLocaleString()}
                           </div>
                           <div className="text-xs text-gray-500">Your earnings after 15% commission</div>
                         </div>
 
-                        <div className="bg-white p-4 rounded-lg">
-                          <div className="text-sm text-gray-600">If rented 20 days/month</div>
-                          <div className="text-xl font-bold text-green-600">
+                        <div className="bg-white p-3 sm:p-4 rounded-lg">
+                          <div className="text-xs sm:text-sm text-gray-600">If rented 20 days/month</div>
+                          <div className="text-lg sm:text-xl font-bold text-green-600">
                             DH{Math.round(vehicleData.dailyRate * 20 * 0.85).toLocaleString()}
                           </div>
                           <div className="text-xs text-gray-500">Your earnings after 15% commission</div>
                         </div>
 
-                        <div className="bg-white p-4 rounded-lg">
-                          <div className="text-sm text-gray-600">If rented 25 days/month</div>
-                          <div className="text-xl font-bold text-green-600">
+                        <div className="bg-white p-3 sm:p-4 rounded-lg">
+                          <div className="text-xs sm:text-sm text-gray-600">If rented 25 days/month</div>
+                          <div className="text-lg sm:text-xl font-bold text-green-600">
                             DH{Math.round(vehicleData.dailyRate * 25 * 0.85).toLocaleString()}
                           </div>
                           <div className="text-xs text-gray-500">Your earnings after 15% commission</div>
@@ -1229,23 +1258,23 @@ async function fetchPartners() {
     })()}
     {/* Header */}
     <div className="text-center">
-      <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
-        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center shadow-lg">
+        <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       </div>
-      <h3 className="text-2xl font-bold text-gray-900 mb-2">Pictures of the vehicle</h3>
-      <p className="text-gray-600 mb-4">
+      <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-2">Pictures of the vehicle</h3>
+      <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
         We only display cars with photos. You can start with one and add more later.
       </p>
       
       {/* Progress Indicator */}
-      <div className="flex items-center justify-center gap-2 mb-6">
-        <div className="text-sm font-medium text-gray-700">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-4 sm:mb-6">
+        <div className="text-xs sm:text-sm font-medium text-gray-700">
           {Object.values(photos).filter(photo => photo && photo !== 'loading').length} of 4 photos uploaded
         </div>
-        <div className="w-32 bg-gray-200 rounded-full h-2">
+        <div className="w-24 sm:w-32 bg-gray-200 rounded-full h-2">
           <div 
             className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300" 
             style={{ width: `${(Object.values(photos).filter(photo => photo && photo !== 'loading').length / 4) * 100}%` }}
@@ -1255,22 +1284,22 @@ async function fetchPartners() {
     </div>
 
     {/* Tips Section */}
-    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200">
-      <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 sm:p-6 border border-blue-200">
+      <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
         </svg>
         Photography Tips
       </h4>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-2 sm:gap-3">
         {[
           'Use landscape format for best results',
           'Follow our angle guidelines shown in examples',
           'Keep the background clear and neutral',
           'Use only natural daylight for best quality'
         ].map((tip, index) => (
-          <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
-            <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <div key={index} className="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
             <span>{tip}</span>
@@ -1288,8 +1317,8 @@ async function fetchPartners() {
             <h4 className="text-lg font-semibold text-gray-900 mb-2">Main Picture</h4>
             <p className="text-gray-600">This is the first photo drivers will see - make it count!</p>
           </div>
-          
-          <div className="space-y-3">
+
+          <div className="space-y-3 ">
             <div className="flex items-center justify-between">
               <div>
                 <h5 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -1300,12 +1329,12 @@ async function fetchPartners() {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-start">
               {/* Upload Area */}
-              <div className="relative">
+              <div className="relative order-2 lg:order-1">
                 <label 
                   className={`
-                    relative block w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200
+                    relative block w-full h-55 sm:h-54 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200
                     ${photos.front ? 'border-green-300 bg-green-50' : 'border-gray-300 hover:border-gray-400'}
                   `}
                   onDrop={(e) => {
@@ -1389,13 +1418,13 @@ async function fetchPartners() {
               </div>
 
               {/* Example Image */}
-              <div className="relative">
+              <div className="relative order-1 lg:order-2">
                 <img 
                   src={front_img} 
                   alt="Example front view" 
-                  className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                  className="w-full h-full sm:h-full object-cover rounded-lg border border-gray-200"
                 />
-                <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                <div className="absolute top-1 sm:top-2 left-1 sm:left-2 bg-black bg-opacity-50 text-white text-xs px-1 sm:px-2 py-1 rounded">
                   Example
                 </div>
               </div>
@@ -1420,11 +1449,11 @@ async function fetchPartners() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                <div className="relative">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-start">
+                <div className="relative order-2 lg:order-1">
                   <label 
                     className={`
-                      relative block w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200
+                      relative block w-full h-55 sm:h-54 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200
                       ${photos.side ? 'border-green-300 bg-green-50' : 'border-gray-300 hover:border-gray-400'}
                     `}
                     onDrop={async (e) => {
@@ -1508,13 +1537,13 @@ async function fetchPartners() {
                   </label>
                 </div>
 
-                <div className="relative">
+                <div className="relative order-1 lg:order-2">
                   <img 
                     src={side_img} 
                     alt="Example side view" 
-                    className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                    className="w-full h-55 sm:h-54 object-cover rounded-lg border border-gray-200"
                   />
-                  <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                  <div className="absolute top-1 sm:top-2 left-1 sm:left-2 bg-black bg-opacity-50 text-white text-xs px-1 sm:px-2 py-1 rounded">
                     Example
                   </div>
                 </div>
@@ -1530,11 +1559,11 @@ async function fetchPartners() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                <div className="relative">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-start">
+                <div className="relative order-2 lg:order-1">
                   <label 
                     className={`
-                      relative block w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200
+                      relative block w-full h-55 sm:h-54 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200
                       ${photos.back ? 'border-green-300 bg-green-50' : 'border-gray-300 hover:border-gray-400'}
                     `}
                     onDrop={async (e) => {
@@ -1618,13 +1647,13 @@ async function fetchPartners() {
                   </label>
                 </div>
 
-                <div className="relative">
+                <div className="relative order-1 lg:order-2">
                   <img 
                     src={back_img} 
                     alt="Example back view" 
-                    className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                    className="w-full h-full sm:h-full object-cover rounded-lg border border-gray-200"
                   />
-                  <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                  <div className="absolute top-1 sm:top-2 left-1 sm:left-2 bg-black bg-opacity-50 text-white text-xs px-1 sm:px-2 py-1 rounded">
                     Example
                   </div>
                 </div>
@@ -1640,11 +1669,11 @@ async function fetchPartners() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                <div className="relative">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-start">
+                <div className="relative order-2 lg:order-1">
                   <label 
                     className={`
-                      relative block w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200
+                      relative block w-full h-55 sm:h-54 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200
                       ${photos.interior ? 'border-green-300 bg-green-50' : 'border-gray-300 hover:border-gray-400'}
                     `}
                     onDrop={async (e) => {
@@ -1731,13 +1760,13 @@ async function fetchPartners() {
                   </label>
                 </div>
 
-                <div className="relative">
+                <div className="relative order-1 lg:order-2">
                   <img 
                     src={interior_img} 
                     alt="Example interior view" 
-                    className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                    className="w-full h-full sm:h-full object-cover rounded-lg border border-gray-200"
                   />
-                  <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                  <div className="absolute top-1 sm:top-2 left-1 sm:left-2 bg-black bg-opacity-50 text-white text-xs px-1 sm:px-2 py-1 rounded">
                     Example
                   </div>
                 </div>
@@ -1747,17 +1776,29 @@ async function fetchPartners() {
         </div>
       </div>
     </div>
+    
+    {/* Error Display for Step 5 */}
+    {formErrors.photos && (
+      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+        <p className="text-red-600 text-sm font-medium">{formErrors.photos}</p>
+      </div>
+    )}
+    {formErrors.general && (
+      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+        <p className="text-red-600 text-sm font-medium">{formErrors.general}</p>
+      </div>
+    )}
   </div>
 )}
 
 
               {/* Navigation Buttons */}
-              <div className="flex justify-between pt-6 border-t border-gray-200 mt-8">
+              <div className="flex flex-col sm:flex-row justify-between pt-4 sm:pt-6 border-t border-gray-200 mt-6 sm:mt-8 gap-3 sm:gap-0">
                 <button
                   type="button"
                   onClick={prevStep}
                   disabled={currentStep === 1}
-                  className={`px-6 py-3 rounded-lg font-medium ${currentStep === 1
+                  className={`w-full sm:w-auto px-4 sm:px-6 py-3 rounded-lg font-medium text-sm sm:text-base ${currentStep === 1
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
@@ -1769,7 +1810,7 @@ async function fetchPartners() {
                   <button
                     type="button"
                     onClick={nextStep}
-                    className="px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-all duration-200"
+                    className="w-full sm:w-auto px-4 sm:px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-all duration-200 text-sm sm:text-base"
                     style={{ backgroundColor: '#ff4c25' }}
                   >
                     Next Step
@@ -1778,7 +1819,7 @@ async function fetchPartners() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`px-8 py-3 rounded-lg font-medium flex items-center space-x-2 ${isSubmitting
+                    className={`w-full sm:w-auto px-6 sm:px-8 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 text-sm sm:text-base ${isSubmitting
                       ? 'bg-gray-400 cursor-not-allowed'
                       : 'text-white hover:opacity-90'
                       } transition-all duration-200`}
@@ -1800,57 +1841,57 @@ async function fetchPartners() {
       )}
 
       {/* How does it work? */}
-      <section className="py-20 bg-white">
+      <section className="py-12 sm:py-16 lg:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
               How does it work?
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Join our motorcycle rental network in 4 simple steps and start earning within 24 hours.
+            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
+              Join our vehicle rental network in 4 simple steps and start earning within 24 hours.
             </p>
           </div>
 
           <div className="max-w-4xl mx-auto">
-            <p className="text-lg text-gray-700 text-center mb-12 leading-relaxed bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-2xl">
-              🚀 <strong>Quick Setup Process:</strong> Upload your motorcycle fleet, set competitive prices on our partner portal.
-              List motorcycles individually or in batches, then we verify your vehicle details and business
+            <p className="text-base sm:text-lg text-gray-700 text-center mb-8 sm:mb-12 leading-relaxed bg-gradient-to-r from-blue-50 to-purple-50 p-4 sm:p-6 rounded-2xl">
+              🚀 <strong>Quick Setup Process:</strong> Upload your vehicle fleet, set competitive prices on our partner portal.
+              List vehicles individually or in batches, then we verify your vehicle details and business
               credentials through our secure verification process.
             </p>
 
             {/* Process Steps with Enhanced Images */}
-            <div className="space-y-20">
+            <div className="space-y-12 sm:space-y-16 lg:space-y-20">
               {/* Step 1 */}
-              <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="space-y-6 animate-fade-in-up">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+                <div className="space-y-4 sm:space-y-6 animate-fade-in-up order-2 lg:order-1">
+                  <div className="flex items-center space-x-3 sm:space-x-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
                       1
                     </div>
-                    <h3 className="text-3xl font-bold text-gray-900">Set your prices & upload fleet</h3>
+                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Set your prices & upload fleet</h3>
                   </div>
-                  <p className="text-gray-600 leading-relaxed text-lg">
-                    📋 <strong>Easy Fleet Management:</strong> Choose competitive rental rates for your motorbikes and list them on our platform!
+                  <p className="text-gray-600 leading-relaxed text-sm sm:text-base lg:text-lg">
+                    📋 <strong>Easy Fleet Management:</strong> Choose competitive rental rates for your vehicles and list them on our platform!
                     <br /><br />
-                    💰 Set dynamic pricing for different motorcycle categories, get recommended pricing based on market analysis,
+                    💰 Set dynamic pricing for different vehicle categories, get recommended pricing based on market analysis,
                     and optimize your rates to maximize bookings and revenue goals.
                   </p>
-                  <div className="flex space-x-4 pt-4">
+                  <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0 pt-4">
                     <div className="flex items-center text-green-600">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       Free listing
                     </div>
                     <div className="flex items-center text-green-600">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       Bulk upload
                     </div>
                   </div>
                 </div>
-                <div className="bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl h-80 shadow-xl relative overflow-hidden">
+                <div className="bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl h-64 sm:h-80 shadow-xl relative overflow-hidden order-1 lg:order-2">
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 opacity-10"></div>
 
                   {/* Dashboard Mockup */}
@@ -1909,46 +1950,46 @@ async function fetchPartners() {
               </div>
 
               {/* Step 2 */}
-              <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl h-80 md:order-1 shadow-xl relative overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+                <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl h-64 sm:h-80 lg:order-1 shadow-xl relative overflow-hidden order-1">
                   <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-emerald-500 opacity-10"></div>
 
                   {/* Booking Interface Mockup */}
-                  <div className="p-6 h-full flex flex-col">
+                  <div className="p-4 sm:p-6 h-full flex flex-col">
                     {/* Header */}
-                    <div className="bg-white rounded-lg p-3 mb-4 shadow-sm">
+                    <div className="bg-white rounded-lg p-2 sm:p-3 mb-3 sm:mb-4 shadow-sm">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-gray-800">New Booking Requests</span>
+                        <span className="text-xs sm:text-sm font-semibold text-gray-800">New Booking Requests</span>
                         <div className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">3</div>
                       </div>
                     </div>
 
                     {/* Booking Cards */}
-                    <div className="space-y-3 flex-1">
-                      <div className="bg-white rounded-lg p-4 shadow-sm border-l-4 border-green-500">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <div className="space-y-2 sm:space-y-3 flex-1">
+                      <div className="bg-white rounded-lg p-2 sm:p-4 shadow-sm border-l-4 border-green-500">
+                        <div className="flex items-center justify-between mb-1 sm:mb-2">
+                          <div className="flex items-center space-x-1 sm:space-x-2">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center">
                               <span className="text-xs font-bold text-blue-600">RK</span>
                             </div>
                             <div>
-                              <div className="text-sm font-semibold">Raj Kumar</div>
+                              <div className="text-xs sm:text-sm font-semibold">Raj Kumar</div>
                               <div className="text-xs text-gray-500">★★★★★ 4.9</div>
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-sm font-bold text-green-600">DH1,500</div>
+                            <div className="text-xs sm:text-sm font-bold text-green-600">DH1,500</div>
                             <div className="text-xs text-gray-500">3 days</div>
                           </div>
                         </div>
-                        <div className="text-xs text-gray-600 mb-3">Royal Enfield Classic 350 • Aug 15-17</div>
-                        <div className="flex space-x-2">
-                          <button className="flex-1 bg-green-500 text-white text-xs py-2 rounded font-semibold">Accept</button>
-                          <button className="flex-1 bg-gray-200 text-gray-700 text-xs py-2 rounded font-semibold">Decline</button>
+                        <div className="text-xs text-gray-600 mb-2 sm:mb-3">Royal Enfield Classic 350 • Aug 15-17</div>
+                        <div className="flex space-x-1 sm:space-x-2">
+                          <button className="flex-1 bg-green-500 text-white text-xs py-1 sm:py-2 rounded font-semibold">Accept</button>
+                          <button className="flex-1 bg-gray-200 text-gray-700 text-xs py-1 sm:py-2 rounded font-semibold">Decline</button>
                         </div>
                       </div>
 
-                      <div className="bg-white rounded-lg p-4 shadow-sm border-l-4 border-orange-500">
+                      <div className="bg-white rounded-lg p-2 sm:p-4 shadow-sm border-l-4 border-orange-500">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-2">
                             <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
@@ -1973,28 +2014,28 @@ async function fetchPartners() {
                     </div>
                   </div>
                 </div>
-                <div className="space-y-6 md:order-2 animate-fade-in-up">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                <div className="space-y-4 sm:space-y-6 lg:order-2 animate-fade-in-up order-2">
+                  <div className="flex items-center space-x-3 sm:space-x-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
                       2
                     </div>
-                    <h3 className="text-3xl font-bold text-gray-900">Accept or reject bookings</h3>
+                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Accept or reject bookings</h3>
                   </div>
-                  <p className="text-gray-600 leading-relaxed text-lg">
+                  <p className="text-gray-600 leading-relaxed text-sm sm:text-base lg:text-lg">
                     ⚡ <strong>Smart Control System:</strong> Review every booking request and choose which ones to accept!
                     <br /><br />
                     📱 Get instant notifications for new booking requests, view detailed customer profiles and reviews,
                     manage your availability calendar, and maintain full control over your rental business.
                   </p>
-                  <div className="flex space-x-4 pt-4">
+                  <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0 pt-4">
                     <div className="flex items-center text-green-600">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       Instant notifications
                     </div>
                     <div className="flex items-center text-green-600">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       Full control
@@ -2212,7 +2253,7 @@ async function fetchPartners() {
       </section>
 
       {/* Ready to get started? */}
-      <section className="py-20 relative overflow-hidden" style={{
+      <section className="py-12 sm:py-16 lg:py-20 relative overflow-hidden" style={{
         backgroundImage: 'url(/partner-cta-bg.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -2223,54 +2264,54 @@ async function fetchPartners() {
 
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-32 h-32 border border-white rounded-full"></div>
-          <div className="absolute bottom-20 right-20 w-24 h-24 border border-white rounded-full"></div>
-          <div className="absolute top-40 right-40 w-16 h-16 bg-white rounded-full animate-pulse"></div>
-          <div className="absolute bottom-40 left-40 w-20 h-20 bg-white rounded-full animate-bounce"></div>
+          <div className="absolute top-10 sm:top-20 left-10 sm:left-20 w-16 h-16 sm:w-32 sm:h-32 border border-white rounded-full"></div>
+          <div className="absolute bottom-10 sm:bottom-20 right-10 sm:right-20 w-12 h-12 sm:w-24 sm:h-24 border border-white rounded-full"></div>
+          <div className="absolute top-20 sm:top-40 right-20 sm:right-40 w-8 h-8 sm:w-16 sm:h-16 bg-white rounded-full animate-pulse"></div>
+          <div className="absolute bottom-20 sm:bottom-40 left-20 sm:left-40 w-10 h-10 sm:w-20 sm:h-20 bg-white rounded-full animate-bounce"></div>
         </div>
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
-          <div className="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 rounded-full text-white text-sm font-medium mb-6"
+          <div className="inline-flex items-center px-3 sm:px-4 py-2 bg-white bg-opacity-20 rounded-full text-white text-xs sm:text-sm font-medium mb-4 sm:mb-6"
           style={{color: 'var(--color-orange-500)' }} >
             <span className="w-2 h-2 rounded-full mr-2 animate-pulse"></span>
             Limited Time: Zero Setup Fees
           </div>
 
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
             Ready to <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">transform</span> your business?
           </h2>
-          <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-            Join thousands of successful motorbike rental partners earning an average of <strong className="text-yellow-400">DH50,000+ monthly</strong> with AirbCar
+          <p className="text-base sm:text-lg lg:text-xl mb-6 sm:mb-8 opacity-90 max-w-2xl mx-auto">
+            Join thousands of successful vehicle rental partners earning an average of <strong className="text-yellow-400">DH50,000+ monthly</strong> with AirbCar
           </p>
 
-          <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-8">
+          <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-6 sm:mb-8">
             <button
               onClick={() => setShowAddVehicleForm(true)}
-              className="bg-white py-4 px-8 rounded-xl font-bold text-lg hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:-translate-y-1 glow-on-hover flex items-center space-x-2"
+              className="w-full sm:w-auto bg-white py-3 sm:py-4 px-6 sm:px-8 rounded-xl font-bold text-sm sm:text-lg hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:-translate-y-1 glow-on-hover flex items-center justify-center space-x-2"
               style={{color: 'var(--color-orange-500)' }}
             >
               <span>START EARNING TODAY - FREE</span>
             </button>
-            <div className="flex items-center text-white">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center text-white text-sm sm:text-base">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
               </svg>
-              <span>Or call us: <strong>+91 98765 43210</strong></span>
+              <span>Or call us: <strong>+212 6 12 34 56 78</strong></span>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto text-center">
+          <div className="grid grid-cols-3 gap-4 sm:gap-8 max-w-2xl mx-auto text-center">
             <div>
-              <div className="text-3xl font-bold text-yellow-400">24hrs</div>
-              <div className="text-sm opacity-80">Quick Approval</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-400">24hrs</div>
+              <div className="text-xs sm:text-sm opacity-80">Quick Approval</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-yellow-400">DH0</div>
-              <div className="text-sm opacity-80">Setup Cost</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-400">DH0</div>
+              <div className="text-xs sm:text-sm opacity-80">Setup Cost</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-yellow-400">15%</div>
-              <div className="text-sm opacity-80">Commission Only</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-400">15%</div>
+              <div className="text-xs sm:text-sm opacity-80">Commission Only</div>
             </div>
           </div>
         </div>

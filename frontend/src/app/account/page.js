@@ -119,10 +119,10 @@ function AccountPageContent() {
   }
 
   const sidebarItems = [
-    { id: 'bookings', label: 'Your bookings', icon: '📋' },
-    { id: 'favorites', label: 'Your Favorite cars', icon: '❤️' },
-    { id: 'alerts', label: 'Price Alerts', icon: '🔔' },
-    { id: 'account', label: 'Account', icon: '👤' },
+    { id: 'bookings', label: 'Your bookings' },
+    { id: 'favorites', label: 'Your Favorite cars'},
+    { id: 'alerts', label: 'Price Alerts'},
+    { id: 'account', label: 'Account'},
   ]
 
   const months = [
@@ -567,7 +567,6 @@ function AccountPageContent() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h1 className="text-2xl font-bold text-gray-900 mb-6">Your Bookings</h1>
                 <div className="text-center py-12">
-                  <div className="text-6xl mb-4">📋</div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No bookings yet</h3>
                   <p className="text-gray-600">Your car rental bookings will appear here.</p>
                 </div>
@@ -578,7 +577,6 @@ function AccountPageContent() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h1 className="text-2xl font-bold text-gray-900 mb-6">Your Favorite Cars</h1>
                 <div className="text-center py-12">
-                  <div className="text-6xl mb-4">❤️</div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No favorites yet</h3>
                   <p className="text-gray-600">Cars you favorite will appear here.</p>
                 </div>
@@ -589,7 +587,6 @@ function AccountPageContent() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h1 className="text-2xl font-bold text-gray-900 mb-6">Price Alerts</h1>
                 <div className="text-center py-12">
-                  <div className="text-6xl mb-4">🔔</div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No price alerts set</h3>
                   <p className="text-gray-600">Set up price alerts to get notified of deals.</p>
                 </div>
