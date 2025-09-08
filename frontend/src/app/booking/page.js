@@ -110,22 +110,22 @@ function BookingContent() {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <nav className="flex items-center space-x-2 text-sm">
-            <button onClick={() => router.push('/')} className="text-gray-500 hover:text-gray-700">
+            <button onClick={() => router.push('/')} className="text-gray-700 hover:text-gray-800">
               Home
             </button>
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            <button onClick={() => router.push('/search')} className="text-gray-500 hover:text-gray-700">
+            <button onClick={() => router.push('/search')} className="text-gray-700 hover:text-gray-800">
               Cars in Morocco
             </button>
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            <button onClick={() => router.push(`/car/${carId}`)} className="text-gray-500 hover:text-gray-700">
+            <button onClick={() => router.push(`/car/${carId}`)} className="text-gray-700 hover:text-gray-800">
               {car.name}
             </button>
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
             <span className="text-gray-900">Book Now</span>

@@ -83,7 +83,7 @@ export default function CarTypes() {
               {/* Car Type Info */}
               <div className="mb-4">
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">{car.name}</h3>
-                <p className="text-sm text-gray-500 mb-3">{car.doors}</p>
+                <p className="text-sm text-gray-700 mb-3">{car.doors}</p>
                 
                 {/* Icons and Stats */}
                 <div className="flex items-center space-x-4 text-sm">
@@ -102,7 +102,7 @@ export default function CarTypes() {
               <div className="flex justify-between items-center">
                 <div>
                   <span className="text-2xl font-bold text-gray-900">{car.price} €</span>
-                  <span className="text-sm text-gray-500 ml-1">per day</span>
+                  <span className="text-sm text-gray-700 ml-1">per day</span>
                 </div>
               </div>
             </div>

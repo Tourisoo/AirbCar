@@ -204,7 +204,7 @@ export default function PartnerDashboard() {
                   className={`py-4 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-orange-500 text-orange-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      : 'border-transparent text-gray-700 hover:text-gray-800 hover:border-gray-300'
                   }`}
                 >
                   <span className="mr-2">{tab.icon}</span>
@@ -247,7 +247,7 @@ export default function PartnerDashboard() {
                     <div className="space-y-3">
                       <div className="text-sm text-gray-600">
                         <span className="font-medium">No recent activity</span>
-                        <p className="text-xs text-gray-500 mt-1">Add your first vehicle to get started!</p>
+                        <p className="text-xs text-gray-700 mt-1">Add your first vehicle to get started!</p>
                       </div>
                     </div>
                   </div>
@@ -277,8 +277,8 @@ export default function PartnerDashboard() {
                       </div>
                       <div className="bg-white p-4 rounded-lg">
                         <div className="text-blue-600 font-semibold mb-2">3. Start Earning</div>
-                        <p className="text-sm text-gray-600 mb-3">Receive bookings and manage your rental business</p>
-                        <button className="text-gray-400 text-sm font-medium cursor-not-allowed">
+                        <p className="text-sm text-gray-700 mb-3">Receive bookings and manage your rental business</p>
+                        <button className="text-gray-600 text-sm font-medium cursor-not-allowed">
                           Coming Soon
                         </button>
                       </div>
@@ -306,11 +306,11 @@ export default function PartnerDashboard() {
 
                 {vehicles.length === 0 ? (
                   <div className="text-center py-12">
-                    <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m-4 0h2m2 0h4m-5 0v-5a2 2 0 012-2h2a2 2 0 012 2v5" />
                     </svg>
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No vehicles yet</h3>
-                    <p className="text-gray-600 mb-4">Start by adding your first vehicle to begin earning</p>
+                    <p className="text-gray-700 mb-4">Start by adding your first vehicle to begin earning</p>
                     <button
                       onClick={() => setShowAddVehicleModal(true)}
                       className="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors"

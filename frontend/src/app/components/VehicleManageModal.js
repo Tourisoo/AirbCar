@@ -455,7 +455,7 @@ export default function VehicleManageModal({
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50"
                           readOnly
                         />
-                        <p className="text-xs text-gray-500 mt-1">Auto-calculated with 15% discount</p>
+                        <p className="text-xs text-gray-700 mt-1">Auto-calculated with 15% discount</p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Rate (DH)</label>
@@ -467,7 +467,7 @@ export default function VehicleManageModal({
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50"
                           readOnly
                         />
-                        <p className="text-xs text-gray-500 mt-1">Auto-calculated with 30% discount</p>
+                        <p className="text-xs text-gray-700 mt-1">Auto-calculated with 30% discount</p>
                       </div>
                     </div>
                   ) : (

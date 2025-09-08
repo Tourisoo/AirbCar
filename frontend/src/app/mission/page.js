@@ -465,7 +465,7 @@ export default function MissionPage() {
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900">Sarah M.</div>
-                    <div className="text-sm text-gray-500">Casablanca</div>
+                    <div className="text-sm text-gray-700">Casablanca</div>
                   </div>
                 </div>
               </div>
@@ -489,7 +489,7 @@ export default function MissionPage() {
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900">Ahmed B.</div>
-                    <div className="text-sm text-gray-500">Rabat</div>
+                    <div className="text-sm text-gray-700">Rabat</div>
                   </div>
                 </div>
               </div>
@@ -513,7 +513,7 @@ export default function MissionPage() {
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900">Leila K.</div>
-                    <div className="text-sm text-gray-500">Marrakech</div>
+                    <div className="text-sm text-gray-700">Marrakech</div>
                   </div>
                 </div>
               </div>
@@ -537,7 +537,7 @@ export default function MissionPage() {
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900">Mohamed F.</div>
-                    <div className="text-sm text-gray-500">Fez</div>
+                    <div className="text-sm text-gray-700">Fez</div>
                   </div>
                 </div>
               </div>
@@ -561,7 +561,7 @@ export default function MissionPage() {
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900">Zineb H.</div>
-                    <div className="text-sm text-gray-500">Agadir</div>
+                    <div className="text-sm text-gray-700">Agadir</div>
                   </div>
                 </div>
               </div>
@@ -585,7 +585,7 @@ export default function MissionPage() {
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900">Youssef A.</div>
-                    <div className="text-sm text-gray-500">Tangier</div>
+                    <div className="text-sm text-gray-700">Tangier</div>
                   </div>
                 </div>
               </div>
@@ -647,7 +647,7 @@ export default function MissionPage() {
                           </div>
                           <div>
                             <div className="text-gray-900 font-medium text-base">Premium</div>
-                            <div className="text-gray-500 text-sm">Mid-size and luxury cars</div>
+                            <div className="text-gray-700 text-sm">Mid-size and luxury cars</div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -665,7 +665,7 @@ export default function MissionPage() {
                           </div>
                           <div>
                             <div className="text-gray-900 font-medium text-base">Soft</div>
-                            <div className="text-gray-500 text-sm">Eco and economy cars</div>
+                            <div className="text-gray-700 text-sm">Eco and economy cars</div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -683,7 +683,7 @@ export default function MissionPage() {
                           </div>
                           <div>
                             <div className="text-gray-900 font-medium text-base">Air</div>
-                            <div className="text-gray-500 text-sm">Standard car</div>
+                            <div className="text-gray-700 text-sm">Standard car</div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -701,7 +701,7 @@ export default function MissionPage() {
                           </div>
                           <div>
                             <div className="text-gray-900 font-medium text-base">Premium</div>
-                            <div className="text-gray-500 text-sm">Mid-size and luxury cars</div>
+                            <div className="text-gray-700 text-sm">Mid-size and luxury cars</div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -719,8 +719,8 @@ export default function MissionPage() {
                           </div>
                           <div>
                             <div className="text-orange-600 font-bold text-base">Bolt Drive</div>
-                            <div className="text-gray-500 text-sm">13 min walk 👥 4</div>
-                            <div className="text-gray-500 text-sm">VVP-556</div>
+                            <div className="text-gray-700 text-sm">13 min walk 👥 4</div>
+                            <div className="text-gray-700 text-sm">VVP-556</div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -738,7 +738,7 @@ export default function MissionPage() {
                           </div>
                           <div>
                             <div className="text-orange-600 font-bold text-base">Scooter</div>
-                            <div className="text-gray-500 text-sm">5 min walk</div>
+                            <div className="text-gray-700 text-sm">5 min walk</div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -756,8 +756,8 @@ export default function MissionPage() {
                           </div>
                           <div>
                             <div className="text-orange-600 font-bold text-base">Tuk-Tuk</div>
-                            <div className="text-gray-500 text-sm">5 min 👥 4</div>
-                            <div className="text-gray-500 text-sm">3-wheel rides</div>
+                            <div className="text-gray-700 text-sm">5 min 👥 4</div>
+                            <div className="text-gray-700 text-sm">3-wheel rides</div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -788,7 +788,7 @@ export default function MissionPage() {
               <form className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide">
                       Your Firstname *
                     </label>
                     <input
@@ -802,7 +802,7 @@ export default function MissionPage() {
                   </div>
                   
                   <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">
+                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide">
                       Your Lastname *
                     </label>
                     <input
@@ -817,7 +817,7 @@ export default function MissionPage() {
                 </div>
                 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide">
                     Your Email *
                   </label>
                   <input
@@ -831,7 +831,7 @@ export default function MissionPage() {
                 </div>
                 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide">
                     Your Message for us *
                   </label>
                   <textarea
@@ -857,8 +857,8 @@ export default function MissionPage() {
                       Je ne suis pas un robot
                     </label>
                     <div className="ml-auto">
-                      <div className="text-xs text-gray-500">reCAPTCHA</div>
-                      <div className="text-xs text-gray-400">Confidentialité - Conditions</div>
+                      <div className="text-xs text-gray-700">reCAPTCHA</div>
+                      <div className="text-xs text-gray-600">Confidentialité - Conditions</div>
                     </div>
                   </div>
                 </div>

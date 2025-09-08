@@ -222,7 +222,7 @@ export default function QuickEditModal({ showModal, setShowModal, vehicle, onUpd
                     placeholder="Auto-calculated"
                     readOnly
                   />
-                  <p className="mt-1 text-xs text-gray-500">30% discount applied automatically</p>
+                  <p className="mt-1 text-xs text-gray-700">30% discount applied automatically</p>
                 </div>
 
                 <div>

@@ -13,9 +13,6 @@ RUN npm install -g pnpm
 # Copy package files first for better caching
 COPY package.json pnpm-lock.yaml ./
 
-# Copy Prisma schema for database setup (optional - only if prisma directory exists)
-# COPY prisma ./prisma/
-
 # Install dependencies (allow lockfile refresh if package.json updated)
 RUN pnpm install --no-frozen-lockfile
 
@@ -31,8 +28,7 @@ COPY start.sh ./
 COPY src ./src/
 COPY public ./public/
 
-# (Removed automatic .env.local generation & SQLite DATABASE_URL override)
-# Prisma Client will be generated at runtime if needed.
+# Set environment for development
 ENV NODE_ENV="development"
 
 # Make the startup script executable

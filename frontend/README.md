@@ -1,4 +1,4 @@
-# Car Rental Platform
+# Car Rental Platform - Frontend
 
 A modern car rental platform built with Next.js, featuring user authentication, admin panel, and a beautiful UI.
 
@@ -8,7 +8,7 @@ A modern car rental platform built with Next.js, featuring user authentication, 
 - Tailwind CSS v4 for styling
 - App Router architecture
 - NextAuth.js authentication with email/password and Google OAuth
-- Prisma ORM with SQLite database
+- Django REST API backend integration
 - Admin panel for user management
 - Password reset functionality
 - Responsive design with modern UI components
@@ -20,13 +20,14 @@ A modern car rental platform built with Next.js, featuring user authentication, 
 
 - Node.js 18+ 
 - pnpm (recommended) or npm
+- Django backend running at `http://localhost:8000`
 
 ### Quick Setup
 
 1. Clone the repository:
 ```bash
 git clone <your-repo-url>
-cd hello-world
+cd airbcar/frontend
 ```
 
 2. Install dependencies:
@@ -36,7 +37,7 @@ pnpm install
 
 3. Run the setup script:
 ```bash
-pnpm run setup
+./start.sh
 ```
 This will create `.env.local` from the example and guide you through the setup.
 
@@ -46,12 +47,7 @@ This will create `.env.local` from the example and guide you through the setup.
 openssl rand -base64 32
 ```
 
-5. After editing .env.local, set up the database:
-```bash
-pnpm run db:setup
-```
-
-6. Run the development server:
+5. Make sure Django backend is running at `http://localhost:8000`, then start the frontend:
 ```bash
 pnpm dev
 ```
@@ -63,7 +59,7 @@ If you prefer to set up manually:
 1. Clone the repository:
 ```bash
 git clone <your-repo-url>
-cd hello-world
+cd airbcar/frontend
 ```
 
 2. Install dependencies:
@@ -81,10 +77,7 @@ Edit `.env.local` and add your actual values. At minimum, generate a NextAuth se
 openssl rand -base64 32
 ```
 
-4. Set up the database:
-```bash
-pnpm run db:setup
-```
+4. Make sure Django backend is running at `http://localhost:8000`
 
 5. Run the development server:
 ```bash
