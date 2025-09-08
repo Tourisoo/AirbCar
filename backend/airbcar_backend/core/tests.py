@@ -14,7 +14,17 @@ class RelationshipSmokeTest(TestCase):
         partner = Partner.objects.create(user=user, company_name='SmokeCars', tax_id='12345', verification_document='smoke.pdf')
         
         # Create a listing under that partner
-        listing = Listing.objects.create(partner=partner, make='Tesla', model='Model S', year=2021, price_per_day=100)
+        listing = Listing.objects.create(
+            partner=partner, 
+            make='Tesla', 
+            model='Model S', 
+            year=2021, 
+            price_per_day=100,
+            seating_capacity=5,
+            fuel_type='Electric',
+            transmission='Automatic',
+            vehicle_condition='Excellent'
+        )
         
         # Create a booking linked to the user and listing
         booking = Booking.objects.create(user=user, listing=listing)
