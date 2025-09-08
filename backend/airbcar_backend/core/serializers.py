@@ -106,16 +106,16 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-# class ListingBriefSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Listing
-#         fields = ['id', 'make', 'model', 'year', 'location', 'price_per_day',
-#                   'availability', 'created_at', 'fuel_type', 'transmission',
-#                   'seating_capacity', 'vehicle_condition', 'rating', 'features',
-#                   'available_features']
+class ListingBriefSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Listing
+        fields = ['id', 'make', 'model', 'year', 'location', 'price_per_day',
+                  'availability', 'created_at', 'fuel_type', 'transmission',
+                  'seating_capacity', 'vehicle_condition', 'rating', 'features',
+                  'available_features']
 
 class PartnerSerializer(serializers.ModelSerializer):
-    listings = ListingSerializer(many=True, read_only=True)
+    listings = ListingBriefSerializer(many=True, read_only=True)
     class Meta:
         model = Partner
         fields = "__all__"
