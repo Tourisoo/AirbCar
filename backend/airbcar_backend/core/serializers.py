@@ -84,25 +84,26 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'email', 'phone_number', 'default_currency',
             'is_partner', 'is_verified', 'password', 'profile_picture', 'email_verified',
-            'name', 'license_number', 'address', 'role', 'first_name', 'last_name']
-        read_only_fields = ['id', 'is_partner', 'is_verified', 'email_verified']
+            'license_number', 'address', 'role', 'first_name', 'last_name', 'id_type', 'id_number',
+            'id_expiry_date', 'id_verification_status', 'id_front_document', 'id_back_document']
+        read_only_fields = ['id', 'is_partner', 'is_verified', 'email_verified', 'id_verification_status']
 
     def create(self, validated_data):
         # Generate username from email if not provided
-        username = validated_data.get('username', validated_data['email'].split('@')[0])
+        # username = validated_data.get('username', validated_data['email'].split('@')[0])
         
         user = User.objects.create(
-            username=username,
+            # username=username,
             email=validated_data['email'],
-            phone_number=validated_data.get('phone_number', ''),
-            default_currency=validated_data.get('default_currency', 'USD'),
-            is_partner=validated_data.get('is_partner', False),
-            name=validated_data.get('name', ''),
-            license_number=validated_data.get('license_number', ''),
-            address=validated_data.get('address', ''),
-            role=validated_data.get('role', 'user'),
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', '')
+            # phone_number=validated_data.get('phone_number', ''),
+            # default_currency=validated_data.get('default_currency', 'USD'),
+            # is_partner=validated_data.get('is_partner', False),
+            # name=validated_data.get('name', ''),
+            # license_number=validated_data.get('license_number', ''),
+            # address=validated_data.get('address', ''),
+            # role=validated_data.get('role', 'user'),
+            # first_name=validated_data.get('first_name', ''),
+            # last_name=validated_data.get('last_name', '')
         )
         user.set_password(validated_data['password'])
         user.save()
@@ -119,7 +120,7 @@ class ListingBriefSerializer(serializers.ModelSerializer):
 class ListingImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ListingImage
-        fields = [ 'id', 'image', 'uploaded_at' ]
+        fields = [ 'id', 'image', 'uploaded_at']
 
 class PartnerSerializer(serializers.ModelSerializer):
     listings = ListingBriefSerializer(many=True, read_only=True)
@@ -133,15 +134,13 @@ class PartnerSerializer(serializers.ModelSerializer):
         # read_only_fields: ['id', 'user', 'created_at']
 
 class ListingSerializer(serializers.ModelSerializer):
-    partner = PartnerSerializer(read_only=True)
+    partner = serializers.PrimaryKeyRelatedField(read_only=True)
     images = ListingImageSerializer(many=True, read_only=True)
     class Meta:
         model = Listing
-        fields = [
-            'id', 'partner', 'make', 'model', 'year', 'location', 
-            'features', 'price_per_day', 'availability', 'rating', 'created_at',
-            'fuel_type', 'transmission', 'seating_capacity', 'vehicle_condition', 'available_features',
-            'images']
+        fields = ['id', 'partner', 'make', 'model', 'year', 'location', 
+            'features', 'price_per_day', 'availability', 'rating', 'created_at', 'fuel_type', 
+            'transmission', 'seating_capacity', 'vehicle_condition', 'available_features', 'images']
         read_only_fields = ['partner', 'created_at']
 
 class BookingSerializer(serializers.ModelSerializer):
@@ -149,23 +148,18 @@ class BookingSerializer(serializers.ModelSerializer):
     listing = ListingSerializer(read_only=True)
     class Meta:
         model = Booking
-        fields = [
-            'id', 'user', 'listing', 'start_time', 'end_time', 
-            'price', 'status', 'date']
+        fields = ['id', 'user', 'listing', 'start_time', 'end_time', 'price', 'status', 'date']
         read_only_fields = ['user', 'date']
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     password = serializers.CharField(min_length=6, required=True)
     
     def validate_password(self, value):
-        # You can add additional password validation here if needed
         return value
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
-# class ListingSerializer(serializers.ModelSerializer):
-#     # other fields...
 
 #     def create(self, validated_data):
 #         listing = super().create(validated_data)

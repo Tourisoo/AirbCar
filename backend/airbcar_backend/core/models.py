@@ -14,13 +14,17 @@ class User(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     email_verification_token = models.CharField(max_length=36, blank=True, null=True)
     email_verified = models.BooleanField(default=False)
-
-    name = models.CharField(max_length=100, blank=True)
+    # name = models.CharField(max_length=100, blank=True)
     license_number = models.TextField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     role = models.CharField(max_length=50, default='user')
-
-
+    id_type = models.CharField(max_length=50, blank=True, null=True)
+    id_number = models.CharField(max_length=100, blank=True, null=True)
+    id_expiry_date = models.DateField(blank=True, null=True)
+    id_verification_status = models.CharField(max_length=20, default='pending')
+    id_front_document = models.FileField(upload_to='id_documents/', blank=True, null=True)
+    id_back_document = models.FileField(upload_to='id_documents/', blank=True, null=True)
+    
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
@@ -36,11 +40,7 @@ class Partner(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='partner')
     company_name = models.CharField(max_length=100, blank=False)
     tax_id = models.CharField(max_length=50, blank=False)
-    verification_status = models.CharField(max_length=20, choices=[
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected')
-    ], default='pending')
+    verification_status = models.CharField(max_length=20, default='pending')
     agree_on_terms = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     verification_document = models.FileField(upload_to='partner_docs/', blank=True, null=True)
