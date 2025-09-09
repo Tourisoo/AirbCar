@@ -90,10 +90,10 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # Generate username from email if not provided
-        # username = validated_data.get('username', validated_data['email'].split('@')[0])
+        username = validated_data.get('username', validated_data['email'].split('@')[0])
         
         user = User.objects.create(
-            # username=username,
+            username=username,
             email=validated_data['email'],
             # phone_number=validated_data.get('phone_number', ''),
             # default_currency=validated_data.get('default_currency', 'USD'),
