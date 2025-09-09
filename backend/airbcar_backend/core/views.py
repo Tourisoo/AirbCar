@@ -1,12 +1,14 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseBadRequest
-from .models import User, Booking, Partner, Listing
+from .models import User, Booking, Partner, Listing, ListingImage
 from .serializers import UserSerializer, BookingSerializer, PartnerSerializer, \
     ListingSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer
 from rest_framework import viewsets, generics, status
+from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 import uuid
@@ -16,7 +18,9 @@ from django.core.mail import send_mail
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth.tokens import default_token_generator
-
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
 User = get_user_model()
 
@@ -56,7 +60,6 @@ class UserVerificationView(generics.GenericAPIView):
             return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
-            
         token_generator = PasswordResetTokenGenerator()
         if user and token_generator.check_token(user, token):
             user.set_password(serializer.validated_data['password'])
@@ -96,7 +99,6 @@ class CustomLoginView(APIView):
         if not password:
             return Response({'error': 'Password is required'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Since USERNAME_FIELD = 'email' in our User model, we need to authenticate with email
         user_email = None
         
         # Handle email login  
@@ -182,7 +184,8 @@ class PartnerViewSet(viewsets.ModelViewSet):
 class ListingViewSet(viewsets.ModelViewSet):
     queryset = Listing.objects.all()
     serializer_class = ListingSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def perform_create(self, serializer):
         # Get or create partner for the authenticated user
@@ -199,7 +202,32 @@ class ListingViewSet(viewsets.ModelViewSet):
             self.request.user.is_partner = True
             self.request.user.save(update_fields=['is_partner'])
         
-        serializer.save(partner=partner)
+        listing = serializer.save(partner=partner)
+
+        # Handle multiple images uploaded with the listing creation
+        files = []
+        # Common array field names
+        files += self.request.FILES.getlist('images')
+        files += self.request.FILES.getlist('images[]')
+        # Also accept single keys image, image1..image4 for convenience
+        for key in ['image', 'image1', 'image2', 'image3', 'image4']:
+            f = self.request.FILES.get(key)
+            if f:
+                files.append(f)
+
+        for f in files:
+            ListingImage.objects.create(listing=listing, image=f)
+
+    @action(detail=True, methods=['post'], url_path='upload-image', parser_classes=[MultiPartParser, FormParser])
+    def upload_image(self, request, pk=None):
+        listing = self.get_object()
+        file_obj = request.FILES.get('image')
+        if not file_obj:
+            return Response({'error': 'No image provided. Use form-data key "image".'}, status=status.HTTP_400_BAD_REQUEST)
+        # create image record
+        img = ListingImage.objects.create(listing=listing, image=file_obj)
+        from .serializers import ListingImageSerializer
+        return Response(ListingImageSerializer(img).data, status=status.HTTP_201_CREATED)
 
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all()
@@ -267,13 +295,13 @@ class PasswordResetConfirmView(generics.GenericAPIView):
     def post(self, request, uidb64, token):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         try:
             uid = urlsafe_base64_decode(uidb64).decode()
             user = User.objects.get(pk=uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
-            
+
         token_generator = PasswordResetTokenGenerator()
         if user and token_generator.check_token(user, token):
             user.set_password(serializer.validated_data['password'])
@@ -416,3 +444,29 @@ python manage.py runserver
     </html>
     """
     return HttpResponse(html_content)
+
+# @api_view(['POST'])
+# def upload_listing_image(request, listing_id):
+#     """
+#     API view to handle uploading of images for listings.
+#     """
+#     listing = Listing.objects.get(id=listing_id)
+#     image_file = request.FILES.get('image')
+
+#     if image_file:
+#         # Generate a unique file name
+#         file_name = f"listing_{listing_id}/{image_file.name}"
+        
+#         try:
+#             # Upload image to Supabase and get the URL
+#             image_url = upload_image_to_supabase(image_file, file_name)
+            
+#             # Save the image URL to the ListingImage model
+#             ListingImage.objects.create(listing=listing, image_url=image_url)
+            
+#             return Response({"message": "Image uploaded successfully", "image_url": image_url}, status=status.HTTP_200_OK)
+        
+#         except Exception as e:
+#             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+#     return Response({"error": "No image provided."}, status=status.HTTP_400_BAD_REQUEST)

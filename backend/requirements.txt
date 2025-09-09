@@ -8,4 +8,5 @@ redis==4.5.4
 boto3==1.26.0
 django-storages==1.14.4
 gunicorn==22.0.0
-python-dotenv
+python-dotenv==1.0.1
+supabase==2.6.0

@@ -209,3 +209,5 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+# SUPABASE_URL = 'https://db.wtbmqtmmdobfvvecinif.supabase.co'
+# SUPABASE_KEY = 'Mayache+123455'

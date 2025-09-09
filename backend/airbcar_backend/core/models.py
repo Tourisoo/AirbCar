@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from supabase import create_client, Client
+
 
 class User(AbstractUser):
     phone_number = models.CharField(max_length=15, blank=True)
@@ -73,12 +75,13 @@ class Listing(models.Model):
     def __str__(self):
         return f"{self.make} {self.model} ({self.year})"
 
-# class ListingImage(models.Model):
-#     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="pictures")
-#     image = models.ImageField(upload_to="listing_pictures/")
+class ListingImage(models.Model):
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to="listing_pictures/")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
-#     def __str__(self):
-#         return f"Image for {self.listing.make} {self.listing.model}"
+    def __str__(self):
+        return f"Image for {self.listing.make} {self.listing.model}"
 
 class Booking(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -1,6 +1,8 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
-from .models import User, Booking, Partner, Listing
+from .models import User, Booking, Partner, Listing, ListingImage
+# , ListingImage
+# from .utils import upload_image_to_supabase
 
 # The default TokenObtainPairSerializer provided by rest_framework_simplejwt
 #  generates JWT tokens with minimal user data (typically just the user ID). 
@@ -114,20 +116,32 @@ class ListingBriefSerializer(serializers.ModelSerializer):
                   'seating_capacity', 'vehicle_condition', 'rating', 'features',
                   'available_features']
 
+class ListingImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ListingImage
+        fields = [ 'id', 'image', 'uploaded_at' ]
+
 class PartnerSerializer(serializers.ModelSerializer):
     listings = ListingBriefSerializer(many=True, read_only=True)
     class Meta:
         model = Partner
-        fields = "__all__"
+        fields = ['id', 'company_name', 'tax_id', 'verification_status', 'created_at', 
+            'agree_on_terms', 'verification_document', 'listings']
+        
+        # fields: ['id', 'user', 'company_name', 'tax_id', 'verification_status', 'agree_on_terms',
+        #     'created_at', 'verification_document', 'listings']
+        # read_only_fields: ['id', 'user', 'created_at']
 
 class ListingSerializer(serializers.ModelSerializer):
     partner = PartnerSerializer(read_only=True)
+    images = ListingImageSerializer(many=True, read_only=True)
     class Meta:
         model = Listing
         fields = [
             'id', 'partner', 'make', 'model', 'year', 'location', 
             'features', 'price_per_day', 'availability', 'rating', 'created_at',
-            'fuel_type', 'transmission', 'seating_capacity', 'vehicle_condition', 'available_features']
+            'fuel_type', 'transmission', 'seating_capacity', 'vehicle_condition', 'available_features',
+            'images']
         read_only_fields = ['partner', 'created_at']
 
 class BookingSerializer(serializers.ModelSerializer):
@@ -149,3 +163,25 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
+
+# class ListingSerializer(serializers.ModelSerializer):
+#     # other fields...
+
+#     def create(self, validated_data):
+#         listing = super().create(validated_data)
+        
+#         # Check if an image was provided and upload it to Supabase
+#         image_file = self.context.get('image_file')
+#         if image_file:
+#             # Generate a unique file name for Supabase
+#             file_name = f"listing_{listing.id}/{image_file.name}"
+#             try:
+#                 # Upload the image to Supabase and get the URL
+#                 image_url = upload_image_to_supabase(image_file, file_name)
+                
+#                 # Save the image URL in the ListingImage model
+#                 ListingImage.objects.create(listing=listing, image_url=image_url)
+#             except Exception as e:
+#                 raise serializers.ValidationError(f"Failed to upload image: {str(e)}")
+        
+#         return listing
