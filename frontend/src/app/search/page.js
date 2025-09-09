@@ -837,7 +837,7 @@ function SearchContent() {
     }
   }
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     // Clear previous validation errors
     setValidationError('')
     setAuthError('')
@@ -847,11 +847,58 @@ function SearchContent() {
       return
     }
 
+    // If completing verification step, save verification data to backend
+    if (bookingStep === 'verification') {
+      try {
+        setAuthSubmitLoading(true)
+        await saveVerificationData()
+      } catch (error) {
+        console.error('Error saving verification data:', error)
+        setValidationError('Failed to save verification data. Please try again.')
+        return
+      } finally {
+        setAuthSubmitLoading(false)
+      }
+    }
+
     const steps = ['auth', 'license', 'personal', 'contact', 'verification', 'payment', 'confirmation']
     const currentIndex = steps.indexOf(bookingStep)
     if (currentIndex < steps.length - 1) {
       setBookingStep(steps[currentIndex + 1])
     }
+  }
+
+  const saveVerificationData = async () => {
+    const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+    const token = localStorage.getItem('access_token')
+
+    if (!token) {
+      throw new Error('No authentication token found')
+    }
+
+    const verificationData = {
+      license_number: bookingData.idNumber, // Using existing license_number field for ID number
+      name: `${bookingData.firstName} ${bookingData.lastName}`.trim(),
+      first_name: bookingData.firstName,
+      last_name: bookingData.lastName,
+      address: `${bookingData.address}, ${bookingData.city}, ${bookingData.country}`.trim()
+    }
+
+    const response = await fetch(`${apiUrl}/api/profile/`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(verificationData)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.detail || 'Failed to update profile')
+    }
+
+    return response.json()
   }
 
   const handlePrevStep = () => {
@@ -873,7 +920,7 @@ function SearchContent() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Searching for the best deals...</p>
+            <p className="text-gray-700">Searching for the best deals...</p>
           </div>
         </div>
         <Footer />
@@ -891,7 +938,7 @@ function SearchContent() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Search Results</h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-700 mt-1">
                 Showing {filteredCars.length} cars available in Morocco
               </p>
             </div>
@@ -899,7 +946,7 @@ function SearchContent() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
               >
                 <option value="relevance">Sort by Relevance</option>
                 <option value="price_low">Price: Low to High</option>
@@ -950,7 +997,7 @@ function SearchContent() {
                     }}
                   />
                   <div className="flex justify-between text-sm mt-2">
-                    <span className="text-gray-600 font-medium bg-gray-50 px-2 py-1 rounded">0 MAD</span>
+                    <span className="text-gray-700 font-medium bg-gray-50 px-2 py-1 rounded">0 MAD</span>
                     <span className="text-orange-600 font-medium bg-orange-50 px-2 py-1 rounded">{filters.priceRange[1]} MAD</span>
                   </div>
                 </div>
@@ -1051,7 +1098,7 @@ function SearchContent() {
                         {showAllStyles && (
                           <button
                             onClick={() => setShowAllStyles(false)}
-                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -1134,7 +1181,7 @@ function SearchContent() {
                         {showAllBrands && (
                           <button
                             onClick={() => setShowAllBrands(false)}
-                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -1199,7 +1246,7 @@ function SearchContent() {
                         {showAllFeatures && (
                           <button
                             onClick={() => setShowAllFeatures(false)}
-                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
+                            className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100 transition-colors flex-shrink-0 flex items-center justify-center gap-1"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -1254,13 +1301,13 @@ function SearchContent() {
           <div className="lg:w-3/4">
             {filteredCars.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">
+                <div className="text-gray-600 mb-4">
                   <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0118 12a8 8 0 01-8 8 8 8 0 01-8-8 8 8 0 018-8c.28 0 .556.014.827.042l2.651-9.529z" />
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No cars found</h3>
-                <p className="text-gray-600 mb-4">Try adjusting your filters to see more results</p>
+                <p className="text-gray-700 mb-4">Try adjusting your filters to see more results</p>
                 <button
                   onClick={clearFilters}
                   className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors"
@@ -1291,7 +1338,7 @@ function SearchContent() {
                       )}
                       <div className="absolute top-3 right-3">
                         <button className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors">
-                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                           </svg>
                         </button>
@@ -1313,12 +1360,12 @@ function SearchContent() {
                         </div>
                         <div className="text-right">
                           <div className="text-2xl font-bold text-orange-500">{car.price} MAD</div>
-                          <div className="text-sm text-gray-500">per day</div>
+                          <div className="text-sm text-gray-700">per day</div>
                         </div>
                       </div>
 
                       {/* Car Features */}
-                      <div className="flex items-center text-sm text-gray-600 mb-4 space-x-4">
+                      <div className="flex items-center text-sm text-gray-700 mb-4 space-x-4">
                         <span className="flex items-center">
                           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
@@ -1352,7 +1399,7 @@ function SearchContent() {
                               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                             </svg>
                           ))}
-                          <span className="ml-2 text-sm text-gray-600">
+                          <span className="ml-2 text-sm text-gray-700">
                             {car.rating} ({car.reviews} reviews)
                           </span>
                         </div>
@@ -1382,15 +1429,15 @@ function SearchContent() {
             {filteredCars.length > 0 && (
               <div className="mt-12 flex justify-center">
                 <nav className="flex items-center space-x-2">
-                  <button className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                  <button className="px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
                     Previous
                   </button>
                   <button className="px-4 py-2 bg-orange-500 text-white rounded-lg">1</button>
                   <button className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">2</button>
                   <button className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">3</button>
-                  <span className="px-3 py-2 text-gray-500">...</span>
+                  <span className="px-3 py-2 text-gray-700">...</span>
                   <button className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">10</button>
-                  <button className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                  <button className="px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
                     Next
                   </button>
                 </nav>
@@ -1402,7 +1449,8 @@ function SearchContent() {
 
       {/* Car Details Modal */}
       {showCarModal && selectedCar && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center p-4">
+        // <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white overflow-hidden max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between rounded-t-[40px] z-10">
@@ -1413,7 +1461,7 @@ function SearchContent() {
                 onClick={handleCloseModal}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -1479,7 +1527,7 @@ function SearchContent() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h3 className="text-2xl font-bold text-gray-900">{selectedCar.name}</h3>
-                      <p className="text-gray-600">Model Year: {selectedCar.modelYear}</p>
+                      <p className="text-gray-700">Model Year: {selectedCar.modelYear}</p>
                     </div>
                     {selectedCar.verified && (
                       <span className="bg-green-500 text-white text-sm px-3 py-1 rounded-full flex items-center">
@@ -1493,32 +1541,32 @@ function SearchContent() {
 
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <svg className="w-6 h-6 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6 mx-auto mb-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                       </svg>
                       <div className="text-sm font-medium text-gray-900">{selectedCar.seats}</div>
-                      <div className="text-xs text-gray-500">Seats</div>
+                      <div className="text-xs text-gray-700">Seats</div>
                     </div>
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <svg className="w-6 h-6 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6 mx-auto mb-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
                       <div className="text-sm font-medium text-gray-900">{selectedCar.fuel}</div>
-                      <div className="text-xs text-gray-500">Fuel</div>
+                      <div className="text-xs text-gray-700">Fuel</div>
                     </div>
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <svg className="w-6 h-6 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6 mx-auto mb-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                       </svg>
                       <div className="text-sm font-medium text-gray-900">{selectedCar.transmission}</div>
-                      <div className="text-xs text-gray-500">Transmission</div>
+                      <div className="text-xs text-gray-700">Transmission</div>
                     </div>
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <svg className="w-6 h-6 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6 mx-auto mb-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
                       <div className="text-sm font-medium text-gray-900">{selectedCar.mileage}</div>
-                      <div className="text-xs text-gray-500">Mileage</div>
+                      <div className="text-xs text-gray-700">Mileage</div>
                     </div>
                   </div>
                 </div>
@@ -1540,7 +1588,7 @@ function SearchContent() {
                       <div className="space-y-4">
                         <div>
                           <h5 className="font-medium text-gray-900 mb-2">Process Steps:</h5>
-                          <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+                          <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
                             {selectedCar.pickupProcess.steps.map((step, index) => (
                               <li key={index}>{step}</li>
                             ))}
@@ -1548,11 +1596,11 @@ function SearchContent() {
                         </div>
                         <div>
                           <h5 className="font-medium text-gray-900 mb-2">Duration:</h5>
-                          <p className="text-sm text-gray-600">{selectedCar.pickupProcess.duration}</p>
+                          <p className="text-sm text-gray-700">{selectedCar.pickupProcess.duration}</p>
                         </div>
                         <div>
                           <h5 className="font-medium text-gray-900 mb-2">Requirements:</h5>
-                          <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                          <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
                             {selectedCar.pickupProcess.requirements.map((req, index) => (
                               <li key={index}>{req}</li>
                             ))}
@@ -1565,7 +1613,7 @@ function SearchContent() {
                   {/* Description Card */}
                   <div className="bg-gray-50 rounded-xl p-6">
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">Description</h4>
-                    <p className="text-gray-600 leading-relaxed">{selectedCar.description}</p>
+                    <p className="text-gray-700 leading-relaxed">{selectedCar.description}</p>
                   </div>
 
                   {/* Owner Rules Card */}
@@ -1577,7 +1625,7 @@ function SearchContent() {
                           <svg className="w-4 h-4 text-orange-500 mt-1 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
-                          <span className="text-gray-600 text-sm">{rule}</span>
+                          <span className="text-gray-700 text-sm">{rule}</span>
                         </li>
                       ))}
                     </ul>
@@ -1589,11 +1637,11 @@ function SearchContent() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <h5 className="font-medium text-gray-900 mb-2">Fuel Type</h5>
-                        <p className="text-gray-600">{selectedCar.fuel}</p>
+                        <p className="text-gray-700">{selectedCar.fuel}</p>
                       </div>
                       <div>
                         <h5 className="font-medium text-gray-900 mb-2">Transmission</h5>
-                        <p className="text-gray-600">{selectedCar.transmission}</p>
+                        <p className="text-gray-700">{selectedCar.transmission}</p>
                       </div>
                     </div>
                   </div>
@@ -1607,7 +1655,7 @@ function SearchContent() {
                           <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
-                          <span className="text-gray-600 text-sm">{feature}</span>
+                          <span className="text-gray-700 text-sm">{feature}</span>
                         </div>
                       ))}
                     </div>
@@ -1622,7 +1670,7 @@ function SearchContent() {
                           <svg className="w-4 h-4 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
-                          <span className="text-gray-600 text-sm">{option}</span>
+                          <span className="text-gray-700 text-sm">{option}</span>
                         </div>
                       ))}
                     </div>
@@ -1638,23 +1686,23 @@ function SearchContent() {
                       <div className="text-3xl font-bold text-orange-500 mb-2">
                         {selectedCar.price} MAD
                       </div>
-                      <div className="text-gray-500">per day</div>
+                      <div className="text-gray-700">per day</div>
                     </div>
 
                     <div className="mb-6">
                       <h5 className="font-semibold text-gray-900 mb-3">Duration</h5>
                       <div className="space-y-3">
                         <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600">Pickup:</span>
-                          <span className="font-medium">Wed, Aug 20 - 01:30 PM</span>
+                          <span className="text-gray-700">Pickup:</span>
+                          <span className="font-medium text-gray-900">Wed, Aug 20 - 01:30 PM</span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600">Return:</span>
-                          <span className="font-medium">Thu, Aug 21 - 01:30 PM</span>
+                          <span className="text-gray-700">Return:</span>
+                          <span className="font-medium text-gray-900">Thu, Aug 21 - 01:30 PM</span>
                         </div>
                         <div className="border-t pt-2 flex justify-between items-center">
                           <span className="font-medium text-gray-900">Total Duration:</span>
-                          <span className="font-bold">1 day</span>
+                          <span className="font-bold text-gray-900">1 day</span>
                         </div>
                       </div>
                     </div>
@@ -1663,16 +1711,16 @@ function SearchContent() {
                       <h5 className="font-semibold text-gray-900 mb-3">Total Price</h5>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-600">{selectedCar.price} MAD × 1 day</span>
-                          <span>{selectedCar.price} MAD</span>
+                          <span className="text-gray-700">{selectedCar.price} MAD × 1 day</span>
+                          <span className="text-gray-900">{selectedCar.price} MAD</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Service fee</span>
-                          <span>50 MAD</span>
+                          <span className="text-gray-700">Service fee</span>
+                          <span className="text-gray-900">50 MAD</span>
                         </div>
                         <div className="border-t pt-2 flex justify-between font-semibold">
-                          <span>Total</span>
-                          <span>{selectedCar.price + 50} MAD</span>
+                          <span className="text-gray-900">Total</span>
+                          <span className="text-gray-900">{selectedCar.price + 50} MAD</span>
                         </div>
                       </div>
                     </div>
@@ -1686,7 +1734,7 @@ function SearchContent() {
 
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h6 className="font-semibold text-gray-900 mb-2">Cancellation Policy</h6>
-                      <p className="text-xs text-gray-600 leading-relaxed">
+                      <p className="text-xs text-gray-700 leading-relaxed">
                         {selectedCar.cancellationPolicy}
                       </p>
                     </div>
@@ -1700,7 +1748,7 @@ function SearchContent() {
 
       {/* Booking Flow Modal */}
       {showBookingFlow && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-[40px] overflow-hidden max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between rounded-t-[40px] z-10">
@@ -1730,7 +1778,7 @@ function SearchContent() {
                 onClick={handleCloseModal}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -1744,7 +1792,7 @@ function SearchContent() {
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       {bookingData.isSignUp ? 'Create Your Account' : 'Welcome Back'}
                     </h3>
-                    <p className="text-gray-600">
+                    <p className="text-gray-700">
                       {bookingData.isSignUp ? 'Join AirbCar to book your first car' : 'Sign in to continue with your booking'}
                     </p>
                   </div>
@@ -1767,7 +1815,7 @@ function SearchContent() {
                       <div className="w-full border-t border-gray-300" />
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">Or</span>
+                      <span className="px-2 bg-white text-gray-700">Or</span>
                     </div>
                   </div>
 
@@ -1794,9 +1842,9 @@ function SearchContent() {
                           type="text"
                           value={bookingData.name}
                           onChange={(e) => handleBookingDataChange('name', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="Enter your full name"
-                          required
+                          // required
                         />
                       </div>
                     )}
@@ -1807,9 +1855,9 @@ function SearchContent() {
                         type="email"
                         value={bookingData.email}
                         onChange={(e) => handleBookingDataChange('email', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="Enter your email"
-                        required
+                        // required
                       />
                     </div>
 
@@ -1819,9 +1867,9 @@ function SearchContent() {
                         type="password"
                         value={bookingData.password}
                         onChange={(e) => handleBookingDataChange('password', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="Enter your password"
-                        required
+                        // required
                       />
                     </div>
 
@@ -1832,9 +1880,9 @@ function SearchContent() {
                           type="password"
                           value={bookingData.confirmPassword}
                           onChange={(e) => handleBookingDataChange('confirmPassword', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="Confirm your password"
-                          required
+                          // required
                         />
                       </div>
                     )}
@@ -1867,7 +1915,7 @@ function SearchContent() {
                 <div className="space-y-6">
                   <div className="text-center">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Driver License Information</h3>
-                    <p className="text-gray-600">We need your license details for verification</p>
+                    <p className="text-gray-700">We need your license details for verification</p>
                   </div>
 
                   {validationError && (
@@ -1891,8 +1939,8 @@ function SearchContent() {
                       <select
                         value={bookingData.licenseCountry}
                         onChange={(e) => handleBookingDataChange('licenseCountry', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                        required
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
+                        // required
                       >
                         <option value="">Select country</option>
                         <option value="morocco">Morocco</option>
@@ -1912,9 +1960,9 @@ function SearchContent() {
                         type="text"
                         value={bookingData.licenseNumber}
                         onChange={(e) => handleBookingDataChange('licenseNumber', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="Enter license number"
-                        required
+                        // required
                       />
                     </div>
 
@@ -1925,8 +1973,8 @@ function SearchContent() {
                           type="date"
                           value={bookingData.licenseIssueDate}
                           onChange={(e) => handleBookingDataChange('licenseIssueDate', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                          required
+                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
+                          // required
                         />
                       </div>
                       <div>
@@ -1935,8 +1983,8 @@ function SearchContent() {
                           type="date"
                           value={bookingData.licenseExpiryDate}
                           onChange={(e) => handleBookingDataChange('licenseExpiryDate', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                          required
+                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
+                          // required
                         />
                       </div>
                     </div>
@@ -1964,7 +2012,7 @@ function SearchContent() {
                 <div className="space-y-6">
                   <div className="text-center">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Personal Information</h3>
-                    <p className="text-gray-600">Tell us more about yourself</p>
+                    <p className="text-gray-700">Tell us more about yourself</p>
                   </div>
 
                   {validationError && (
@@ -1990,9 +2038,9 @@ function SearchContent() {
                           type="text"
                           value={bookingData.firstName}
                           onChange={(e) => handleBookingDataChange('firstName', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="First name"
-                          required
+                          // required
                         />
                       </div>
                       <div>
@@ -2001,9 +2049,9 @@ function SearchContent() {
                           type="text"
                           value={bookingData.lastName}
                           onChange={(e) => handleBookingDataChange('lastName', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="Last name"
-                          required
+                          // required
                         />
                       </div>
                     </div>
@@ -2014,8 +2062,8 @@ function SearchContent() {
                         type="date"
                         value={bookingData.dateOfBirth}
                         onChange={(e) => handleBookingDataChange('dateOfBirth', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                        required
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
+                        // required
                       />
                     </div>
 
@@ -2024,8 +2072,8 @@ function SearchContent() {
                       <select
                         value={bookingData.nationality}
                         onChange={(e) => handleBookingDataChange('nationality', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                        required
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
+                        // required
                       >
                         <option value="">Select nationality</option>
                         <option value="moroccan">Moroccan</option>
@@ -2062,7 +2110,7 @@ function SearchContent() {
                 <div className="space-y-6">
                   <div className="text-center">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Contact Information</h3>
-                    <p className="text-gray-600">We need your contact details and address</p>
+                    <p className="text-gray-700">We need your contact details and address</p>
                   </div>
 
                   {validationError && (
@@ -2087,9 +2135,9 @@ function SearchContent() {
                         type="tel"
                         value={bookingData.phoneNumber}
                         onChange={(e) => handleBookingDataChange('phoneNumber', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="+212 6XX XXX XXX"
-                        required
+                        // required
                       />
                     </div>
 
@@ -2101,7 +2149,7 @@ function SearchContent() {
                             type="text"
                             value={bookingData.smsCode}
                             onChange={(e) => handleBookingDataChange('smsCode', e.target.value)}
-                            className="flex-1 px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="flex-1 px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
                             placeholder="Enter 6-digit code"
                             maxLength="6"
                           />
@@ -2121,9 +2169,9 @@ function SearchContent() {
                         type="text"
                         value={bookingData.address}
                         onChange={(e) => handleBookingDataChange('address', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="Street address"
-                        required
+                        // required
                       />
                     </div>
 
@@ -2134,9 +2182,9 @@ function SearchContent() {
                           type="text"
                           value={bookingData.city}
                           onChange={(e) => handleBookingDataChange('city', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="City"
-                          required
+                          // required
                         />
                       </div>
                       <div>
@@ -2145,9 +2193,9 @@ function SearchContent() {
                           type="text"
                           value={bookingData.postalCode}
                           onChange={(e) => handleBookingDataChange('postalCode', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="Postal code"
-                          required
+                          // required
                         />
                       </div>
                     </div>
@@ -2157,8 +2205,8 @@ function SearchContent() {
                       <select
                         value={bookingData.country}
                         onChange={(e) => handleBookingDataChange('country', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                        required
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
+                        // required
                       >
                         <option value="">Select country</option>
                         <option value="morocco">Morocco</option>
@@ -2195,7 +2243,7 @@ function SearchContent() {
                 <div className="space-y-6">
                   <div className="text-center">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Identity Verification</h3>
-                    <p className="text-gray-600">Please provide your identification details</p>
+                    <p className="text-gray-700">Please provide your identification details</p>
                   </div>
 
                   {validationError && (
@@ -2244,9 +2292,9 @@ function SearchContent() {
                         type="text"
                         value={bookingData.idNumber}
                         onChange={(e) => handleBookingDataChange('idNumber', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="Enter ID number"
-                        required
+                        // required
                       />
                     </div>
 
@@ -2256,8 +2304,8 @@ function SearchContent() {
                         type="date"
                         value={bookingData.idExpiryDate}
                         onChange={(e) => handleBookingDataChange('idExpiryDate', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                        required
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
+                        // required
                       />
                     </div>
 
@@ -2296,9 +2344,17 @@ function SearchContent() {
                     </button>
                     <button
                       onClick={handleNextStep}
-                      className="flex-1 bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium"
+                      disabled={authSubmitLoading}
+                      className="flex-1 bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Continue
+                      {authSubmitLoading ? (
+                        <div className="flex items-center justify-center space-x-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>Saving...</span>
+                        </div>
+                      ) : (
+                        'Continue'
+                      )}
                     </button>
                   </div>
                 </div>
@@ -2309,31 +2365,31 @@ function SearchContent() {
                 <div className="space-y-6">
                   <div className="text-center">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Payment Information</h3>
-                    <p className="text-gray-600">Secure payment details</p>
+                    <p className="text-gray-700">Secure payment details</p>
                   </div>
 
                   <div className="bg-gray-50 rounded-lg p-4 mb-6">
                     <h4 className="font-medium text-gray-900 mb-2">Booking Summary</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span>{selectedCar?.name} {selectedCar?.modelYear}</span>
-                        <span>{selectedCar?.price} MAD/day</span>
+                        <span className="text-gray-700">{selectedCar?.name} {selectedCar?.modelYear}</span>
+                        <span className="text-gray-900">{selectedCar?.price} MAD/day</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>1 day rental</span>
-                        <span>{selectedCar?.price} MAD</span>
+                        <span className="text-gray-700">1 day rental</span>
+                        <span className="text-gray-900">{selectedCar?.price} MAD</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Service fee</span>
-                        <span>50 MAD</span>
+                        <span className="text-gray-700">Service fee</span>
+                        <span className="text-gray-900">50 MAD</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Security deposit (refundable)</span>
-                        <span>1000 MAD</span>
+                        <span className="text-gray-700">Security deposit (refundable)</span>
+                        <span className="text-gray-900">1000 MAD</span>
                       </div>
                       <div className="border-t pt-2 flex justify-between font-semibold">
-                        <span>Total</span>
-                        <span>{selectedCar ? selectedCar.price + 1050 : 1050} MAD</span>
+                        <span className="text-gray-900">Total</span>
+                        <span className="text-gray-900">{selectedCar ? selectedCar.price + 1050 : 1050} MAD</span>
                       </div>
                     </div>
                   </div>
@@ -2345,9 +2401,9 @@ function SearchContent() {
                         type="text"
                         value={bookingData.cardholderName}
                         onChange={(e) => handleBookingDataChange('cardholderName', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="Name on card"
-                        required
+                        // required
                       />
                     </div>
 
@@ -2357,10 +2413,10 @@ function SearchContent() {
                         type="text"
                         value={bookingData.cardNumber}
                         onChange={(e) => handleBookingDataChange('cardNumber', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="1234 5678 9012 3456"
                         maxLength="19"
-                        required
+                        // required
                       />
                     </div>
 
@@ -2371,10 +2427,10 @@ function SearchContent() {
                           type="text"
                           value={bookingData.expiryDate}
                           onChange={(e) => handleBookingDataChange('expiryDate', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="MM/YY"
                           maxLength="5"
-                          required
+                          // required
                         />
                       </div>
                       <div>
@@ -2383,10 +2439,10 @@ function SearchContent() {
                           type="text"
                           value={bookingData.cvv}
                           onChange={(e) => handleBookingDataChange('cvv', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="123"
                           maxLength="4"
-                          required
+                          // required
                         />
                       </div>
                     </div>
@@ -2420,41 +2476,41 @@ function SearchContent() {
                   
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-2">Booking Confirmed!</h3>
-                    <p className="text-gray-600">Your car rental has been successfully booked</p>
+                    <p className="text-gray-700">Your car rental has been successfully booked</p>
                   </div>
 
                   <div className="bg-gray-50 rounded-lg p-6 text-left">
                     <h4 className="font-semibold text-gray-900 mb-4">Booking Details</h4>
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Booking ID:</span>
+                        <span className="text-gray-700">Booking ID:</span>
                         <span className="font-medium">#ABC123456</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Car:</span>
+                        <span className="text-gray-700">Car:</span>
                         <span className="font-medium">{selectedCar?.name} {selectedCar?.modelYear}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Pickup:</span>
+                        <span className="text-gray-700">Pickup:</span>
                         <span className="font-medium">Wed, Aug 20 - 01:30 PM</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Return:</span>
+                        <span className="text-gray-700">Return:</span>
                         <span className="font-medium">Thu, Aug 21 - 01:30 PM</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Location:</span>
+                        <span className="text-gray-700">Location:</span>
                         <span className="font-medium">{selectedCar?.location}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Total Paid:</span>
+                        <span className="text-gray-700">Total Paid:</span>
                         <span className="font-medium">{selectedCar ? selectedCar.price + 1050 : 1050} MAD</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-700">
                       You will receive a confirmation email with all the details and pickup instructions.
                     </p>
                     <button
@@ -2484,7 +2540,7 @@ export default function SearchResults() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading search results...</p>
+            <p className="text-gray-700">Loading search results...</p>
           </div>
         </div>
         <Footer />

@@ -8,15 +8,29 @@ const AuthContext = createContext({})
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isClient, setIsClient] = useState(false)
   const router = useRouter()
+
+  // Ensure we're on the client side
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Check if user is logged in on app start
   useEffect(() => {
-    checkAuth()
-  }, [])
+    if (isClient) {
+      checkAuth()
+    }
+  }, [isClient])
 
   const checkAuth = async () => {
     try {
+      // Check if we're on the client side
+      if (typeof window === 'undefined') {
+        setLoading(false)
+        return
+      }
+
       const token = localStorage.getItem('access_token')
       if (!token) {
         setLoading(false)
@@ -87,7 +101,9 @@ export function AuthProvider({ children }) {
           setUser(data.user)
         } else {
           // If no user data in response, fetch it
-          await checkAuth()
+          if (isClient) {
+            await checkAuth()
+          }
         }
         
         return { success: true }
@@ -148,8 +164,10 @@ export function AuthProvider({ children }) {
   }
 
   const logout = () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+    }
     setUser(null)
     router.push('/')
   }

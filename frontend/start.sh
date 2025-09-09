@@ -1,12 +1,11 @@
 #!/bin/sh
 
-# Respect an existing DATABASE_URL (e.g. provided by Docker compose pointing to Postgres).
-# Fallback to local SQLite only if nothing is set.
-if [ -z "${DATABASE_URL:-}" ]; then
-  export DATABASE_URL="file:./prisma/dev.db"
-  echo "[start.sh] No DATABASE_URL provided. Using local SQLite fallback: $DATABASE_URL"
+# Set Django Backend URL if not provided
+if [ -z "${DJANGO_API_URL:-}" ]; then
+  export DJANGO_API_URL="http://localhost:8000"
+  echo "[start.sh] No DJANGO_API_URL provided. Using default: $DJANGO_API_URL"
 else
-  echo "[start.sh] Using provided DATABASE_URL: $DATABASE_URL"
+  echo "[start.sh] Using provided DJANGO_API_URL: $DJANGO_API_URL"
 fi
 
 # Only set NEXTAUTH_URL if not already provided (dev convenience)
@@ -21,9 +20,9 @@ if [ ! -f ".env.local" ]; then
   echo "💡 Generate one with: openssl rand -base64 32"
 fi
 
-# If we're falling back to SQLite AND .env.local lacks a DATABASE_URL line, append it.
-if [ "$DATABASE_URL" = "file:./prisma/dev.db" ] && ! grep -q "DATABASE_URL=file:" .env.local 2>/dev/null; then
-  echo "DATABASE_URL=file:./prisma/dev.db" >> .env.local
+# If .env.local lacks a DJANGO_API_URL line, append it.
+if ! grep -q "DJANGO_API_URL=" .env.local 2>/dev/null; then
+  echo "DJANGO_API_URL=$DJANGO_API_URL" >> .env.local
 fi
 
 if grep -q "your-nextauth-secret-here" .env.local; then
@@ -33,26 +32,13 @@ if grep -q "your-nextauth-secret-here" .env.local; then
 fi
 
 set -a
-# Load .env.local but keep existing DATABASE_URL if already pointing to Postgres
-if grep -q '^DATABASE_URL=' .env.local 2>/dev/null; then
-  ORIGINAL_DB_URL="$DATABASE_URL"
-  . ./.env.local
-  # If .env.local overwrote with a file: URL and we had a postgres one before, restore it
-  if [ "${ORIGINAL_DB_URL:-}" != "" ] && printf '%s' "$ORIGINAL_DB_URL" | grep -qi '^postgres'; then
-    if printf '%s' "$DATABASE_URL" | grep -qi '^file:'; then
-      export DATABASE_URL="$ORIGINAL_DB_URL"
-      echo "[start.sh] Restored Postgres DATABASE_URL from compose instead of SQLite fallback."
-    fi
-  fi
-else
-  . ./.env.local
-fi
+. ./.env.local
 set +a
 
-echo "Setting up database..."
-pnpm dlx prisma migrate deploy || pnpm dlx prisma db push
+echo "Checking Django backend connection..."
+curl -f "$DJANGO_API_URL/api/health/" > /dev/null 2>&1 || echo "⚠️  Django backend not responding at $DJANGO_API_URL"
 
-echo "Starting application..."
+echo "Starting Next.js application..."
 if [ "$NODE_ENV" = "production" ]; then
   pnpm run build
   pnpm start

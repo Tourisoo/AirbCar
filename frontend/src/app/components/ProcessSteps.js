@@ -122,7 +122,7 @@ export default function ProcessSteps() {
                         <i className={`${step.icon} text-2xl`}></i>
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                        <div className="text-sm font-medium text-gray-700 uppercase tracking-wide">
                           Step {step.number}
                         </div>
                         <h3 className="text-2xl font-bold text-gray-800">
@@ -130,7 +130,7 @@ export default function ProcessSteps() {
                         </h3>
                       </div>
                     </div>
-                    <p className="text-gray-600 leading-relaxed text-lg">
+                    <p className="text-gray-700 leading-relaxed text-lg">
                       {step.description}
                     </p>
                   </div>

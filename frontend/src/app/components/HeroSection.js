@@ -99,7 +99,7 @@ export default function HeroSection() {
                   <i className="fas fa-shield-alt text-green-500 mr-1"></i>
                   No subscriptions or hidden fees, ever.
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-700 mt-1">
                   You only pay commission on rentals from us.
                 </p>
               </div>

@@ -48,9 +48,6 @@ yarn-error.log*
 out/
 build/
 
-# Prisma
-prisma/dev.db*
-
 # Environment variables
 .env
 .env.local
