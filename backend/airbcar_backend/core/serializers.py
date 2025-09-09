@@ -1,7 +1,6 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from .models import User, Booking, Partner, Listing, ListingImage
-# , ListingImage
 # from .utils import upload_image_to_supabase
 
 # The default TokenObtainPairSerializer provided by rest_framework_simplejwt
@@ -128,10 +127,6 @@ class PartnerSerializer(serializers.ModelSerializer):
         model = Partner
         fields = ['id', 'company_name', 'tax_id', 'verification_status', 'created_at', 
             'agree_on_terms', 'verification_document', 'listings']
-        
-        # fields: ['id', 'user', 'company_name', 'tax_id', 'verification_status', 'agree_on_terms',
-        #     'created_at', 'verification_document', 'listings']
-        # read_only_fields: ['id', 'user', 'created_at']
 
 class ListingSerializer(serializers.ModelSerializer):
     partner = serializers.PrimaryKeyRelatedField(read_only=True)

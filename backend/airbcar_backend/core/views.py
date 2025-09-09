@@ -187,6 +187,13 @@ class ListingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        partner_id = self.request.query_params.get('partner')
+        if partner_id:
+            qs = qs.filter(partner_id=partner_id)
+        return qs
+
     def perform_create(self, serializer):
         # Get or create partner for the authenticated user
         partner, created = Partner.objects.get_or_create(
@@ -202,32 +209,33 @@ class ListingViewSet(viewsets.ModelViewSet):
             self.request.user.is_partner = True
             self.request.user.save(update_fields=['is_partner'])
         
-        listing = serializer.save(partner=partner)
+        serializer.save(partner=partner)
 
-        # Handle multiple images uploaded with the listing creation
-        files = []
-        # Common array field names
-        files += self.request.FILES.getlist('images')
-        files += self.request.FILES.getlist('images[]')
-        # Also accept single keys image, image1..image4 for convenience
-        for key in ['image', 'image1', 'image2', 'image3', 'image4']:
-            f = self.request.FILES.get(key)
-            if f:
-                files.append(f)
+        # listing = serializer.save(partner=partner)
+        # # Handle multiple images uploaded with the listing creation
+        # files = []
+        # # Common array field names
+        # files += self.request.FILES.getlist('images')
+        # files += self.request.FILES.getlist('images[]')
+        # # Also accept single keys image, image1..image4 for convenience
+        # for key in ['image', 'image1', 'image2', 'image3', 'image4']:
+        #     f = self.request.FILES.get(key)
+        #     if f:
+        #         files.append(f)
 
-        for f in files:
-            ListingImage.objects.create(listing=listing, image=f)
+        # for f in files:
+        #     ListingImage.objects.create(listing=listing, image=f)
 
-    @action(detail=True, methods=['post'], url_path='upload-image', parser_classes=[MultiPartParser, FormParser])
-    def upload_image(self, request, pk=None):
-        listing = self.get_object()
-        file_obj = request.FILES.get('image')
-        if not file_obj:
-            return Response({'error': 'No image provided. Use form-data key "image".'}, status=status.HTTP_400_BAD_REQUEST)
-        # create image record
-        img = ListingImage.objects.create(listing=listing, image=file_obj)
-        from .serializers import ListingImageSerializer
-        return Response(ListingImageSerializer(img).data, status=status.HTTP_201_CREATED)
+    # @action(detail=True, methods=['post'], url_path='upload-image', parser_classes=[MultiPartParser, FormParser])
+    # def upload_image(self, request, pk=None):
+    #     listing = self.get_object()
+    #     file_obj = request.FILES.get('image')
+    #     if not file_obj:
+    #         return Response({'error': 'No image provided. Use form-data key "image".'}, status=status.HTTP_400_BAD_REQUEST)
+    #     # create image record
+    #     img = ListingImage.objects.create(listing=listing, image=file_obj)
+    #     from .serializers import ListingImageSerializer
+    #     return Response(ListingImageSerializer(img).data, status=status.HTTP_201_CREATED)
 
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all()

@@ -71,6 +71,7 @@ class Listing(models.Model):
 
     rating = models.FloatField(default=0.0, blank=True, null=True)
     features = models.JSONField(default=list)
+    # image_url = models.URLField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.make} {self.model} ({self.year})"
