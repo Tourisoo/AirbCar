@@ -1,13 +1,13 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, HttpResponseBadRequest
-from .models import User, Booking, Partner, Listing, ListingImage
+from django.http import HttpResponse
+from .models import User, Booking, Partner, Listing#, ListingImage
 from .serializers import UserSerializer, BookingSerializer, PartnerSerializer, \
     ListingSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer
 from rest_framework import viewsets, generics, status
-from rest_framework.decorators import action
+# from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
+# from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -20,23 +20,14 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+# from rest_framework.decorators import api_view
+from supabase import create_client
+
+url = "https://wtbmqtmmdobfvvecinif.supabase.co"
+key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0Ym1xdG1tZG9iZnZ2ZWNpbmlmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjIzODE3MCwiZXhwIjoyMDcxODE0MTcwfQ.1WHIBQlRgCy-jHLT-EwXgfGLAUK7G_1GIZPQLLCoXXc"
+supabase = create_client(url, key)
 
 User = get_user_model()
-
-def verify_email(request):
-    token = request.GET.get("token")
-    if not token:
-        return HttpResponse("Invalid token", status=400)
-
-    try:
-        user = User.objects.get(email_verification_token=token)
-        user.is_verified = True
-        user.email_verification_token = None
-        user.save()
-        return HttpResponse("Email successfully verified!")
-    except User.DoesNotExist:
-        return HttpResponse("Invalid or expired token", status=400)
 
 
 class UserVerificationView(generics.GenericAPIView):
@@ -162,7 +153,7 @@ class TokenVerifyView(generics.GenericAPIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         user = self.request.user
@@ -317,6 +308,20 @@ class PasswordResetConfirmView(generics.GenericAPIView):
             return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)
 
+def verify_email(request):
+    token = request.GET.get("token")
+    if not token:
+        return HttpResponse("Invalid token", status=400)
+
+    try:
+        user = User.objects.get(email_verification_token=token)
+        user.is_verified = True
+        user.email_verification_token = None
+        user.save()
+        return HttpResponse("Email successfully verified!")
+    except User.DoesNotExist:
+        return HttpResponse("Invalid or expired token", status=400)
+
 def user_list(request):
     users = User.objects.all()
     if not users:
@@ -330,6 +335,12 @@ def booking_list(request):
         return HttpResponse("No bookings found.")
     greeting = [f"booking ID: {booking.id}, user: {booking.user.username}, Car: {booking.listing}, Date: {booking.date}" for booking in bookings]
     return HttpResponse("<br>".join(greeting))
+
+def upload_file_to_supabase(file, folder="listings"):
+    filename = f"{folder}/{uuid.uuid4()}_{file.name}"
+    supabase.storage.from_("your-bucket").upload(filename, file)
+    return f"{url}/storage/v1/object/public/your-bucket/{filename}"
+
 
 def home_view(request):
     html_content = """
