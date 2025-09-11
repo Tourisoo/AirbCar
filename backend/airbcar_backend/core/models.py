@@ -7,11 +7,11 @@ from supabase import create_client, Client
 class User(AbstractUser):
     # Store a URL to the profile picture and map it to the existing DB column
     # 'profile_picture_url' to match the current production schema.
-    profile_picture = models.URLField(blank=True, null=True, db_column='profile_picture_url')
+    # profile_picture = models.URLField(blank=True, null=True, db_column='profile_picture_url')
     phone_number = models.CharField(max_length=15, blank=True)
     email = models.EmailField(unique=True)
     # profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
-    # profile_picture = models.URLField(blank=True, null=True)
+    profile_picture = models.URLField(blank=True, null=True)
     default_currency = models.CharField(max_length=3, default='USD')
     is_partner = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
@@ -39,9 +39,7 @@ class User(AbstractUser):
         return self.email
 
     class Meta:
-        indexes = [
-            models.Index(fields=['email']),
-        ]
+        indexes = [models.Index(fields=['email'])]
 
 class Partner(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='partner')
@@ -56,9 +54,7 @@ class Partner(models.Model):
         return f"{self.company_name} ({self.user.username})"
 
     class Meta:
-        indexes = [
-            models.Index(fields=['verification_status']),
-        ]
+        indexes = [models.Index(fields=['verification_status'])]
 
 class Listing(models.Model):
     partner = models.ForeignKey('Partner', on_delete=models.CASCADE, related_name='listings')
@@ -81,14 +77,6 @@ class Listing(models.Model):
 
     def __str__(self):
         return f"{self.make} {self.model} ({self.year})"
-
-# class ListingImage(models.Model):
-#     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="images")
-#     image = models.ImageField(upload_to="listing_pictures/")
-#     uploaded_at = models.DateTimeField(auto_now_add=True)
-
-#     def __str__(self):
-#         return f"Image for {self.listing.make} {self.listing.model}"
 
 class Booking(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

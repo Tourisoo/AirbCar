@@ -20,7 +20,6 @@ from rest_framework import status
 from rest_framework.response import Response
 from .utils import upload_file_to_supabase
 
-
 User = get_user_model()
 
 
@@ -53,15 +52,15 @@ class UserVerificationView(generics.GenericAPIView):
         return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_object(self):
-        return self.request.user  # Always return the authenticated user
-    
-    def patch(self, request, *args, **kwargs):
-        return self.partial_update(request, *args, **kwargs)
+# class UserProfileView(generics.RetrieveUpdateAPIView):
+#     serializer_class = UserSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_object(self):
+#         return self.request.user
+
+#     def patch(self, request, *args, **kwargs):
+#         return self.partial_update(request, *args, **kwargs)
 
 
 class AdminVerificationView(APIView):
@@ -148,12 +147,41 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         user = self.request.user
         if user.is_staff:
             return User.objects.all()
         return User.objects.filter(id=user.id)
+
+    def perform_update(self, serializer):
+        request = self.request
+        user = serializer.save()
+        
+        # Handle profile picture upload
+        profile_picture = request.FILES.get("profile_picture")
+        if profile_picture:
+            url = upload_file_to_supabase(profile_picture, folder="profiles")
+            user.profile_picture = url
+            user.save(update_fields=["profile_picture"])
+        
+        # Handle ID front document upload
+        id_front_document = request.FILES.get("id_front_document")
+        if id_front_document:
+            url = upload_file_to_supabase(id_front_document, folder="id_documents")
+            user.id_front_document_url = url
+            user.save(update_fields=["id_front_document_url"])
+        
+        # Handle ID back document upload
+        id_back_document = request.FILES.get("id_back_document")
+        if id_back_document:
+            url = upload_file_to_supabase(id_back_document, folder="id_documents")
+            user.id_back_document_url = url
+            user.save(update_fields=["id_back_document_url"])
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
 
 class PartnerViewSet(viewsets.ModelViewSet):
     queryset = Partner.objects.all().prefetch_related('listings')
@@ -182,8 +210,6 @@ class ListingViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         request = self.request
         picture = request.FILES.get("picture_url")
-        print("Received picture:", picture)
-        print("picture_url" in request.FILES)
         # Get or create partner
         partner, created = Partner.objects.get_or_create(
             user=request.user,
@@ -199,7 +225,6 @@ class ListingViewSet(viewsets.ModelViewSet):
         # Save listing object first (without picture_url)
         listing = serializer.save(partner=partner)
         # Upload to Supabase
-        print("Uploading picture to Supabase...")
         if picture:
             url = upload_file_to_supabase(picture, folder="listings")
             listing.picture_url = url
@@ -309,8 +334,6 @@ def booking_list(request):
         return HttpResponse("No bookings found.")
     greeting = [f"booking ID: {booking.id}, user: {booking.user.username}, Car: {booking.listing}, Date: {booking.date}" for booking in bookings]
     return HttpResponse("<br>".join(greeting))
-
-
 
 
 def home_view(request):
