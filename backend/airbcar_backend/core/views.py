@@ -1,13 +1,11 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from .models import User, Booking, Partner, Listing#, ListingImage
+from .models import User, Booking, Partner, Listing
 from .serializers import UserSerializer, BookingSerializer, PartnerSerializer, \
     ListingSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer
 from rest_framework import viewsets, generics, status
-# from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
-# from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -20,12 +18,8 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import status
 from rest_framework.response import Response
-# from rest_framework.decorators import api_view
-from supabase import create_client
+from .utils import upload_file_to_supabase
 
-url = "https://wtbmqtmmdobfvvecinif.supabase.co"
-key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0Ym1xdG1tZG9iZnZ2ZWNpbmlmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjIzODE3MCwiZXhwIjoyMDcxODE0MTcwfQ.1WHIBQlRgCy-jHLT-EwXgfGLAUK7G_1GIZPQLLCoXXc"
-supabase = create_client(url, key)
 
 User = get_user_model()
 
@@ -184,49 +178,32 @@ class ListingViewSet(viewsets.ModelViewSet):
         if partner_id:
             qs = qs.filter(partner_id=partner_id)
         return qs
-
+        
     def perform_create(self, serializer):
-        # Get or create partner for the authenticated user
+        request = self.request
+        picture = request.FILES.get("picture_url")
+        print("Received picture:", picture)
+        print("picture_url" in request.FILES)
+        # Get or create partner
         partner, created = Partner.objects.get_or_create(
-            user=self.request.user,
+            user=request.user,
             defaults={
-                'company_name': f"{self.request.user.username}'s Company",
+                'company_name': f"{request.user.username}'s Company",
                 'tax_id': 'PENDING',
             }
         )
-        
-        # Ensure user is marked as partner
-        if not self.request.user.is_partner:
-            self.request.user.is_partner = True
-            self.request.user.save(update_fields=['is_partner'])
-        
-        serializer.save(partner=partner)
-
-        # listing = serializer.save(partner=partner)
-        # # Handle multiple images uploaded with the listing creation
-        # files = []
-        # # Common array field names
-        # files += self.request.FILES.getlist('images')
-        # files += self.request.FILES.getlist('images[]')
-        # # Also accept single keys image, image1..image4 for convenience
-        # for key in ['image', 'image1', 'image2', 'image3', 'image4']:
-        #     f = self.request.FILES.get(key)
-        #     if f:
-        #         files.append(f)
-
-        # for f in files:
-        #     ListingImage.objects.create(listing=listing, image=f)
-
-    # @action(detail=True, methods=['post'], url_path='upload-image', parser_classes=[MultiPartParser, FormParser])
-    # def upload_image(self, request, pk=None):
-    #     listing = self.get_object()
-    #     file_obj = request.FILES.get('image')
-    #     if not file_obj:
-    #         return Response({'error': 'No image provided. Use form-data key "image".'}, status=status.HTTP_400_BAD_REQUEST)
-    #     # create image record
-    #     img = ListingImage.objects.create(listing=listing, image=file_obj)
-    #     from .serializers import ListingImageSerializer
-    #     return Response(ListingImageSerializer(img).data, status=status.HTTP_201_CREATED)
+        # Ensure user is a partner
+        if not request.user.is_partner:
+            request.user.is_partner = True
+            request.user.save(update_fields=['is_partner'])
+        # Save listing object first (without picture_url)
+        listing = serializer.save(partner=partner)
+        # Upload to Supabase
+        print("Uploading picture to Supabase...")
+        if picture:
+            url = upload_file_to_supabase(picture, folder="listings")
+            listing.picture_url = url
+            listing.save(update_fields=["picture_url"]) 
 
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all()
@@ -240,9 +217,6 @@ class BookingViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'listing': 'Listing not found'})
         serializer.save(user=self.request.user, listing=listing)
-
-# def home_view(request):
-#     return HttpResponse("<h1>Welcome Home<h1>")
 
 class UserRegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -336,10 +310,7 @@ def booking_list(request):
     greeting = [f"booking ID: {booking.id}, user: {booking.user.username}, Car: {booking.listing}, Date: {booking.date}" for booking in bookings]
     return HttpResponse("<br>".join(greeting))
 
-def upload_file_to_supabase(file, folder="listings"):
-    filename = f"{folder}/{uuid.uuid4()}_{file.name}"
-    supabase.storage.from_("your-bucket").upload(filename, file)
-    return f"{url}/storage/v1/object/public/your-bucket/{filename}"
+
 
 
 def home_view(request):
@@ -403,30 +374,30 @@ def home_view(request):
             <div class="section">
                 <h2>✅ Login</h2>
                 <p><strong>POST</strong> <code>/api/token/</code></p>
-                <pre>{
-  "username": "testuser2",
-  "password": "testpass123"
-}</pre>
+                <pre>   {
+        "username": "testuser2",
+        "password": "testpass123"
+    }</pre>
                 <p><strong>Returns:</strong> JWT <code>access</code> & <code>refresh</code> tokens + user info</p>
             </div>
 
             <div class="section">
                 <h2>🔁 Refresh Token</h2>
                 <p><strong>POST</strong> <code>/api/token/refresh/</code></p>
-                <pre>{
-  "refresh": "your_refresh_token_here"
-}</pre>
+                <pre>   {
+        "refresh": "your_refresh_token_here"
+    }</pre>
             </div>
 
             <div class="section">
                 <h2>📝 Register (Sign-up)</h2>
                 <p><strong>POST</strong> <code>/api/register/</code></p>
-                <pre>{
-  "username": "testuser2",
-  "email": "test2@example.com",
-  "password": "testpass123",
-  "phone_number": "+1234567890"
-}</pre>
+                <pre>   {
+        "username": "testuser2",
+        "email": "test2@example.com",
+        "password": "testpass123",
+        "phone_number": "+1234567890"
+    }</pre>
             </div>
 
             <div class="section">
@@ -441,12 +412,12 @@ def home_view(request):
             <div class="section">
                 <h2>🛠️ Dev Setup</h2>
                 <pre>
-cd airbcar_backend
-source env/bin/activate
-pip install -r requirements.txt
-sudo service postgresql start
-python manage.py migrate
-python manage.py runserver
+    cd airbcar_backend
+    source env/bin/activate
+    pip install -r requirements.txt
+    sudo service postgresql start
+    python manage.py migrate
+    python manage.py runserver
                 </pre>
             </div>
 
@@ -463,29 +434,3 @@ python manage.py runserver
     </html>
     """
     return HttpResponse(html_content)
-
-# @api_view(['POST'])
-# def upload_listing_image(request, listing_id):
-#     """
-#     API view to handle uploading of images for listings.
-#     """
-#     listing = Listing.objects.get(id=listing_id)
-#     image_file = request.FILES.get('image')
-
-#     if image_file:
-#         # Generate a unique file name
-#         file_name = f"listing_{listing_id}/{image_file.name}"
-        
-#         try:
-#             # Upload image to Supabase and get the URL
-#             image_url = upload_image_to_supabase(image_file, file_name)
-            
-#             # Save the image URL to the ListingImage model
-#             ListingImage.objects.create(listing=listing, image_url=image_url)
-            
-#             return Response({"message": "Image uploaded successfully", "image_url": image_url}, status=status.HTTP_200_OK)
-        
-#         except Exception as e:
-#             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-#     return Response({"error": "No image provided."}, status=status.HTTP_400_BAD_REQUEST)

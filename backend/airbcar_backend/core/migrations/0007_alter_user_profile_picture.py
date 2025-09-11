@@ -9,17 +9,10 @@ class Migration(migrations.Migration):
         ('core', '0006_remove_user_id_back_document_and_more'),
     ]
 
-    # The database already has the column 'profile_picture_url'. We only
-    # need to update Django's state to map the field to that column.
     operations = [
-        migrations.SeparateDatabaseAndState(
-            database_operations=[],
-            state_operations=[
-                migrations.AlterField(
-                    model_name='user',
-                    name='profile_picture',
-                    field=models.URLField(blank=True, null=True, db_column='profile_picture_url'),
-                ),
-            ],
+        migrations.AlterField(
+            model_name='user',
+            name='profile_picture',
+            field=models.URLField(blank=True, db_column='profile_picture_url', null=True),
         ),
     ]

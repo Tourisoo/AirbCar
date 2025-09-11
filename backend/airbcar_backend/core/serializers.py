@@ -1,7 +1,8 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
-from .models import User, Booking, Partner, Listing#, ListingImage
-# from .utils import upload_image_to_supabase
+from .models import User, Booking, Partner, Listing
+# from .utils import upload_file_to_supabase
+
 
 # The default TokenObtainPairSerializer provided by rest_framework_simplejwt
 #  generates JWT tokens with minimal user data (typically just the user ID). 
@@ -73,7 +74,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'is_partner': self.user.is_partner,
             'is_verified': self.user.is_verified
         }
-        
         return data
 
 class UserSerializer(serializers.ModelSerializer):
@@ -88,21 +88,10 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'is_partner', 'is_verified', 'email_verified', 'id_verification_status', 'id_front_document_url', 'id_back_document_url']
 
     def create(self, validated_data):
-        # Generate username from email if not provided
-        username = validated_data.get('username', validated_data['email'].split('@')[0])
-        
+        username = validated_data.get('username', validated_data['email'].split('@')[0])        
         user = User.objects.create(
             username=username,
             email=validated_data['email'],
-            # phone_number=validated_data.get('phone_number', ''),
-            # default_currency=validated_data.get('default_currency', 'USD'),
-            # is_partner=validated_data.get('is_partner', False),
-            # name=validated_data.get('name', ''),
-            # license_number=validated_data.get('license_number', ''),
-            # address=validated_data.get('address', ''),
-            # role=validated_data.get('role', 'user'),
-            # first_name=validated_data.get('first_name', ''),
-            # last_name=validated_data.get('last_name', '')
         )
         user.set_password(validated_data['password'])
         user.save()
@@ -115,11 +104,6 @@ class ListingBriefSerializer(serializers.ModelSerializer):
                   'availability', 'created_at', 'fuel_type', 'transmission',
                   'seating_capacity', 'vehicle_condition', 'rating', 'features',
                   'available_features', 'picture_url']
-
-# class ListingImageSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = ListingImage
-#         fields = [ 'id', 'image', 'uploaded_at']
 
 class PartnerSerializer(serializers.ModelSerializer):
     listings = ListingBriefSerializer(many=True, read_only=True)
@@ -140,14 +124,14 @@ class ListingSerializer(serializers.ModelSerializer):
             'picture_url', 'picture']
         read_only_fields = ['partner', 'created_at', 'picture_url', ]
 
-    def create(self, validated_data):
-        picture = validated_data.pop("picture", None)
-        listing = super().create(validated_data)
-        if picture:
-            url = upload_file_to_supabase(picture, folder="listings")
-            listing.picture_url = url
-            listing.save()
-        return listing
+    # def create(self, validated_data):
+    #     picture = validated_data.pop("picture", None)
+    #     listing = super().create(validated_data)
+    #     if picture:
+    #         url = upload_file_to_supabase(picture, folder="listings")
+    #         listing.picture_url = url
+    #         listing.save()
+    #     return listing
 
 class BookingSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -165,23 +149,3 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
-
-
-#     def create(self, validated_data):
-#         listing = super().create(validated_data)
-        
-#         # Check if an image was provided and upload it to Supabase
-#         image_file = self.context.get('image_file')
-#         if image_file:
-#             # Generate a unique file name for Supabase
-#             file_name = f"listing_{listing.id}/{image_file.name}"
-#             try:
-#                 # Upload the image to Supabase and get the URL
-#                 image_url = upload_image_to_supabase(image_file, file_name)
-                
-#                 # Save the image URL in the ListingImage model
-#                 ListingImage.objects.create(listing=listing, image_url=image_url)
-#             except Exception as e:
-#                 raise serializers.ValidationError(f"Failed to upload image: {str(e)}")
-        
-#         return listing
