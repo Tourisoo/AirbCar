@@ -16,7 +16,7 @@ class User(AbstractUser):
     id_back_document_url = models.URLField(blank=True, null=True)
     id_verification_status = models.CharField(max_length=20, default='pending')
     license_origin_country = models.CharField(max_length=75, blank=True, null=True)
-    nationality = models.CharField(max_length=75)
+    nationality = models.CharField(max_length=75, null=True, blank=True)
     country_of_residence = models.CharField(max_length=75, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
     postal_code = models.CharField(max_length=20, blank=True, null=True)

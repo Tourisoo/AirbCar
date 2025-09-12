@@ -163,10 +163,10 @@ class UserViewSet(viewsets.ModelViewSet):
         # )
         # user.set_password(self.request.data['password'])
         # user.save()
+        user = serializer.save()  # This calls UserSerializer.create()
         profile_pic = self.request.FILES.get("profile_picture")
         front_doc = self.request.FILES.get("id_front_document_url")
         back_doc = self.request.FILES.get("id_back_document_url")
-        user = serializer.save()
         if profile_pic:
             url = upload_file_to_supabase(profile_pic, folder=f"id_documents/{user.id}")
             user.profile_picture = url
@@ -179,6 +179,7 @@ class UserViewSet(viewsets.ModelViewSet):
             url = upload_file_to_supabase(back_doc, folder=f"id_documents/{user.id}")
             user.id_back_document_url = url
             user.save(update_fields=["id_back_document_url"])
+
         user.email_verification_token = str(uuid.uuid4())
         user.save()
 
@@ -190,7 +191,6 @@ class UserViewSet(viewsets.ModelViewSet):
             recipient_list=[user.email],
             fail_silently=False,
         )
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
         print("get_queryset called")
