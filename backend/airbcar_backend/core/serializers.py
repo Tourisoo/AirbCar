@@ -89,6 +89,7 @@ class UserSerializer(serializers.ModelSerializer):
             'id_front_document_url', 'id_back_document_url', 'profile_picture']
 
     def create(self, validated_data):
+        print("creat serializer called")
         username = validated_data.get('username', validated_data['email'].split('@')[0])        
         user = User.objects.create(
             username=username,

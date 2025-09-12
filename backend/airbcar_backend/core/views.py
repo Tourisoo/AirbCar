@@ -156,6 +156,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         print("perform_create called")
+        # username = self.request.data.get('username', self.request.data['email'].split('@')[0])
+        # user = User.objects.create(
+        #     username=username,
+        #     email=self.request.data['email'],
+        # )
+        # user.set_password(self.request.data['password'])
+        # user.save()
         profile_pic = self.request.FILES.get("profile_picture")
         front_doc = self.request.FILES.get("id_front_document_url")
         back_doc = self.request.FILES.get("id_back_document_url")
@@ -194,25 +201,21 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         print("perform_update called")
-        request = self.request
+        # request = self.request
         user = serializer.save()
         
-        # Handle profile picture upload
-        profile_picture = request.FILES.get("profile_picture")
+        profile_picture = self.request.FILES.get("profile_picture")
+        id_front_document = self.request.FILES.get("id_front_document_url")
+        id_back_document = self.request.FILES.get("id_back_document_url")
+
         if profile_picture:
             url = upload_file_to_supabase(profile_picture, folder=f"id_documents/{user.id}")
             user.profile_picture = url
             user.save(update_fields=["profile_picture"])
-        
-        # Handle ID front document upload
-        id_front_document = request.FILES.get("id_front_document_url")
         if id_front_document:
             url = upload_file_to_supabase(id_front_document, folder=f"id_documents/{user.id}")
             user.id_front_document_url = url
             user.save(update_fields=["id_front_document_url"])
-        
-        # Handle ID back document upload
-        id_back_document = request.FILES.get("id_back_document_url")
         if id_back_document:
             url = upload_file_to_supabase(id_back_document, folder=f"id_documents/{user.id}")
             user.id_back_document_url = url
