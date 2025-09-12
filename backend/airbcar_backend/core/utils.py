@@ -7,6 +7,7 @@ supabase = create_client(url, key)
 
 
 def upload_file_to_supabase(file, folder="listings"):
+    print("Uploading file to Supabase... called")
     filename = f"{folder}/{uuid.uuid4()}_{file}"    
     file.seek(0)
     file_content = file.read()

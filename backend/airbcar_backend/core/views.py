@@ -74,6 +74,22 @@ class AdminVerificationView(APIView):
             return Response({'is_admin': False}, status=status.HTTP_403_FORBIDDEN)
 
 
+class TokenVerifyView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'is_partner': user.is_partner,
+            'is_verified': user.is_verified,
+            'email_verified': user.email_verified,
+            'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser
+        })
+
 class CustomLoginView(APIView):
     def post(self, request):
         email = request.data.get('email')
@@ -127,72 +143,84 @@ class CustomLoginView(APIView):
         else:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-class TokenVerifyView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
+# class UserRegisterView(generics.CreateAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
 
-    def get(self, request):
-        user = request.user
-        return Response({
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'is_partner': user.is_partner,
-            'is_verified': user.is_verified,
-            'email_verified': user.email_verified,
-            'is_staff': user.is_staff,
-            'is_superuser': user.is_superuser
-        })
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    # permission_classes = [IsAuthenticatedOrReadOnly]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
+    def perform_create(self, serializer):
+        print("perform_create called")
+        profile_pic = self.request.FILES.get("profile_picture")
+        front_doc = self.request.FILES.get("id_front_document_url")
+        back_doc = self.request.FILES.get("id_back_document_url")
+        user = serializer.save()
+        if profile_pic:
+            url = upload_file_to_supabase(profile_pic, folder=f"id_documents/{user.id}")
+            user.profile_picture = url
+            user.save(update_fields=["profile_picture"])
+        if front_doc:
+            url = upload_file_to_supabase(front_doc, folder=f"id_documents/{user.id}")
+            user.id_front_document_url = url
+            user.save(update_fields=["id_front_document_url"])
+        if back_doc:
+            url = upload_file_to_supabase(back_doc, folder=f"id_documents/{user.id}")
+            user.id_back_document_url = url
+            user.save(update_fields=["id_back_document_url"])
+        user.email_verification_token = str(uuid.uuid4())
+        user.save()
+
+        verification_url = f"{self.request.build_absolute_uri('/verify-email/')}?token={user.email_verification_token}"
+        send_mail(
+            subject='Verify your email',
+            message=f'Click the link to verify your email: {verification_url}',
+            from_email='no-reply@airbcar.com',
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     def get_queryset(self):
+        print("get_queryset called")
         user = self.request.user
         if user.is_staff:
             return User.objects.all()
         return User.objects.filter(id=user.id)
 
     def perform_update(self, serializer):
+        print("perform_update called")
         request = self.request
         user = serializer.save()
         
         # Handle profile picture upload
         profile_picture = request.FILES.get("profile_picture")
         if profile_picture:
-            url = upload_file_to_supabase(profile_picture, folder="profiles")
+            url = upload_file_to_supabase(profile_picture, folder=f"id_documents/{user.id}")
             user.profile_picture = url
             user.save(update_fields=["profile_picture"])
         
         # Handle ID front document upload
-        id_front_document = request.FILES.get("id_front_document")
+        id_front_document = request.FILES.get("id_front_document_url")
         if id_front_document:
-            url = upload_file_to_supabase(id_front_document, folder="id_documents")
+            url = upload_file_to_supabase(id_front_document, folder=f"id_documents/{user.id}")
             user.id_front_document_url = url
             user.save(update_fields=["id_front_document_url"])
         
         # Handle ID back document upload
-        id_back_document = request.FILES.get("id_back_document")
+        id_back_document = request.FILES.get("id_back_document_url")
         if id_back_document:
-            url = upload_file_to_supabase(id_back_document, folder="id_documents")
+            url = upload_file_to_supabase(id_back_document, folder=f"id_documents/{user.id}")
             user.id_back_document_url = url
             user.save(update_fields=["id_back_document_url"])
 
-    def patch(self, request, *args, **kwargs):
-        return self.partial_update(request, *args, **kwargs)
-
-class PartnerViewSet(viewsets.ModelViewSet):
-    queryset = Partner.objects.all().prefetch_related('listings')
-    serializer_class = PartnerSerializer
-    permission_classes = [IsAuthenticated]
-
-    def perform_create(self, serializer):
-        partner = serializer.save(user=self.request.user)
-        if not self.request.user.is_partner:
-            self.request.user.is_partner = True
-            self.request.user.save(update_fields=['is_partner'])
+    # def patch(self, request, *args, **kwargs):
+    #     print("patch called")
+    #     return self.partial_update(request, *args, **kwargs)
 
 class ListingViewSet(viewsets.ModelViewSet):
     queryset = Listing.objects.all()
@@ -210,7 +238,6 @@ class ListingViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         request = self.request
         picture = request.FILES.get("picture_url")
-        # Get or create partner
         partner, created = Partner.objects.get_or_create(
             user=request.user,
             defaults={
@@ -218,17 +245,25 @@ class ListingViewSet(viewsets.ModelViewSet):
                 'tax_id': 'PENDING',
             }
         )
-        # Ensure user is a partner
         if not request.user.is_partner:
             request.user.is_partner = True
             request.user.save(update_fields=['is_partner'])
-        # Save listing object first (without picture_url)
         listing = serializer.save(partner=partner)
-        # Upload to Supabase
         if picture:
             url = upload_file_to_supabase(picture, folder="listings")
             listing.picture_url = url
             listing.save(update_fields=["picture_url"]) 
+
+class PartnerViewSet(viewsets.ModelViewSet):
+    queryset = Partner.objects.all().prefetch_related('listings')
+    serializer_class = PartnerSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        partner = serializer.save(user=self.request.user)
+        if not self.request.user.is_partner:
+            self.request.user.is_partner = True
+            self.request.user.save(update_fields=['is_partner'])
 
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all()
@@ -243,24 +278,6 @@ class BookingViewSet(viewsets.ModelViewSet):
             raise ValidationError({'listing': 'Listing not found'})
         serializer.save(user=self.request.user, listing=listing)
 
-class UserRegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    def perform_create(self, serializer):
-        user = serializer.save()
-        user.email_verification_token = str(uuid.uuid4())
-        user.save()
-
-        verification_url = f"{self.request.build_absolute_uri('/verify-email/')}?token={user.email_verification_token}"
-        send_mail(
-            subject='Verify your email',
-            message=f'Click the link to verify your email: {verification_url}',
-            from_email='no-reply@airbcar.com',
-            recipient_list=[user.email],
-            fail_silently=False,
-        )
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class PasswordResetRequestView(generics.GenericAPIView):
     serializer_class = PasswordResetRequestSerializer

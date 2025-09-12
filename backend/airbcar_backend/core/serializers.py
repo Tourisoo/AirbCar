@@ -82,10 +82,11 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'email', 'phone_number', 'default_currency',
             'is_partner', 'is_verified', 'password', 'profile_picture', 'email_verified',
-            'license_number', 'address', 'role', 'first_name', 'last_name', 'id_type', 'id_number',
-            'id_expiry_date', 'id_verification_status', 'id_front_document_url', 'id_back_document_url']
+            'license_number', 'address', 'role', 'first_name', 'last_name', 'issue_date', 
+            'license_origin_country', 'nationality', 'country_of_residence', 'city', 'postal_code',
+            'date_of_birth', 'id_verification_status', 'id_front_document_url', 'id_back_document_url']
         read_only_fields = ['id', 'is_partner', 'is_verified', 'email_verified', 'id_verification_status',
-            'id_front_document_url', 'id_back_document_url']
+            'id_front_document_url', 'id_back_document_url', 'profile_picture']
 
     def create(self, validated_data):
         username = validated_data.get('username', validated_data['email'].split('@')[0])        
