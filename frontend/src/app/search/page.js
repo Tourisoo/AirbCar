@@ -34,7 +34,7 @@ function SearchContent() {
   const [showPickupProcess, setShowPickupProcess] = useState(false)
   const [showBookingFlow, setShowBookingFlow] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [bookingStep, setBookingStep] = useState('auth') // auth, license, personal, contact, verification, payment
+  const [bookingStep, setBookingStep] = useState('auth') // auth, personal, contact, license, payment
   const [authError, setAuthError] = useState('')
   const [validationError, setValidationError] = useState('')
   const [authSubmitLoading, setAuthSubmitLoading] = useState(false)
@@ -50,7 +50,6 @@ function SearchContent() {
     licenseCountry: '',
     licenseIssueDate: '',
     licenseNumber: '',
-    licenseExpiryDate: '',
     
     // Personal data
     firstName: '',
@@ -65,11 +64,6 @@ function SearchContent() {
     city: '',
     postalCode: '',
     country: '',
-    
-    // Verification
-    idType: 'passport', // passport, id_card, driver_license
-    idNumber: '',
-    idExpiryDate: '',
     
     // Payment
     cardNumber: '',
@@ -458,7 +452,7 @@ function SearchContent() {
     if (user && !authLoading) {
       setIsLoggedIn(true)
       if (bookingStep === 'auth') {
-        setBookingStep('license')
+        setBookingStep('personal')
       }
     } else if (!user && !authLoading) {
       setIsLoggedIn(false)
@@ -602,7 +596,6 @@ function SearchContent() {
       licenseCountry: '',
       licenseIssueDate: '',
       licenseNumber: '',
-      licenseExpiryDate: '',
       firstName: '',
       lastName: '',
       dateOfBirth: '',
@@ -613,9 +606,6 @@ function SearchContent() {
       city: '',
       postalCode: '',
       country: '',
-      idType: 'passport',
-      idNumber: '',
-      idExpiryDate: '',
       cardNumber: '',
       expiryDate: '',
       cvv: '',
@@ -645,9 +635,9 @@ function SearchContent() {
       setShowBookingFlow(true)
       setBookingStep('auth')
     } else {
-      // User is logged in, start from license step
+      // User is logged in, start from personal step
       setShowBookingFlow(true)
-      setBookingStep('license')
+      setBookingStep('personal')
     }
     document.body.style.overflow = 'hidden'
   }
@@ -700,7 +690,7 @@ function SearchContent() {
 
       if (result.success) {
         setIsLoggedIn(true)
-        setBookingStep('license')
+        setBookingStep('personal')
         setAuthError('')
       } else {
         setAuthError(result.error || 'Authentication failed')
@@ -726,31 +716,6 @@ function SearchContent() {
       case 'auth':
         if (!isLoggedIn) {
           setAuthError('Please sign in or create an account to continue')
-          return false
-        }
-        return true
-
-      case 'license':
-        if (!bookingData.licenseCountry) {
-          setValidationError('Please select your license origin country')
-          return false
-        }
-        if (!bookingData.licenseNumber.trim()) {
-          setValidationError('Please enter your license number')
-          return false
-        }
-        if (!bookingData.licenseIssueDate) {
-          setValidationError('Please select your license issue date')
-          return false
-        }
-        if (!bookingData.licenseExpiryDate) {
-          setValidationError('Please select your license expiry date')
-          return false
-        }
-        // Check if license is not expired
-        const expiryDate = new Date(bookingData.licenseExpiryDate)
-        if (expiryDate < currentDate) {
-          setValidationError('Your license appears to be expired. Please use a valid license.')
           return false
         }
         return true
@@ -806,23 +771,17 @@ function SearchContent() {
         }
         return true
 
-      case 'verification':
-        if (!bookingData.idType) {
-          setValidationError('Please select an ID type')
+      case 'license':
+        if (!bookingData.licenseCountry) {
+          setValidationError('Please select your license origin country')
           return false
         }
-        if (!bookingData.idNumber.trim()) {
-          setValidationError('Please enter your ID number')
+        if (!bookingData.licenseNumber.trim()) {
+          setValidationError('Please enter your license number')
           return false
         }
-        if (!bookingData.idExpiryDate) {
-          setValidationError('Please select your ID expiry date')
-          return false
-        }
-        // Check if ID is not expired
-        const idExpiryDate = new Date(bookingData.idExpiryDate)
-        if (idExpiryDate < currentDate) {
-          setValidationError('Your ID appears to be expired. Please use a valid ID.')
+        if (!bookingData.licenseIssueDate) {
+          setValidationError('Please select your license issue date')
           return false
         }
         return true
@@ -847,8 +806,8 @@ function SearchContent() {
       return
     }
 
-    // If completing verification step, save verification data to backend
-    if (bookingStep === 'verification') {
+    // If completing license step, save verification data to backend
+    if (bookingStep === 'license') {
       try {
         setAuthSubmitLoading(true)
         await saveVerificationData()
@@ -861,7 +820,7 @@ function SearchContent() {
       }
     }
 
-    const steps = ['auth', 'license', 'personal', 'contact', 'verification', 'payment', 'confirmation']
+    const steps = ['auth', 'personal', 'contact', 'license', 'payment', 'confirmation']
     const currentIndex = steps.indexOf(bookingStep)
     if (currentIndex < steps.length - 1) {
       setBookingStep(steps[currentIndex + 1])
@@ -877,7 +836,7 @@ function SearchContent() {
     }
 
     const verificationData = {
-      license_number: bookingData.idNumber, // Using existing license_number field for ID number
+      license_number: bookingData.licenseNumber,
       name: `${bookingData.firstName} ${bookingData.lastName}`.trim(),
       first_name: bookingData.firstName,
       last_name: bookingData.lastName,
@@ -906,7 +865,7 @@ function SearchContent() {
     setValidationError('')
     setAuthError('')
     
-    const steps = ['auth', 'license', 'personal', 'contact', 'verification', 'payment', 'confirmation']
+    const steps = ['auth', 'personal', 'contact', 'license', 'payment', 'confirmation']
     const currentIndex = steps.indexOf(bookingStep)
     if (currentIndex > 0) {
       setBookingStep(steps[currentIndex - 1])
@@ -1755,20 +1714,19 @@ function SearchContent() {
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
                   {bookingStep === 'auth' && 'Sign In / Create Account'}
-                  {bookingStep === 'license' && 'Driver License Information'}
                   {bookingStep === 'personal' && 'Personal Information'}
                   {bookingStep === 'contact' && 'Contact Information'}
-                  {bookingStep === 'verification' && 'Identity Verification'}
+                  {bookingStep === 'license' && 'Driver License Information'}
                   {bookingStep === 'payment' && 'Payment Information'}
                   {bookingStep === 'confirmation' && 'Booking Confirmation'}
                 </h2>
                 <div className="flex space-x-2 mt-2">
-                  {['auth', 'license', 'personal', 'contact', 'verification', 'payment', 'confirmation'].map((step, index) => (
+                  {['auth', 'personal', 'contact', 'license', 'payment', 'confirmation'].map((step, index) => (
                     <div
                       key={step}
                       className={`h-2 w-8 rounded-full ${
                         step === bookingStep ? 'bg-orange-500' : 
-                        ['auth', 'license', 'personal', 'contact', 'verification', 'payment', 'confirmation'].indexOf(bookingStep) > index ? 'bg-green-500' : 'bg-gray-200'
+                        ['auth', 'personal', 'contact', 'license', 'payment', 'confirmation'].indexOf(bookingStep) > index ? 'bg-green-500' : 'bg-gray-200'
                       }`}
                     />
                   ))}
@@ -1910,7 +1868,7 @@ function SearchContent() {
                 </div>
               )}
 
-              {/* License Information Step */}
+              {/* Driver License Information Step */}
               {bookingStep === 'license' && (
                 <div className="space-y-6">
                   <div className="text-center">
@@ -1966,26 +1924,39 @@ function SearchContent() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Issue Date</label>
-                        <input
-                          type="date"
-                          value={bookingData.licenseIssueDate}
-                          onChange={(e) => handleBookingDataChange('licenseIssueDate', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
-                          // required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Expiry Date</label>
-                        <input
-                          type="date"
-                          value={bookingData.licenseExpiryDate}
-                          onChange={(e) => handleBookingDataChange('licenseExpiryDate', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
-                          // required
-                        />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Issue Date</label>
+                      <input
+                        type="date"
+                        value={bookingData.licenseIssueDate}
+                        onChange={(e) => handleBookingDataChange('licenseIssueDate', e.target.value)}
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
+                        // required
+                      />
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-medium text-blue-900 mb-2">Document Upload</h4>
+                      <p className="text-blue-700 text-sm mb-3">
+                        Please upload clear photos of both sides of your driver license
+                      </p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center">
+                          <svg className="w-8 h-8 text-blue-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                          <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                            Upload Front Side
+                          </button>
+                        </div>
+                        <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center">
+                          <svg className="w-8 h-8 text-blue-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                          <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                            Upload Back Side
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1999,9 +1970,17 @@ function SearchContent() {
                     </button>
                     <button
                       onClick={handleNextStep}
-                      className="flex-1 bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium"
+                      disabled={authSubmitLoading}
+                      className="flex-1 bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Continue
+                      {authSubmitLoading ? (
+                        <div className="flex items-center justify-center space-x-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>Saving...</span>
+                        </div>
+                      ) : (
+                        'Continue'
+                      )}
                     </button>
                   </div>
                 </div>
@@ -2233,128 +2212,6 @@ function SearchContent() {
                       className="flex-1 bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium"
                     >
                       Continue
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Identity Verification Step */}
-              {bookingStep === 'verification' && (
-                <div className="space-y-6">
-                  <div className="text-center">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Identity Verification</h3>
-                    <p className="text-gray-700">Please provide your identification details</p>
-                  </div>
-
-                  {validationError && (
-                    <div className="rounded-md bg-red-50 p-4">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <div className="ml-3">
-                          <p className="text-sm text-red-700">{validationError}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">ID Document Type</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[
-                          { value: 'passport', label: 'Passport' },
-                          { value: 'id_card', label: 'ID Card' },
-                          { value: 'driver_license', label: 'Driver License' }
-                        ].map((type) => (
-                          <button
-                            key={type.value}
-                            type="button"
-                            onClick={() => handleBookingDataChange('idType', type.value)}
-                            className={`p-3 text-sm rounded-lg border transition-colors ${
-                              bookingData.idType === type.value
-                                ? 'bg-orange-500 text-white border-orange-500'
-                                : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
-                            }`}
-                          >
-                            {type.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">ID Number</label>
-                      <input
-                        type="text"
-                        value={bookingData.idNumber}
-                        onChange={(e) => handleBookingDataChange('idNumber', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
-                        placeholder="Enter ID number"
-                        // required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">ID Expiry Date</label>
-                      <input
-                        type="date"
-                        value={bookingData.idExpiryDate}
-                        onChange={(e) => handleBookingDataChange('idExpiryDate', e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
-                        // required
-                      />
-                    </div>
-
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <h4 className="font-medium text-blue-900 mb-2">Document Upload</h4>
-                      <p className="text-blue-700 text-sm mb-3">
-                        Please upload clear photos of both sides of your {bookingData.idType.replace('_', ' ')}
-                      </p>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center">
-                          <svg className="w-8 h-8 text-blue-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                          </svg>
-                          <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
-                            Upload Front Side
-                          </button>
-                        </div>
-                        <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center">
-                          <svg className="w-8 h-8 text-blue-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                          </svg>
-                          <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
-                            Upload Back Side
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex space-x-4">
-                    <button
-                      onClick={handlePrevStep}
-                      className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                    >
-                      Back
-                    </button>
-                    <button
-                      onClick={handleNextStep}
-                      disabled={authSubmitLoading}
-                      className="flex-1 bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {authSubmitLoading ? (
-                        <div className="flex items-center justify-center space-x-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          <span>Saving...</span>
-                        </div>
-                      ) : (
-                        'Continue'
-                      )}
                     </button>
                   </div>
                 </div>
