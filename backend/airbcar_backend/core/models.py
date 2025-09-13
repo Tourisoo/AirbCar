@@ -71,7 +71,6 @@ class Listing(models.Model):
     vehicle_description = models.CharField(max_length=500, blank=True, null=True)
     rating = models.FloatField(default=0.0, blank=True, null=True)
     features = models.JSONField(default=list)
-    # picture_url = models.URLField(blank=True, null=True)
     pictures = models.JSONField(default=list, blank=True)
 
     def __str__(self):

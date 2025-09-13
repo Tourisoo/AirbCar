@@ -146,9 +146,9 @@ class ListingSerializer(serializers.ModelSerializer):
             data.pop('pictures')
         return super().to_internal_value(data)
 
-    def create(self, validated_data):
-        validated_data['pictures'] = []  # Initialize with empty list
-        return super().create(validated_data)
+    # def create(self, validated_data):
+    #     validated_data['pictures'] = []  # Initialize with empty list
+    #     return super().create(validated_data)
 
     def update(self, instance, validated_data):
         # Don't update pictures field here, it's handled in the view

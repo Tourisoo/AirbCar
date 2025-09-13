@@ -151,12 +151,12 @@ class CustomLoginView(APIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    # permission_classes = [IsAuthenticatedOrReadOnly]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+    # permission_classes = [IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
         print("perform_create called")
-        user = serializer.save()  # This calls UserSerializer.create()
+        user = serializer.save()
         profile_pic = self.request.FILES.get("profile_picture")
         front_doc = self.request.FILES.get("id_front_document_url")
         back_doc = self.request.FILES.get("id_back_document_url")
@@ -249,6 +249,35 @@ class ListingViewSet(viewsets.ModelViewSet):
                 urls.append(url)
             listing.pictures = urls
             listing.save(update_fields=["pictures"])
+
+        def perform_update(self, serializer):
+            print("perform_update called")
+            listing = serializer.save()
+            
+            pictures = self.request.FILES.getlist("pictures")
+            if pictures:
+                for picture in pictures:
+                    url = upload_file_to_supabase(picture, folder=f"listings/{listing.id}")
+                    listing.pictures.append(url)
+                listing.save(update_fields=["pictures"])
+
+            # profile_picture = self.request.FILES.get("profile_picture")
+            # id_front_document = self.request.FILES.get("id_front_document_url")
+            # id_back_document = self.request.FILES.get("id_back_document_url")
+            # print("Files received:", profile_picture, id_front_document, id_back_document)
+
+            # if profile_picture:
+            #     url = upload_file_to_supabase(profile_picture, folder=f"id_documents/{user.id}")
+            #     user.profile_picture = url
+            #     user.save(update_fields=["profile_picture"])
+            # if id_front_document:
+            #     url = upload_file_to_supabase(id_front_document, folder=f"id_documents/{user.id}")
+            #     user.id_front_document_url = url
+            #     user.save(update_fields=["id_front_document_url"])
+            # if id_back_document:
+            #     url = upload_file_to_supabase(id_back_document, folder=f"id_documents/{user.id}")
+            #     user.id_back_document_url = url
+            #     user.save(update_fields=["id_back_document_url"])
 
 class PartnerViewSet(viewsets.ModelViewSet):
     queryset = Partner.objects.all().prefetch_related('listings')
