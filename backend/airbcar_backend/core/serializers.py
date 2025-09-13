@@ -113,19 +113,46 @@ class PartnerSerializer(serializers.ModelSerializer):
         fields = ['id', 'company_name', 'tax_id', 'verification_status', 'created_at', 
             'agree_on_terms', 'verification_document', 'listings']
 
+# class ListingSerializer(serializers.ModelSerializer):
+#     partner = serializers.PrimaryKeyRelatedField(read_only=True)
+#     # picture = serializers.FileField(write_only=True, required=False)
+#     pictures = serializers.JSONField(required=False)  # Add required=False
+#     class Meta:
+#         model = Listing
+#         fields = ['id', 'partner', 'make', 'model', 'year', 'location', 'features', 
+#             'price_per_day', 'availability', 'rating', 'created_at', 'fuel_type', 
+#             'transmission', 'seating_capacity', 'vehicle_condition', 'pictures', 'vehicle_description']
+#         read_only_fields = ['partner', 'created_at', 'rating']
+
+#     def create(self, validated_data):
+#         validated_data['pictures'] = []
+#         return super().create(validated_data)
+
+
 class ListingSerializer(serializers.ModelSerializer):
     partner = serializers.PrimaryKeyRelatedField(read_only=True)
-    # picture = serializers.FileField(write_only=True, required=False)
+    
     class Meta:
         model = Listing
-        fields = ['id', 'partner', 'make', 'model', 'year', 'location', 
-            'features', 'price_per_day', 'availability', 'rating', 'created_at', 'fuel_type', 
-            'transmission', 'seating_capacity', 'vehicle_condition', 'pictures']
-        read_only_fields = ['partner', 'created_at', 'pictures']
+        fields = ['id', 'partner', 'make', 'model', 'year', 'location', 'features', 
+            'price_per_day', 'availability', 'rating', 'created_at', 'fuel_type', 
+            'transmission', 'seating_capacity', 'vehicle_condition', 'pictures', 'vehicle_description']
+        read_only_fields = ['partner', 'created_at', 'rating']
+
+    def to_internal_value(self, data):
+        # Remove 'pictures' from validation since we'll handle it in the view
+        if 'pictures' in data:
+            data = data.copy()  # Make a copy to avoid modifying the original
+            data.pop('pictures')
+        return super().to_internal_value(data)
 
     def create(self, validated_data):
-        validated_data['pictures'] = []
+        validated_data['pictures'] = []  # Initialize with empty list
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        # Don't update pictures field here, it's handled in the view
+        return super().update(instance, validated_data)
 
 class BookingSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

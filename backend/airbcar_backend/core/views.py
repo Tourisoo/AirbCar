@@ -223,39 +223,14 @@ class ListingViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        partner_id = self.request.query_params.get('partner')
+        partner_id = self.request.query_params.get('partner_id')
         if partner_id:
             qs = qs.filter(partner_id=partner_id)
         return qs
         
-    # def perform_create(self, serializer):
-    #     request = self.request
-    #     # picture = request.FILES.get("picture_url")
-    #     pictures = request.FILES.getlist("pictures")
-    #     partner, created = Partner.objects.get_or_create(
-    #         user=request.user,
-    #         defaults={
-    #             'company_name': f"{request.user.username}'s Company",
-    #             'tax_id': 'PENDING',
-    #         }
-    #     )
-    #     if not request.user.is_partner:
-    #         request.user.is_partner = True
-    #         request.user.save(update_fields=['is_partner'])
-    #     listing = serializer.save(partner=partner)
-    #     if pictures:
-    #         urls = []
-    #         for pic in pictures:
-    #             url = upload_file_to_supabase(pic, folder=f"listings/{listing.id}")
-    #             urls.append(url)
-    #         listing.pictures = urls
-    #         listing.save(update_fields=["pictures"])
-
-    
     def perform_create(self, serializer):
         request = self.request
-        pictures = request.FILES.getlist("pictures")  # Handle multiple files
-        
+        pictures = request.FILES.getlist("pictures")
         partner, created = Partner.objects.get_or_create(
             user=request.user,
             defaults={
@@ -267,15 +242,13 @@ class ListingViewSet(viewsets.ModelViewSet):
             request.user.is_partner = True
             request.user.save(update_fields=['is_partner'])
         listing = serializer.save(partner=partner)
-        
-        # Upload pictures and update listing
         if pictures:
-            picture_urls = []
-            for picture in pictures:
-                url = upload_file_to_supabase(picture, folder=f"listings/{listing.id}")
-                picture_urls.append(url)
-            listing.pictures = picture_urls
-            listing.save(update_fields=['pictures'])
+            urls = []
+            for pic in pictures:
+                url = upload_file_to_supabase(pic, folder=f"listings/{listing.id}")
+                urls.append(url)
+            listing.pictures = urls
+            listing.save(update_fields=["pictures"])
 
 class PartnerViewSet(viewsets.ModelViewSet):
     queryset = Partner.objects.all().prefetch_related('listings')
