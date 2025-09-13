@@ -85,11 +85,11 @@ class UserSerializer(serializers.ModelSerializer):
             'license_number', 'address', 'role', 'first_name', 'last_name', 'issue_date', 
             'license_origin_country', 'nationality', 'country_of_residence', 'city', 'postal_code',
             'date_of_birth', 'id_verification_status', 'id_front_document_url', 'id_back_document_url']
-        read_only_fields = ['id', 'is_partner', 'is_verified', 'email_verified', 'id_verification_status',
+        read_only_fields = ['id', 'is_partner', 'is_verified', 'email_verified', 
             'id_front_document_url', 'id_back_document_url', 'profile_picture']
 
     def create(self, validated_data):
-        print("creat serializer called")
+        print("User create serializer called")
         password = validated_data.pop('password')
         username = validated_data.get('username', validated_data['email'].split('@')[0])
         validated_data['username'] = username
@@ -104,8 +104,7 @@ class ListingBriefSerializer(serializers.ModelSerializer):
         model = Listing
         fields = ['id', 'make', 'model', 'year', 'location', 'price_per_day',
                   'availability', 'created_at', 'fuel_type', 'transmission',
-                  'seating_capacity', 'vehicle_condition', 'rating', 'features',
-                  'available_features', 'picture_url']
+                  'seating_capacity', 'vehicle_condition', 'rating', 'features', 'pictures']
 
 class PartnerSerializer(serializers.ModelSerializer):
     listings = ListingBriefSerializer(many=True, read_only=True)
@@ -116,14 +115,17 @@ class PartnerSerializer(serializers.ModelSerializer):
 
 class ListingSerializer(serializers.ModelSerializer):
     partner = serializers.PrimaryKeyRelatedField(read_only=True)
-    picture = serializers.FileField(write_only=True, required=False)
+    # picture = serializers.FileField(write_only=True, required=False)
     class Meta:
         model = Listing
         fields = ['id', 'partner', 'make', 'model', 'year', 'location', 
             'features', 'price_per_day', 'availability', 'rating', 'created_at', 'fuel_type', 
-            'transmission', 'seating_capacity', 'vehicle_condition', 'available_features',
-            'picture_url', 'picture']
-        read_only_fields = ['partner', 'created_at', 'picture_url']
+            'transmission', 'seating_capacity', 'vehicle_condition', 'pictures']
+        read_only_fields = ['partner', 'created_at', 'pictures']
+
+    def create(self, validated_data):
+        validated_data['pictures'] = []
+        return super().create(validated_data)
 
 class BookingSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

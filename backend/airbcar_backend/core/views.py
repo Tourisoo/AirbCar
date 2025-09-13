@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from .models import User, Booking, Partner, Listing
 from .serializers import UserSerializer, BookingSerializer, PartnerSerializer, \
     ListingSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer
@@ -156,17 +156,11 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         print("perform_create called")
-        # username = self.request.data.get('username', self.request.data['email'].split('@')[0])
-        # user = User.objects.create(
-        #     username=username,
-        #     email=self.request.data['email'],
-        # )
-        # user.set_password(self.request.data['password'])
-        # user.save()
         user = serializer.save()  # This calls UserSerializer.create()
         profile_pic = self.request.FILES.get("profile_picture")
         front_doc = self.request.FILES.get("id_front_document_url")
         back_doc = self.request.FILES.get("id_back_document_url")
+
         if profile_pic:
             url = upload_file_to_supabase(profile_pic, folder=f"id_documents/{user.id}")
             user.profile_picture = url
@@ -201,12 +195,12 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         print("perform_update called")
-        # request = self.request
         user = serializer.save()
         
         profile_picture = self.request.FILES.get("profile_picture")
         id_front_document = self.request.FILES.get("id_front_document_url")
         id_back_document = self.request.FILES.get("id_back_document_url")
+        print("Files received:", profile_picture, id_front_document, id_back_document)
 
         if profile_picture:
             url = upload_file_to_supabase(profile_picture, folder=f"id_documents/{user.id}")
@@ -221,10 +215,6 @@ class UserViewSet(viewsets.ModelViewSet):
             user.id_back_document_url = url
             user.save(update_fields=["id_back_document_url"])
 
-    # def patch(self, request, *args, **kwargs):
-    #     print("patch called")
-    #     return self.partial_update(request, *args, **kwargs)
-
 class ListingViewSet(viewsets.ModelViewSet):
     queryset = Listing.objects.all()
     serializer_class = ListingSerializer
@@ -238,9 +228,34 @@ class ListingViewSet(viewsets.ModelViewSet):
             qs = qs.filter(partner_id=partner_id)
         return qs
         
+    # def perform_create(self, serializer):
+    #     request = self.request
+    #     # picture = request.FILES.get("picture_url")
+    #     pictures = request.FILES.getlist("pictures")
+    #     partner, created = Partner.objects.get_or_create(
+    #         user=request.user,
+    #         defaults={
+    #             'company_name': f"{request.user.username}'s Company",
+    #             'tax_id': 'PENDING',
+    #         }
+    #     )
+    #     if not request.user.is_partner:
+    #         request.user.is_partner = True
+    #         request.user.save(update_fields=['is_partner'])
+    #     listing = serializer.save(partner=partner)
+    #     if pictures:
+    #         urls = []
+    #         for pic in pictures:
+    #             url = upload_file_to_supabase(pic, folder=f"listings/{listing.id}")
+    #             urls.append(url)
+    #         listing.pictures = urls
+    #         listing.save(update_fields=["pictures"])
+
+    
     def perform_create(self, serializer):
         request = self.request
-        picture = request.FILES.get("picture_url")
+        pictures = request.FILES.getlist("pictures")  # Handle multiple files
+        
         partner, created = Partner.objects.get_or_create(
             user=request.user,
             defaults={
@@ -252,10 +267,15 @@ class ListingViewSet(viewsets.ModelViewSet):
             request.user.is_partner = True
             request.user.save(update_fields=['is_partner'])
         listing = serializer.save(partner=partner)
-        if picture:
-            url = upload_file_to_supabase(picture, folder="listings")
-            listing.picture_url = url
-            listing.save(update_fields=["picture_url"]) 
+        
+        # Upload pictures and update listing
+        if pictures:
+            picture_urls = []
+            for picture in pictures:
+                url = upload_file_to_supabase(picture, folder=f"listings/{listing.id}")
+                picture_urls.append(url)
+            listing.pictures = picture_urls
+            listing.save(update_fields=['pictures'])
 
 class PartnerViewSet(viewsets.ModelViewSet):
     queryset = Partner.objects.all().prefetch_related('listings')
@@ -342,18 +362,27 @@ def verify_email(request):
         return HttpResponse("Invalid or expired token", status=400)
 
 def user_list(request):
-    users = User.objects.all()
+    users = User.objects.filter(is_superuser=False)
+
     if not users:
-        return HttpResponse("No Users found.")
-    greetings = [f"Hi my name is {user.username}, with the id {user.id}, im using {user.email}" for user in users]
-    return HttpResponse("<br>".join(greetings))
+        return JsonResponse({"message": "No users found."}, status=404)
+
+    user_data = [
+        {"username": user.username, "id": user.id, "email": user.email}
+        for user in users
+    ]
+    return JsonResponse(user_data, safe=False)
 
 def booking_list(request):
     bookings = Booking.objects.all()
     if not bookings:
-        return HttpResponse("No bookings found.")
-    greeting = [f"booking ID: {booking.id}, user: {booking.user.username}, Car: {booking.listing}, Date: {booking.date}" for booking in bookings]
-    return HttpResponse("<br>".join(greeting))
+        return JsonResponse({"message": "No bookings found."}, status=404)
+
+    booking_data = [
+        {"id": booking.id, "user": booking.user.username, "listing": booking.listing.id, "date": booking.date}
+        for booking in bookings
+    ]
+    return JsonResponse(booking_data, safe=False)
 
 
 def home_view(request):

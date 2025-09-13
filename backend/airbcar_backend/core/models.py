@@ -69,10 +69,10 @@ class Listing(models.Model):
     seating_capacity = models.IntegerField(blank=False, null=False)
     vehicle_condition = models.CharField(max_length=50, blank=False, null=False)
     vehicle_description = models.CharField(max_length=500, blank=True, null=True)
-    available_features = models.JSONField(default=list)
     rating = models.FloatField(default=0.0, blank=True, null=True)
     features = models.JSONField(default=list)
-    picture_url = models.URLField(blank=True, null=True)
+    # picture_url = models.URLField(blank=True, null=True)
+    pictures = models.JSONField(default=list, blank=True)
 
     def __str__(self):
         return f"{self.make} {self.model} ({self.year})"
