@@ -39,6 +39,12 @@ function SearchContent() {
   const [validationError, setValidationError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [authSubmitLoading, setAuthSubmitLoading] = useState(false)
+  const [profileCompleteness, setProfileCompleteness] = useState({
+    personal: false,
+    contact: false,
+    license: false
+  })
+  const [userDataLoaded, setUserDataLoaded] = useState(false)
   const [bookingData, setBookingData] = useState({
     // Auth data
     name: '',
@@ -456,16 +462,65 @@ function SearchContent() {
 
   // Check if user is authenticated and skip auth step
   useEffect(() => {
-    if (user && !authLoading) {
-      setIsLoggedIn(true)
-      if (bookingStep === 'auth') {
-        setBookingStep('personal')
+    const initializeUserProfile = async () => {
+      if (user && !authLoading) {
+        setIsLoggedIn(true)
+        
+        // Check profile completeness FIRST before setting step
+        if (!userDataLoaded) {
+          try {
+            const profileStatus = await checkUserProfileCompleteness()
+            setProfileCompleteness({
+              personal: profileStatus.personal,
+              contact: profileStatus.contact,
+              license: profileStatus.license
+            })
+            
+            // Handle case where user is already past auth but profile is complete
+            if (showCarModal && profileStatus.personal && profileStatus.contact && profileStatus.license && bookingStep !== 'payment') {
+              setBookingStep('payment')
+            }
+            
+            // Pre-fill booking data with existing user data if available
+            if (profileStatus.userData) {
+              setBookingData(prev => ({
+                ...prev,
+                firstName: profileStatus.userData.first_name || '',
+                lastName: profileStatus.userData.last_name || '',
+                dateOfBirth: profileStatus.userData.date_of_birth || '',
+                nationality: profileStatus.userData.nationality || '',
+                phoneNumber: profileStatus.userData.phone_number || '',
+                address: profileStatus.userData.address || '',
+                city: profileStatus.userData.city || '',
+                postalCode: profileStatus.userData.postal_code || '',
+                country: profileStatus.userData.country_of_residence || '',
+                licenseNumber: profileStatus.userData.license_number || '',
+                licenseIssueDate: profileStatus.userData.issue_date || '',
+                licenseCountry: profileStatus.userData.license_origin_country || ''
+              }))
+            }
+            
+            
+            setUserDataLoaded(true)
+          } catch (error) {
+            console.error('Error checking profile completeness on login:', error)
+          }
+        }
+      } else if (!user && !authLoading) {
+        setIsLoggedIn(false)
+        setBookingStep('auth')
+        // Reset profile completeness and data when user logs out
+        setProfileCompleteness({
+          personal: false,
+          contact: false,
+          license: false
+        })
+        setUserDataLoaded(false)
       }
-    } else if (!user && !authLoading) {
-      setIsLoggedIn(false)
-      setBookingStep('auth')
     }
-  }, [user, authLoading, bookingStep])
+
+    initializeUserProfile()
+  }, [user, authLoading, userDataLoaded])
 
   useEffect(() => {
     let filtered = cars.filter(car => {
@@ -594,6 +649,7 @@ function SearchContent() {
     setBookingStep('auth')
     setAuthError('')
     setAuthSubmitLoading(false)
+    // Don't reset profileCompleteness here - it should persist while user is logged in
     setBookingData({
       name: '',
       email: '',
@@ -637,14 +693,98 @@ function SearchContent() {
     }
   }
 
-  const handleBookingRequest = () => {
+  // Check if user profile is complete
+  const checkUserProfileCompleteness = async () => {
+    try {
+      const token = localStorage.getItem('access_token')
+      if (!token || !user?.id) {
+        return {
+          personal: false,
+          contact: false,
+          license: false
+        }
+      }
+
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/users/${user.id}/`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        console.error('Failed to fetch user profile')
+        return {
+          personal: false,
+          contact: false,
+          license: false
+        }
+      }
+
+      const userData = await response.json()
+      
+      // Check if each section is complete
+      const personalComplete = !!(
+        userData.first_name && 
+        userData.last_name && 
+        userData.date_of_birth && 
+        userData.nationality
+      )
+      
+      const contactComplete = !!(
+        userData.phone_number && 
+        userData.address && 
+        userData.city && 
+        userData.country_of_residence
+      )
+      
+      const licenseComplete = !!(
+        userData.license_number && 
+        userData.issue_date && 
+        userData.license_origin_country
+      )
+
+      return {
+        personal: personalComplete,
+        contact: contactComplete,
+        license: licenseComplete,
+        userData: userData
+      }
+    } catch (error) {
+      console.error('Error checking profile completeness:', error)
+      return {
+        personal: false,
+        contact: false,
+        license: false
+      }
+    }
+  }
+
+  const handleBookingRequest = async () => {
     if (!isLoggedIn) {
       setShowBookingFlow(true)
       setBookingStep('auth')
     } else {
-      // User is logged in, start from personal step
+      // User is logged in, use existing profile completeness (already loaded in useEffect)
+      const currentProfileStatus = profileCompleteness
+      
+      // Determine which step to start from based on completeness
+      let startStep = 'personal'
+      if (currentProfileStatus.personal && currentProfileStatus.contact && currentProfileStatus.license) {
+        // All verification steps complete, go directly to payment
+        startStep = 'payment'
+      } else if (currentProfileStatus.personal && currentProfileStatus.contact) {
+        // Personal and contact complete, start from license
+        startStep = 'license'
+      } else if (currentProfileStatus.personal) {
+        // Only personal complete, start from contact
+        startStep = 'contact'
+      }
+      // If nothing is complete, start from personal (default)
+      
       setShowBookingFlow(true)
-      setBookingStep('personal')
+      setBookingStep(startStep)
     }
     document.body.style.overflow = 'hidden'
   }
@@ -837,31 +977,43 @@ function SearchContent() {
       // Handle auth step differently - login/register
       if (bookingStep === 'auth') {
         await handleAuthSubmission()
+        console.log('🔐 Auth completed - let useEffect handle step determination')
         setSuccessMessage('Authentication successful!')
+        
+        // Clear message after delay
+        setTimeout(() => {
+          setSuccessMessage('')
+        }, 1000)
+        return // Exit early to avoid automatic next step progression
       } 
       // For other steps, save data to backend
       else if (bookingStep === 'personal') {
         await savePersonalInfo()
+        setProfileCompleteness(prev => ({ ...prev, personal: true }))
         setSuccessMessage('Personal information saved successfully!')
       } 
       else if (bookingStep === 'contact') {
         await saveContactInfo()
+        setProfileCompleteness(prev => ({ ...prev, contact: true }))
         setSuccessMessage('Contact information saved successfully!')
       } 
       else if (bookingStep === 'license') {
         await saveLicenseInfo()
+        setProfileCompleteness(prev => ({ ...prev, license: true }))
         setSuccessMessage('License information and documents saved successfully!')
       }
 
-      // Wait a bit to show success message, then move to next step
-      setTimeout(() => {
-        const steps = ['auth', 'personal', 'contact', 'license', 'payment', 'confirmation']
-        const currentIndex = steps.indexOf(bookingStep)
-        if (currentIndex < steps.length - 1) {
-          setBookingStep(steps[currentIndex + 1])
-        }
-        setSuccessMessage('')
-      }, 1000)
+      // Wait a bit to show success message, then move to next step (only for non-auth steps)
+      if (bookingStep !== 'auth') {
+        setTimeout(() => {
+          const steps = ['auth', 'personal', 'contact', 'license', 'payment', 'confirmation']
+          const currentIndex = steps.indexOf(bookingStep)
+          if (currentIndex < steps.length - 1) {
+            setBookingStep(steps[currentIndex + 1])
+          }
+          setSuccessMessage('')
+        }, 1000)
+      }
 
     } catch (error) {
       console.error(`Error in ${bookingStep} step:`, error)
@@ -882,6 +1034,7 @@ function SearchContent() {
       
       if (result.success) {
         setIsLoggedIn(true)
+        console.log('🔐 New user registered - useEffect will determine step')
       } else {
         throw new Error(result.error || 'Registration failed')
       }
@@ -891,6 +1044,28 @@ function SearchContent() {
       
       if (result.success) {
         setIsLoggedIn(true)
+        
+        // Check profile and set appropriate step immediately
+        try {
+          const profileStatus = await checkUserProfileCompleteness()
+          setProfileCompleteness({
+            personal: profileStatus.personal,
+            contact: profileStatus.contact,
+            license: profileStatus.license
+          })
+          
+          setUserDataLoaded(true)
+          
+          // Jump to payment if profile is complete, otherwise start from personal
+          if (profileStatus.personal && profileStatus.contact && profileStatus.license) {
+            setBookingStep("payment")
+          } else {
+            setBookingStep("personal")
+          }
+        } catch (error) {
+          console.error("Error checking profile after login:", error)
+          setBookingStep("personal")
+        }
       } else {
         throw new Error(result.error || 'Login failed')
       }
@@ -1873,22 +2048,62 @@ function SearchContent() {
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
                   {bookingStep === 'auth' && 'Sign In / Create Account'}
-                  {bookingStep === 'personal' && 'Personal Information'}
-                  {bookingStep === 'contact' && 'Contact Information'}
-                  {bookingStep === 'license' && 'Driver License Information'}
+                  {bookingStep === 'personal' && (
+                    <span className="flex items-center">
+                      Personal Information
+                      {profileCompleteness.personal && (
+                        <svg className="w-5 h-5 text-green-500 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </span>
+                  )}
+                  {bookingStep === 'contact' && (
+                    <span className="flex items-center">
+                      Contact Information
+                      {profileCompleteness.contact && (
+                        <svg className="w-5 h-5 text-green-500 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </span>
+                  )}
+                  {bookingStep === 'license' && (
+                    <span className="flex items-center">
+                      Driver License Information
+                      {profileCompleteness.license && (
+                        <svg className="w-5 h-5 text-green-500 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </span>
+                  )}
                   {bookingStep === 'payment' && 'Payment Information'}
                   {bookingStep === 'confirmation' && 'Booking Confirmation'}
                 </h2>
                 <div className="flex space-x-2 mt-2">
-                  {['auth', 'personal', 'contact', 'license', 'payment', 'confirmation'].map((step, index) => (
-                    <div
-                      key={step}
-                      className={`h-2 w-8 rounded-full ${
-                        step === bookingStep ? 'bg-orange-500' : 
-                        ['auth', 'personal', 'contact', 'license', 'payment', 'confirmation'].indexOf(bookingStep) > index ? 'bg-green-500' : 'bg-gray-200'
-                      }`}
-                    />
-                  ))}
+                  {['auth', 'personal', 'contact', 'license', 'payment', 'confirmation'].map((step, index) => {
+                    let stepStatus = 'bg-gray-200' // default
+                    
+                    if (step === bookingStep) {
+                      stepStatus = 'bg-orange-500' // current step
+                    } else if (['auth', 'personal', 'contact', 'license', 'payment', 'confirmation'].indexOf(bookingStep) > index) {
+                      stepStatus = 'bg-green-500' // completed step
+                    } else if (step === 'personal' && profileCompleteness.personal) {
+                      stepStatus = 'bg-green-500' // completed profile section
+                    } else if (step === 'contact' && profileCompleteness.contact) {
+                      stepStatus = 'bg-green-500' // completed profile section
+                    } else if (step === 'license' && profileCompleteness.license) {
+                      stepStatus = 'bg-green-500' // completed profile section
+                    }
+                    
+                    return (
+                      <div
+                        key={step}
+                        className={`h-2 w-8 rounded-full ${stepStatus}`}
+                      />
+                    )
+                  })}
                 </div>
               </div>
               <button
@@ -2032,7 +2247,19 @@ function SearchContent() {
                 <div className="space-y-6">
                   <div className="text-center">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Driver License Information</h3>
-                    <p className="text-gray-700">We need your license details for verification</p>
+                    {profileCompleteness.license ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                        <div className="flex items-center justify-center text-green-700">
+                          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          <span className="text-sm font-medium">License information already completed</span>
+                        </div>
+                        <p className="text-green-600 text-xs mt-1">You can update your information below if needed</p>
+                      </div>
+                    ) : (
+                      <p className="text-gray-700">We need your license details for verification</p>
+                    )}
                   </div>
 
                   {validationError && (
@@ -2195,7 +2422,19 @@ function SearchContent() {
                 <div className="space-y-6">
                   <div className="text-center">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Personal Information</h3>
-                    <p className="text-gray-700">Tell us more about yourself</p>
+                    {profileCompleteness.personal ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                        <div className="flex items-center justify-center text-green-700">
+                          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          <span className="text-sm font-medium">Personal information already completed</span>
+                        </div>
+                        <p className="text-green-600 text-xs mt-1">You can update your information below if needed</p>
+                      </div>
+                    ) : (
+                      <p className="text-gray-700">Tell us more about yourself</p>
+                    )}
                   </div>
 
                   {validationError && (
@@ -2293,7 +2532,19 @@ function SearchContent() {
                 <div className="space-y-6">
                   <div className="text-center">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Contact Information</h3>
-                    <p className="text-gray-700">We need your contact details and address</p>
+                    {profileCompleteness.contact ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                        <div className="flex items-center justify-center text-green-700">
+                          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          <span className="text-sm font-medium">Contact information already completed</span>
+                        </div>
+                        <p className="text-green-600 text-xs mt-1">You can update your information below if needed</p>
+                      </div>
+                    ) : (
+                      <p className="text-gray-700">We need your contact details and address</p>
+                    )}
                   </div>
 
                   {validationError && (
