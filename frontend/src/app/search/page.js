@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { userAPI, authAPI } from '@/lib/api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
@@ -37,6 +38,7 @@ function SearchContent() {
   const [bookingStep, setBookingStep] = useState('auth') // auth, personal, contact, license, payment
   const [authError, setAuthError] = useState('')
   const [validationError, setValidationError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [authSubmitLoading, setAuthSubmitLoading] = useState(false)
   const [bookingData, setBookingData] = useState({
     // Auth data
@@ -70,6 +72,12 @@ function SearchContent() {
     expiryDate: '',
     cvv: '',
     cardholderName: ''
+  })
+  
+  // Document upload state
+  const [uploadedDocuments, setUploadedDocuments] = useState({
+    idFrontDocument: null,
+    idBackDocument: null
   })
 
   // Mock data - replace with actual API call
@@ -657,6 +665,23 @@ function SearchContent() {
     }))
   }
 
+  const handleFileUpload = (documentType, file) => {
+    if (file && file.size > 5 * 1024 * 1024) { // 5MB limit
+      setValidationError('File size must be less than 5MB')
+      return
+    }
+    
+    setUploadedDocuments(prev => ({
+      ...prev,
+      [documentType]: file
+    }))
+    
+    // Clear any previous validation errors
+    if (validationError) {
+      setValidationError('')
+    }
+  }
+
   const handleAuthSubmit = async (e) => {
     e.preventDefault()
     setAuthSubmitLoading(true)
@@ -797,67 +822,97 @@ function SearchContent() {
   }
 
   const handleNextStep = async () => {
-    // Clear previous validation errors
+    // Clear previous validation errors and success messages
     setValidationError('')
     setAuthError('')
+    setSuccessMessage('')
 
     // Validate current step before proceeding
     if (!validateCurrentStep(bookingStep)) {
       return
     }
 
-    // If completing license step, save verification data to backend
-    if (bookingStep === 'license') {
-      try {
-        setAuthSubmitLoading(true)
-        await saveVerificationData()
-      } catch (error) {
-        console.error('Error saving verification data:', error)
-        setValidationError('Failed to save verification data. Please try again.')
-        return
-      } finally {
-        setAuthSubmitLoading(false)
-      }
-    }
+    try {
+      setAuthSubmitLoading(true)
 
-    const steps = ['auth', 'personal', 'contact', 'license', 'payment', 'confirmation']
-    const currentIndex = steps.indexOf(bookingStep)
-    if (currentIndex < steps.length - 1) {
-      setBookingStep(steps[currentIndex + 1])
+      // Handle auth step differently - login/register
+      if (bookingStep === 'auth') {
+        await handleAuthSubmission()
+        setSuccessMessage('Authentication successful!')
+      } 
+      // For other steps, save data to backend
+      else if (bookingStep === 'personal') {
+        await userAPI.updatePersonalInfo(bookingData)
+        setSuccessMessage('Personal information saved successfully!')
+      } 
+      else if (bookingStep === 'contact') {
+        await userAPI.updateContactInfo(bookingData)
+        setSuccessMessage('Contact information saved successfully!')
+      } 
+      else if (bookingStep === 'license') {
+        await userAPI.updateLicenseInfo(bookingData)
+        // Also handle document uploads if any files are selected
+        if (uploadedDocuments.idFrontDocument || uploadedDocuments.idBackDocument) {
+          await userAPI.uploadDocuments(uploadedDocuments)
+        }
+        setSuccessMessage('License information and documents saved successfully!')
+      }
+
+      // Wait a bit to show success message, then move to next step
+      setTimeout(() => {
+        const steps = ['auth', 'personal', 'contact', 'license', 'payment', 'confirmation']
+        const currentIndex = steps.indexOf(bookingStep)
+        if (currentIndex < steps.length - 1) {
+          setBookingStep(steps[currentIndex + 1])
+        }
+        setSuccessMessage('')
+      }, 1000)
+
+    } catch (error) {
+      console.error(`Error in ${bookingStep} step:`, error)
+      setValidationError(error.message || `Failed to save ${bookingStep} information. Please try again.`)
+    } finally {
+      setAuthSubmitLoading(false)
     }
   }
 
-  const saveVerificationData = async () => {
-    const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
-    const token = localStorage.getItem('access_token')
-
-    if (!token) {
-      throw new Error('No authentication token found')
+  const handleAuthSubmission = async () => {
+    if (bookingData.isSignUp) {
+      // Register new user
+      const registerData = {
+        email: bookingData.email,
+        password: bookingData.password,
+        first_name: bookingData.name.split(' ')[0] || '',
+        last_name: bookingData.name.split(' ').slice(1).join(' ') || ''
+      }
+      const result = await authAPI.register(registerData)
+      
+      // If registration successful, automatically log in
+      if (result) {
+        const loginResult = await authAPI.login({
+          email: bookingData.email,
+          password: bookingData.password
+        })
+        
+        if (loginResult.access) {
+          localStorage.setItem('accessToken', loginResult.access)
+          localStorage.setItem('refreshToken', loginResult.refresh)
+          setIsLoggedIn(true)
+        }
+      }
+    } else {
+      // Login existing user
+      const loginResult = await authAPI.login({
+        email: bookingData.email,
+        password: bookingData.password
+      })
+      
+      if (loginResult.access) {
+        localStorage.setItem('accessToken', loginResult.access)
+        localStorage.setItem('refreshToken', loginResult.refresh)
+        setIsLoggedIn(true)
+      }
     }
-
-    const verificationData = {
-      license_number: bookingData.licenseNumber,
-      name: `${bookingData.firstName} ${bookingData.lastName}`.trim(),
-      first_name: bookingData.firstName,
-      last_name: bookingData.lastName,
-      address: `${bookingData.address}, ${bookingData.city}, ${bookingData.country}`.trim()
-    }
-
-    const response = await fetch(`${apiUrl}/api/profile/`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(verificationData)
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || 'Failed to update profile')
-    }
-
-    return response.json()
   }
 
   const handlePrevStep = () => {
@@ -1891,6 +1946,21 @@ function SearchContent() {
                     </div>
                   )}
 
+                  {successMessage && (
+                    <div className="rounded-md bg-green-50 p-4">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm text-green-700">{successMessage}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">License Origin Country</label>
@@ -1942,20 +2012,50 @@ function SearchContent() {
                       </p>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center">
+                          <input
+                            type="file"
+                            id="frontDocument"
+                            accept="image/*"
+                            onChange={(e) => handleFileUpload('idFrontDocument', e.target.files[0])}
+                            className="hidden"
+                          />
                           <svg className="w-8 h-8 text-blue-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                           </svg>
-                          <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
-                            Upload Front Side
-                          </button>
+                          <label 
+                            htmlFor="frontDocument" 
+                            className="cursor-pointer text-blue-600 hover:text-blue-700 font-medium text-sm block"
+                          >
+                            {uploadedDocuments.idFrontDocument ? 'Change Front Side' : 'Upload Front Side'}
+                          </label>
+                          {uploadedDocuments.idFrontDocument && (
+                            <p className="text-xs text-green-600 mt-1">
+                              ✓ {uploadedDocuments.idFrontDocument.name}
+                            </p>
+                          )}
                         </div>
                         <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center">
+                          <input
+                            type="file"
+                            id="backDocument"
+                            accept="image/*"
+                            onChange={(e) => handleFileUpload('idBackDocument', e.target.files[0])}
+                            className="hidden"
+                          />
                           <svg className="w-8 h-8 text-blue-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                           </svg>
-                          <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
-                            Upload Back Side
-                          </button>
+                          <label 
+                            htmlFor="backDocument" 
+                            className="cursor-pointer text-blue-600 hover:text-blue-700 font-medium text-sm block"
+                          >
+                            {uploadedDocuments.idBackDocument ? 'Change Back Side' : 'Upload Back Side'}
+                          </label>
+                          {uploadedDocuments.idBackDocument && (
+                            <p className="text-xs text-green-600 mt-1">
+                              ✓ {uploadedDocuments.idBackDocument.name}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
