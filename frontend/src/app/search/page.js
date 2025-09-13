@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { userAPI, authAPI } from '@/lib/api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
@@ -14,7 +13,7 @@ function SearchContent() {
   const [cars, setCars] = useState([])
   const [filteredCars, setFilteredCars] = useState([])
   const [filters, setFilters] = useState({
-    priceRange: [0, 1000],
+    priceRange: [0, 5000],
     transmission: [],
     fuelType: [],
     seats: [],
@@ -565,7 +564,7 @@ function SearchContent() {
 
   const clearFilters = () => {
     setFilters({
-      priceRange: [0, 1000],
+      priceRange: [0, 5000],
       transmission: [],
       fuelType: [],
       seats: [],
@@ -842,19 +841,15 @@ function SearchContent() {
       } 
       // For other steps, save data to backend
       else if (bookingStep === 'personal') {
-        await userAPI.updatePersonalInfo(bookingData)
+        await savePersonalInfo()
         setSuccessMessage('Personal information saved successfully!')
       } 
       else if (bookingStep === 'contact') {
-        await userAPI.updateContactInfo(bookingData)
+        await saveContactInfo()
         setSuccessMessage('Contact information saved successfully!')
       } 
       else if (bookingStep === 'license') {
-        await userAPI.updateLicenseInfo(bookingData)
-        // Also handle document uploads if any files are selected
-        if (uploadedDocuments.idFrontDocument || uploadedDocuments.idBackDocument) {
-          await userAPI.uploadDocuments(uploadedDocuments)
-        }
+        await saveLicenseInfo()
         setSuccessMessage('License information and documents saved successfully!')
       }
 
@@ -879,38 +874,25 @@ function SearchContent() {
   const handleAuthSubmission = async () => {
     if (bookingData.isSignUp) {
       // Register new user
-      const registerData = {
-        email: bookingData.email,
-        password: bookingData.password,
-        first_name: bookingData.name.split(' ')[0] || '',
-        last_name: bookingData.name.split(' ').slice(1).join(' ') || ''
-      }
-      const result = await authAPI.register(registerData)
+      const result = await register(
+        bookingData.name.trim(),
+        bookingData.email,
+        bookingData.password
+      )
       
-      // If registration successful, automatically log in
-      if (result) {
-        const loginResult = await authAPI.login({
-          email: bookingData.email,
-          password: bookingData.password
-        })
-        
-        if (loginResult.access) {
-          localStorage.setItem('accessToken', loginResult.access)
-          localStorage.setItem('refreshToken', loginResult.refresh)
-          setIsLoggedIn(true)
-        }
+      if (result.success) {
+        setIsLoggedIn(true)
+      } else {
+        throw new Error(result.error || 'Registration failed')
       }
     } else {
       // Login existing user
-      const loginResult = await authAPI.login({
-        email: bookingData.email,
-        password: bookingData.password
-      })
+      const result = await login(bookingData.email, bookingData.password)
       
-      if (loginResult.access) {
-        localStorage.setItem('accessToken', loginResult.access)
-        localStorage.setItem('refreshToken', loginResult.refresh)
+      if (result.success) {
         setIsLoggedIn(true)
+      } else {
+        throw new Error(result.error || 'Login failed')
       }
     }
   }
@@ -924,6 +906,128 @@ function SearchContent() {
     const currentIndex = steps.indexOf(bookingStep)
     if (currentIndex > 0) {
       setBookingStep(steps[currentIndex - 1])
+    }
+  }
+
+  // API functions to save user data
+  const savePersonalInfo = async () => {
+    try {
+      const token = localStorage.getItem('access_token')
+      if (!token || !user?.id) {
+        throw new Error('User not authenticated')
+      }
+
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      
+      const personalData = {
+        first_name: bookingData.firstName,
+        last_name: bookingData.lastName,
+        date_of_birth: bookingData.dateOfBirth,
+        nationality: bookingData.nationality
+      }
+
+      const response = await fetch(`${apiUrl}/users/${user.id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(personalData),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to save personal information')
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Error saving personal info:', error)
+      throw error
+    }
+  }
+
+  const saveContactInfo = async () => {
+    try {
+      const token = localStorage.getItem('access_token')
+      if (!token || !user?.id) {
+        throw new Error('User not authenticated')
+      }
+
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      
+      const contactData = {
+        phone_number: bookingData.phoneNumber,
+        address: bookingData.address,
+        city: bookingData.city,
+        postal_code: bookingData.postalCode,
+        country_of_residence: bookingData.country
+      }
+
+      const response = await fetch(`${apiUrl}/users/${user.id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(contactData),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to save contact information')
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Error saving contact info:', error)
+      throw error
+    }
+  }
+
+  const saveLicenseInfo = async () => {
+    try {
+      const token = localStorage.getItem('access_token')
+      if (!token || !user?.id) {
+        throw new Error('User not authenticated')
+      }
+
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      
+      // Prepare form data for multipart upload (to handle file uploads)
+      const formData = new FormData()
+      
+      // Add license data
+      formData.append('license_number', bookingData.licenseNumber)
+      formData.append('issue_date', bookingData.licenseIssueDate)
+      formData.append('license_origin_country', bookingData.licenseCountry)
+      
+      // Add document files if they exist
+      if (uploadedDocuments.idFrontDocument) {
+        formData.append('id_front_document_url', uploadedDocuments.idFrontDocument)
+      }
+      if (uploadedDocuments.idBackDocument) {
+        formData.append('id_back_document_url', uploadedDocuments.idBackDocument)
+      }
+
+      const response = await fetch(`${apiUrl}/users/${user.id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type for FormData, let browser set it with boundary
+        },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to save license information')
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Error saving license info:', error)
+      throw error
     }
   }
 
@@ -1002,12 +1106,12 @@ function SearchContent() {
                   <input
                     type="range"
                     min="0"
-                    max="1000"
+                    max="5000"
                     value={filters.priceRange[1]}
                     onChange={(e) => handleFilterChange('priceRange', [0, parseInt(e.target.value)])}
                     className="w-full h-3 bg-gradient-to-r from-orange-100 to-orange-300 rounded-lg appearance-none cursor-pointer slider"
                     style={{
-                      background: `linear-gradient(to right, #F97316 0%, #F97316 ${(filters.priceRange[1] / 1000) * 100}%, #E5E7EB ${(filters.priceRange[1] / 1000) * 100}%, #E5E7EB 100%)`
+                      background: `linear-gradient(to right, #F97316 0%, #F97316 ${(filters.priceRange[1] / 5000) * 100}%, #E5E7EB ${(filters.priceRange[1] / 5000) * 100}%, #E5E7EB 100%)`
                     }}
                   />
                   <div className="flex justify-between text-sm mt-2">

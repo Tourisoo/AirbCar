@@ -23,6 +23,9 @@ fi
 # If .env.local lacks a DJANGO_API_URL line, append it.
 if ! grep -q "DJANGO_API_URL=" .env.local 2>/dev/null; then
   echo "DJANGO_API_URL=$DJANGO_API_URL" >> .env.local
+else
+  # Update existing DJANGO_API_URL in .env.local
+  sed -i "s|DJANGO_API_URL=.*|DJANGO_API_URL=$DJANGO_API_URL|" .env.local
 fi
 
 if grep -q "your-nextauth-secret-here" .env.local; then
@@ -36,7 +39,22 @@ set -a
 set +a
 
 echo "Checking Django backend connection..."
-curl -f "$DJANGO_API_URL/api/health/" > /dev/null 2>&1 || echo "⚠️  Django backend not responding at $DJANGO_API_URL"
+# Wait for Django backend to be ready
+RETRIES=30
+while [ $RETRIES -gt 0 ]; do
+  if curl -f "$DJANGO_API_URL/" > /dev/null 2>&1; then
+    echo "✅ Django backend is ready at $DJANGO_API_URL"
+    break
+  else
+    echo "⏳ Waiting for Django backend to be ready... ($RETRIES retries left)"
+    sleep 2
+    RETRIES=$((RETRIES - 1))
+  fi
+done
+
+if [ $RETRIES -eq 0 ]; then
+  echo "⚠️  Django backend not responding at $DJANGO_API_URL after waiting"
+fi
 
 echo "Starting Next.js application..."
 if [ "$NODE_ENV" = "production" ]; then
