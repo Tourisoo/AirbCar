@@ -44,24 +44,12 @@ class UserVerificationView(generics.GenericAPIView):
             return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
-        token_generator = PasswordResetTokenGenerator()
-        if user and token_generator.check_token(user, token):
-            user.set_password(serializer.validated_data['password'])
-            user.save()
-            return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
-        return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-# class UserProfileView(generics.RetrieveUpdateAPIView):
-#     serializer_class = UserSerializer
-#     permission_classes = [IsAuthenticated]
-
-#     def get_object(self):
-#         return self.request.user
-
-#     def patch(self, request, *args, **kwargs):
-#         return self.partial_update(request, *args, **kwargs)
-
+        # token_generator = PasswordResetTokenGenerator()
+        # if user and token_generator.check_token(user, token):
+        #     user.set_password(serializer.validated_data['password'])
+        #     user.save()
+        #     return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
+        # return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)
 
 class AdminVerificationView(APIView):
     permission_classes = [IsAuthenticated]
@@ -152,7 +140,6 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
-    # permission_classes = [IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
         print("perform_create called")
@@ -250,34 +237,16 @@ class ListingViewSet(viewsets.ModelViewSet):
             listing.pictures = urls
             listing.save(update_fields=["pictures"])
 
-        def perform_update(self, serializer):
-            print("perform_update called")
-            listing = serializer.save()
-            
-            pictures = self.request.FILES.getlist("pictures")
-            if pictures:
-                for picture in pictures:
-                    url = upload_file_to_supabase(picture, folder=f"listings/{listing.id}")
-                    listing.pictures.append(url)
-                listing.save(update_fields=["pictures"])
-
-            # profile_picture = self.request.FILES.get("profile_picture")
-            # id_front_document = self.request.FILES.get("id_front_document_url")
-            # id_back_document = self.request.FILES.get("id_back_document_url")
-            # print("Files received:", profile_picture, id_front_document, id_back_document)
-
-            # if profile_picture:
-            #     url = upload_file_to_supabase(profile_picture, folder=f"id_documents/{user.id}")
-            #     user.profile_picture = url
-            #     user.save(update_fields=["profile_picture"])
-            # if id_front_document:
-            #     url = upload_file_to_supabase(id_front_document, folder=f"id_documents/{user.id}")
-            #     user.id_front_document_url = url
-            #     user.save(update_fields=["id_front_document_url"])
-            # if id_back_document:
-            #     url = upload_file_to_supabase(id_back_document, folder=f"id_documents/{user.id}")
-            #     user.id_back_document_url = url
-            #     user.save(update_fields=["id_back_document_url"])
+    def perform_update(self, serializer):
+        print("perform_update called")
+        listing = serializer.save()
+        
+        pictures = self.request.FILES.getlist("pictures")
+        if pictures:
+            for picture in pictures:
+                url = upload_file_to_supabase(picture, folder=f"listings/{listing.id}")
+                listing.pictures.append(url)
+            listing.save(update_fields=["pictures"])
 
 class PartnerViewSet(viewsets.ModelViewSet):
     queryset = Partner.objects.all().prefetch_related('listings')
@@ -302,7 +271,6 @@ class BookingViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'listing': 'Listing not found'})
         serializer.save(user=self.request.user, listing=listing)
-
 
 class PasswordResetRequestView(generics.GenericAPIView):
     serializer_class = PasswordResetRequestSerializer
@@ -370,7 +338,7 @@ def user_list(request):
         return JsonResponse({"message": "No users found."}, status=404)
 
     user_data = [
-        {"username": user.username, "id": user.id, "email": user.email}
+        {"username": user.username, "id": user.id, "email": user.email, "is_partner": user.is_partner}
         for user in users
     ]
     return JsonResponse(user_data, safe=False)
@@ -385,7 +353,6 @@ def booking_list(request):
         for booking in bookings
     ]
     return JsonResponse(booking_data, safe=False)
-
 
 def home_view(request):
     html_content = """
