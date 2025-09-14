@@ -83,20 +83,38 @@ export default function VehicleManageModal({
     setIsSubmitting(true)
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // Add the new maintenance record to the beginning of the list
-      const newMaintenanceRecord = {
-        id: Date.now(),
-        date: maintenanceForm.scheduledDate,
-        type: maintenanceForm.type,
+      // Prepare maintenance data for backend
+      const maintenanceData = {
+        vehicle_id: vehicle.id,
+        maintenance_type: maintenanceForm.type,
         description: maintenanceForm.description,
-        cost: parseFloat(maintenanceForm.estimatedCost) || 0,
+        scheduled_date: maintenanceForm.scheduledDate,
         garage: maintenanceForm.garage,
-        nextService: '-',
+        estimated_cost: parseFloat(maintenanceForm.estimatedCost) || 0,
+        priority: maintenanceForm.priority,
         status: 'scheduled'
       }
+
+      // Send maintenance schedule to backend
+      const response = await fetch(`http://127.0.0.1:8000/maintenance/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify(maintenanceData)
+      })
+
+      if (!response.ok) {
+        console.error(`Maintenance API Error: ${response.status} ${response.statusText}`)
+        const errorText = await response.text()
+        console.error('Maintenance error response body:', errorText)
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const newMaintenanceRecord = await response.json()
+      console.log('✅ Maintenance scheduled successfully:', newMaintenanceRecord)
       
       // Reset form
       setMaintenanceForm({
@@ -151,12 +169,110 @@ export default function VehicleManageModal({
   const handleSave = async () => {
     setIsSubmitting(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      onUpdate(editData)
+      // Check if we have an access token
+      const accessToken = localStorage.getItem('access_token')
+      if (!accessToken) {
+        alert('You are not authenticated. Please log in again.')
+        return
+      }
+
+      // Validate required fields before sending
+      if (!editData.brand || !editData.model || !editData.year || !editData.dailyRate || 
+          !editData.fuelType || !editData.transmission || !editData.seatingCapacity || !editData.condition) {
+        alert('Please fill in all required fields (Brand, Model, Year, Daily Rate, Fuel Type, Transmission, Seating Capacity, Condition)')
+        return
+      }
+
+      // Prepare update data in the format expected by the backend
+      const updateData = {
+        make: String(editData.brand).trim(),
+        model: String(editData.model).trim(),
+        year: parseInt(editData.year) || new Date().getFullYear(),
+        location: String(editData.location || '').trim(),
+        price_per_day: parseFloat(editData.dailyRate) || 0,
+        availability: editData.availability !== false,
+        fuel_type: String(editData.fuelType).trim(),
+        transmission: String(editData.transmission).trim(),
+        seating_capacity: parseInt(editData.seatingCapacity) || 1,
+        vehicle_condition: String(editData.condition).trim(),
+        features: Array.isArray(editData.features) ? editData.features : [],
+        vehicle_description: String(editData.description || '').trim()
+      }
+
+      console.log('🔧 Updating vehicle with data:', updateData)
+      console.log('🔧 Vehicle ID:', vehicle.id)
+      console.log('🔧 Edit data:', editData)
+      console.log('🔧 Access token available:', !!accessToken)
+
+      // Update vehicle in backend
+      const response = await fetch(`http://127.0.0.1:8000/listings/${vehicle.id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(updateData)
+      })
+
+      console.log('🔧 Update response status:', response.status)
+      console.log('🔧 Update response headers:', Object.fromEntries(response.headers))
+
+      if (!response.ok) {
+        console.error(`UPDATE API Error: ${response.status} ${response.statusText}`)
+        const errorText = await response.text()
+        console.error('Update error response body:', errorText)
+        
+        // Try to parse error response as JSON for more details
+        let errorDetails = errorText
+        try {
+          const errorJson = JSON.parse(errorText)
+          errorDetails = JSON.stringify(errorJson, null, 2)
+        } catch (e) {
+          // Not JSON, use as is
+        }
+        
+        if (response.status === 401) {
+          alert('Authentication failed. Please log in again.')
+        } else if (response.status === 403) {
+          alert('You do not have permission to update this vehicle.')
+        } else if (response.status === 404) {
+          alert('Vehicle not found. It may have been deleted.')
+        } else {
+          alert(`Error updating vehicle (${response.status}): ${errorDetails}`)
+        }
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const updatedVehicle = await response.json()
+      console.log('✅ Vehicle updated successfully:', updatedVehicle)
+      
+      // Transform the response back to frontend format
+      const transformedVehicle = {
+        ...editData,
+        id: updatedVehicle.id,
+        partner_id: updatedVehicle.partner,
+        brand: updatedVehicle.make,
+        model: updatedVehicle.model,
+        year: updatedVehicle.year,
+        location: updatedVehicle.location,
+        dailyRate: parseFloat(updatedVehicle.price_per_day || 0),
+        availability: updatedVehicle.availability,
+        fuelType: updatedVehicle.fuel_type,
+        transmission: updatedVehicle.transmission,
+        seatingCapacity: updatedVehicle.seating_capacity,
+        condition: updatedVehicle.vehicle_condition,
+        features: updatedVehicle.features || [],
+        description: updatedVehicle.vehicle_description || ''
+      }
+
+      // Call parent component's onUpdate to refresh UI
+      onUpdate(transformedVehicle)
       setIsEditing(false)
       alert('Vehicle updated successfully!')
+      
     } catch (error) {
+      console.error('Error updating vehicle:', error)
       alert('Error updating vehicle. Please try again.')
     } finally {
       setIsSubmitting(false)
@@ -166,13 +282,33 @@ export default function VehicleManageModal({
   const handleDelete = async () => {
     setIsSubmitting(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Delete individual vehicle from backend
+      const response = await fetch(`http://127.0.0.1:8000/listings/${vehicle.id}/`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+      })
+
+      if (!response.ok) {
+        console.error(`DELETE API Error: ${response.status} ${response.statusText}`)
+        const errorText = await response.text()
+        console.error('Delete error response body:', errorText)
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      console.log('✅ Vehicle deleted successfully:', vehicle.id)
+      
+      // Call parent component's onDelete to update UI
       onDelete(vehicle.id)
       setShowDeleteConfirm(false)
       setShowModal(false)
       alert('Vehicle deleted successfully!')
+      
     } catch (error) {
+      console.error('Error deleting vehicle:', error)
       alert('Error deleting vehicle. Please try again.')
     } finally {
       setIsSubmitting(false)
@@ -826,7 +962,7 @@ export default function VehicleManageModal({
 
         {/* Schedule Maintenance Modal */}
         {showMaintenanceModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-60 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-60 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
             <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
                 <div className="flex items-center justify-between">
@@ -1025,7 +1161,7 @@ export default function VehicleManageModal({
 
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-60 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-60 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
             <div className="bg-white rounded-2xl max-w-md w-full p-6">
               <div className="text-center">
                 <div className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">

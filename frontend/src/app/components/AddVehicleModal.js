@@ -1,7 +1,16 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useClientOnly } from '@/hooks/useClientOnly'
+import { useAuth } from '@/contexts/AuthContext'
+import { createListing } from '@/hooks/useListYourVehicle'
+
+function useClientOnly() {
+  const [isClient, setIsClient] = useState(false)
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+  return isClient
+}
 
 export default function AddVehicleModal({ 
   showModal, 
@@ -10,11 +19,18 @@ export default function AddVehicleModal({
   setVehicleData, 
   onSubmit 
 }) {
+  const { user } = useAuth()
   const [currentStep, setCurrentStep] = useState(1)
   const [formErrors, setFormErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const [photos, setPhotos] = useState({
+    front: null,
+    side: null,
+    back: null,
+    interior: null
+  })
+  const [photoFiles, setPhotoFiles] = useState({
     front: null,
     side: null,
     back: null,
@@ -28,6 +44,20 @@ export default function AddVehicleModal({
   useEffect(() => {
     setIsMounted(true)
   }, [])
+
+  // Helper function to get full image URL
+  const getFullImageUrl = (imageUrl) => {
+    if (!imageUrl) return null
+    
+    // If already a complete URL, return as is
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl
+    }
+    
+    // If it's a relative URL, prepend the API base URL
+    const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+    return `${apiUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`
+  }
 
   // Moroccan cities array
   const moroccanCities = [
@@ -222,9 +252,30 @@ export default function AddVehicleModal({
   const handleVehicleInputChange = handleInputChange
 
   // Handle file changes
-  const handleFileChange = (e, photoType) => {
+  const handleFileChange = async (e, photoType) => {
     const file = e.target.files[0]
-    if (file) {
+    if (!file) return
+
+    // Show loading state
+    setPhotos(prev => ({ ...prev, [photoType]: 'loading' }))
+
+    try {
+      // Basic file validation
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Please upload an image file')
+      }
+
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        throw new Error('File size must be less than 5MB')
+      }
+
+      // Store the actual file object for backend upload
+      setPhotoFiles(prev => ({
+        ...prev,
+        [photoType]: file
+      }))
+
+      // Create preview URL for display
       const reader = new FileReader()
       reader.onload = (event) => {
         setPhotos(prev => ({
@@ -232,7 +283,15 @@ export default function AddVehicleModal({
           [photoType]: event.target.result
         }))
       }
+      reader.onerror = () => {
+        throw new Error('Failed to read file')
+      }
       reader.readAsDataURL(file)
+
+    } catch (error) {
+      console.error(`Error uploading ${photoType} photo:`, error)
+      setPhotos(prev => ({ ...prev, [photoType]: null }))
+      alert(error.message || 'Failed to upload photo')
     }
   }
 
@@ -255,14 +314,174 @@ export default function AddVehicleModal({
       return
     }
     
+    if (!user) {
+      setFormErrors({ general: 'Please sign in to add a vehicle' })
+      return
+    }
+
+    if (!user.is_partner) {
+      setFormErrors({ general: 'You need to register as a partner first to add vehicles' })
+      return
+    }
+    
     setIsSubmitting(true)
     try {
-      await onSubmit(vehicleData)
-      setCurrentStep(1)
-      setFormErrors({})
-      setShowModal(false)
+      // Map the form data to match backend expectations
+      const listingData = {
+        brand: vehicleData.brand,
+        model: vehicleData.model,
+        year: vehicleData.year,
+        fuelType: vehicleData.fuelType,
+        transmission: vehicleData.transmission,
+        seatingCapacity: vehicleData.seatingCapacity,
+        condition: vehicleData.condition,
+        features: vehicleData.features || [],
+        description: vehicleData.description,
+        dailyRate: vehicleData.dailyRate,
+        location: vehicleData.location
+      }
+
+      // Create the listing using the backend API
+      const result = await createListing(listingData)
+      
+      if (result) {
+        // Handle photo uploads if any photos were selected
+        const token = localStorage.getItem('access_token')
+        const uploadedPhotos = []
+        const photoTypes = ['front', 'side', 'back', 'interior']
+        
+        // Upload all photos and collect their URLs
+        for (const photoType of photoTypes) {
+          const file = photoFiles[photoType]
+          if (file) {
+            try {
+              // Create FormData for file upload
+              const formData = new FormData()
+              formData.append('pictures', file)
+              
+              // Upload to backend
+              const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+              const uploadResponse = await fetch(`${apiUrl}/listings/${result.id}/`, {
+                method: 'PATCH',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                },
+                body: formData
+              })
+              
+              if (uploadResponse.ok) {
+                const uploadResult = await uploadResponse.json()
+                console.log(`Uploaded ${photoType} photo response:`, uploadResult)
+                
+                // Handle different response formats from backend
+                if (uploadResult.pictures && uploadResult.pictures.length > 0) {
+                  // Get the latest uploaded picture URL
+                  const newPhotoUrl = uploadResult.pictures[uploadResult.pictures.length - 1]
+                  
+                  // Ensure the URL is complete (add base URL if needed)
+                  let fullImageUrl = newPhotoUrl
+                  if (newPhotoUrl && !newPhotoUrl.startsWith('http')) {
+                    const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+                    fullImageUrl = `${apiUrl}${newPhotoUrl.startsWith('/') ? '' : '/'}${newPhotoUrl}`
+                  }
+                  
+                  uploadedPhotos.push(fullImageUrl)
+                  console.log(`Added ${photoType} photo URL:`, fullImageUrl)
+                } else if (uploadResult.picture) {
+                  // Handle single picture response
+                  let fullImageUrl = uploadResult.picture
+                  if (uploadResult.picture && !uploadResult.picture.startsWith('http')) {
+                    const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+                    fullImageUrl = `${apiUrl}${uploadResult.picture.startsWith('/') ? '' : '/'}${uploadResult.picture}`
+                  }
+                  uploadedPhotos.push(fullImageUrl)
+                  console.log(`Added ${photoType} photo URL (single):`, fullImageUrl)
+                } else {
+                  console.warn(`No picture URL found in upload response for ${photoType}:`, uploadResult)
+                }
+              } else {
+                console.error(`Failed to upload ${photoType} photo:`, uploadResponse.statusText)
+              }
+            } catch (uploadError) {
+              console.error(`Error uploading ${photoType} photo:`, uploadError)
+            }
+          }
+        }
+        
+        console.log('All uploaded photos:', uploadedPhotos)
+        
+        // Fetch the final listing data with all uploaded images
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+          const finalResponse = await fetch(`${apiUrl}/listings/${result.id}/`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          })
+          
+          if (finalResponse.ok) {
+            const finalData = await finalResponse.json()
+            console.log('Final listing data with images:', finalData)
+            
+            // Process all image URLs to ensure they're complete
+            const processedImages = (finalData.pictures || uploadedPhotos).map(url => getFullImageUrl(url))
+            
+            // Update the result with the complete image data
+            result.pictures = processedImages
+            result.images = processedImages // For compatibility
+            
+            console.log('Final result with processed images:', result)
+            console.log('Processed image URLs:', processedImages)
+          }
+        } catch (fetchError) {
+          console.error('Error fetching final listing data:', fetchError)
+          // Use the uploaded photos we collected and process them
+          const processedUploadedPhotos = uploadedPhotos.map(url => getFullImageUrl(url))
+          result.pictures = processedUploadedPhotos
+          result.images = processedUploadedPhotos
+          console.log('Using processed uploaded photos as fallback:', processedUploadedPhotos)
+        }
+        
+        // Call the parent's onSubmit if provided
+        if (onSubmit) {
+          await onSubmit({ 
+            ...result, 
+            photos: uploadedPhotos,
+            pictures: uploadedPhotos // Also include as pictures for consistency
+          })
+        }
+        
+        // Reset form and close modal
+        setCurrentStep(1)
+        setFormErrors({})
+        setPhotos({
+          front: null,
+          side: null,
+          back: null,
+          interior: null
+        })
+        setPhotoFiles({
+          front: null,
+          side: null,
+          back: null,
+          interior: null
+        })
+        setShowModal(false)
+        
+        // Show success message with photo count
+        const photoCount = uploadedPhotos.length
+        const successMessage = photoCount > 0 
+          ? `Vehicle added successfully with ${photoCount} photo${photoCount > 1 ? 's' : ''}!`
+          : 'Vehicle added successfully!'
+        alert(successMessage)
+      }
     } catch (error) {
       console.error('Error submitting vehicle:', error)
+      setFormErrors({ 
+        general: error.message || 'Failed to add vehicle. Please try again.' 
+      })
     } finally {
       setIsSubmitting(false)
     }

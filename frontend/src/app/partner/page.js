@@ -1,15 +1,18 @@
 "use client";
-import { useState, useRef, useEffect } from 'react';
 
+import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { useAuth } from '../../contexts/AuthContext';
 import { registerPartner } from '../../hooks/usePartners';
 import { createListing } from '../../hooks/useListYourVehicle';
 
 // Partner registration form component using the custom hook
 function PartnerFormWithHook({ onSuccess }) {
   const { user } = useAuth();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     company_name: '',
     tax_id: '',
@@ -62,6 +65,13 @@ function PartnerFormWithHook({ onSuccess }) {
       const result = await postPartner(formData, currentToken);
       if (result && typeof onSuccess === 'function') {
         onSuccess();
+      }
+      // Redirect to partner dashboard on successful registration
+      if (result) {
+        // Give a brief moment for any state updates, then redirect
+        setTimeout(() => {
+          router.push('/partner/dashboard');
+        }, 1500);
       }
     } catch (err) {
       // Error handled in hook
@@ -134,13 +144,30 @@ function PartnerFormWithHook({ onSuccess }) {
         style={{backgroundColor: 'var(--color-orange-500)' }}
         disabled={loading}
       >
-        {loading ? 'Submitting...' : <span>START EARNING TODAY - FREE</span>}
+        {loading ? (
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            <span>Creating Account...</span>
+          </div>
+        ) : (
+          <span>START EARNING TODAY - FREE</span>
+        )}
       </button>
       {error && <p className="text-red-500 text-center text-xs sm:text-sm">{error.general || 'Submission failed'}</p>}
       {formErrors.company_name && <p className="text-red-500 text-xs mt-1">{formErrors.company_name}</p>}
       {formErrors.agree_on_terms && <p className="text-red-500 text-xs mt-1">{formErrors.agree_on_terms}</p>}
       {formErrors.general && <p className="text-red-500 text-xs mt-1">{formErrors.general}</p>}
-      {success && <p className="text-green-600 text-center text-xs sm:text-sm">Registration successful!</p>}
+      {success && (
+        <div className="text-green-600 text-center text-xs sm:text-sm">
+          <div className="flex items-center justify-center space-x-2 mb-2">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span>Registration successful!</span>
+          </div>
+          <p className="text-xs">Redirecting to your dashboard...</p>
+        </div>
+      )}
       <p className="text-xs text-gray-500 text-center mt-3">
         Quick approval in 24 hours • Start earning immediately • Secure & trusted platform
       </p>
@@ -185,6 +212,7 @@ function useCreatePartner() {
 }
 
 export default function BecomePartner() {
+  const router = useRouter();
   
   // Submission state for disabling submit button and showing loading spinner
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -492,8 +520,15 @@ async function fetchPartners() {
       });
       
       if (res.ok) {
-        setShowAddVehicleForm(true);
-        // Optionally reset the form or show a message here
+        const result = await res.json();
+        console.log('Partner registration successful:', result);
+        
+        // Show success message briefly, then redirect to dashboard
+        setFormErrors({ general: 'Registration successful! Redirecting to dashboard...' });
+        
+        setTimeout(() => {
+          router.push('/partner/dashboard');
+        }, 2000);
       } else {
         const err = await res.json().catch(() => ({}));
         setFormErrors(err.errors || { general: 'Submission failed' });

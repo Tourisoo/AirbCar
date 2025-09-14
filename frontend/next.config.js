@@ -13,15 +13,9 @@ const nextConfig = {
     // Number of pages that should be kept simultaneously without being disposed
     pagesBufferLength: 2,
   },
-  // Custom webpack config to handle hydration warnings
+  // Custom webpack config - removed profiling aliases that cause issues with React 19
   webpack: (config, { dev, isServer }) => {
-    if (dev && !isServer) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        'react-dom$': 'react-dom/profiling',
-        'scheduler/tracing': 'scheduler/tracing-profiling',
-      }
-    }
+    // Remove problematic profiling aliases for React 19 compatibility
     return config
   },
 };

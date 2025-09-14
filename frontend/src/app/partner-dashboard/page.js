@@ -18,6 +18,7 @@ export default function PartnerDashboard() {
     monthlyEarnings: 0,
     averageRating: 0
   })
+  const [loadingData, setLoadingData] = useState(true)
 
   // Initial vehicle data structure
   const [vehicleData, setVehicleData] = useState({
@@ -41,30 +42,75 @@ export default function PartnerDashboard() {
   useEffect(() => {
     if (!loading && !user) {
       router.push('/auth/signin?redirect=/partner-dashboard')
+    } else if (user && !user.is_partner) {
+      router.push('/partner') // Redirect to partner registration page
+    } else if (user && user.is_partner) {
+      loadPartnerData()
     }
   }, [user, loading, router])
 
+  const loadPartnerData = async () => {
+    try {
+      const token = localStorage.getItem('access_token')
+      if (!token) return
+
+      // Fetch partner's vehicles
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/listings/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        const listings = await response.json()
+        setVehicles(listings.results || listings)
+        setStats(prev => ({
+          ...prev,
+          totalVehicles: (listings.results || listings).length
+        }))
+      }
+    } catch (error) {
+      console.error('Error loading partner data:', error)
+    } finally {
+      setLoadingData(false)
+    }
+  }
+
   const handleAddVehicle = async (data) => {
     try {
-      // Here you would normally send data to your backend
-      console.log('Adding vehicle:', data)
+      // The data comes from the AddVehicleModal after successful backend submission
+      console.log('Vehicle added successfully:', data)
       
-      // Simulate adding vehicle
-      const newVehicle = {
-        id: Date.now(),
-        ...data,
-        status: 'active',
-        bookings: 0,
-        earnings: 0,
-        rating: 0,
-        createdAt: new Date().toISOString()
+      if (data) {
+        // Map backend response to frontend format
+        const newVehicle = {
+          id: data.id || Date.now(),
+          brand: data.make || data.brand,
+          model: data.model,
+          year: data.year,
+          dailyRate: data.price_per_day || data.dailyRate,
+          location: data.location,
+          fuelType: data.fuel_type || data.fuelType,
+          transmission: data.transmission,
+          seatingCapacity: data.seating_capacity || data.seatingCapacity,
+          condition: data.vehicle_condition || data.condition,
+          features: data.features || [],
+          status: 'active',
+          bookings: 0,
+          earnings: 0,
+          rating: data.rating || 0,
+          createdAt: new Date().toISOString()
+        }
+        
+        // Add to local state
+        setVehicles(prev => [...prev, newVehicle])
+        setStats(prev => ({
+          ...prev,
+          totalVehicles: prev.totalVehicles + 1
+        }))
       }
-      
-      setVehicles(prev => [...prev, newVehicle])
-      setStats(prev => ({
-        ...prev,
-        totalVehicles: prev.totalVehicles + 1
-      }))
       
       // Reset form data
       setVehicleData({
@@ -85,7 +131,6 @@ export default function PartnerDashboard() {
         features: []
       })
       
-      alert('Vehicle added successfully!')
     } catch (error) {
       console.error('Error adding vehicle:', error)
       alert('Error adding vehicle. Please try again.')
