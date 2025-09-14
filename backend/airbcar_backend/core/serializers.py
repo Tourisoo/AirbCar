@@ -99,35 +99,26 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-class ListingBriefSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Listing
-        fields = ['id', 'make', 'model', 'year', 'location', 'price_per_day',
-                  'availability', 'created_at', 'fuel_type', 'transmission',
-                  'seating_capacity', 'vehicle_condition', 'rating', 'features', 'pictures']
 
 class PartnerSerializer(serializers.ModelSerializer):
+    class ListingBriefSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Listing
+            fields = ['id', 'make', 'model', 'year', 'location', 'price_per_day', 'pictures']
+                    # 'availability', 'created_at', 'fuel_type', 'transmission',
+                    # 'seating_capacity', 'vehicle_condition', 'rating', 'features', 'pictures']
+
+    class UserBriefSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = User
+            fields = ['id', 'email', 'first_name', 'last_name', 'profile_picture']
+    
     listings = ListingBriefSerializer(many=True, read_only=True)
+    user = UserBriefSerializer(read_only=True)
     class Meta:
         model = Partner
-        fields = ['id', 'company_name', 'tax_id', 'verification_status', 'created_at', 
+        fields = ['id', 'company_name', 'tax_id', 'user', 'verification_status', 'created_at', 
             'agree_on_terms', 'verification_document', 'listings']
-
-# class ListingSerializer(serializers.ModelSerializer):
-#     partner = serializers.PrimaryKeyRelatedField(read_only=True)
-#     # picture = serializers.FileField(write_only=True, required=False)
-#     pictures = serializers.JSONField(required=False)  # Add required=False
-#     class Meta:
-#         model = Listing
-#         fields = ['id', 'partner', 'make', 'model', 'year', 'location', 'features', 
-#             'price_per_day', 'availability', 'rating', 'created_at', 'fuel_type', 
-#             'transmission', 'seating_capacity', 'vehicle_condition', 'pictures', 'vehicle_description']
-#         read_only_fields = ['partner', 'created_at', 'rating']
-
-#     def create(self, validated_data):
-#         validated_data['pictures'] = []
-#         return super().create(validated_data)
-
 
 class ListingSerializer(serializers.ModelSerializer):
     partner = serializers.PrimaryKeyRelatedField(read_only=True)
