@@ -101,6 +101,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class PartnerSerializer(serializers.ModelSerializer):
+    
     class ListingBriefSerializer(serializers.ModelSerializer):
         class Meta:
             model = Listing
@@ -137,13 +138,9 @@ class ListingSerializer(serializers.ModelSerializer):
             data.pop('pictures')
         return super().to_internal_value(data)
 
-    # def create(self, validated_data):
-    #     validated_data['pictures'] = []  # Initialize with empty list
-    #     return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        # Don't update pictures field here, it's handled in the view
-        return super().update(instance, validated_data)
+    # def update(self, instance, validated_data):
+    #     # Don't update pictures field here, it's handled in the view
+    #     return super().update(instance, validated_data)
 
 class BookingSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

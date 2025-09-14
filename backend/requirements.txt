@@ -1,6 +1,8 @@
 django==4.2.21
 djangorestframework==3.14.0
 djangorestframework-simplejwt==5.2.2
+# djangorestframework
+# djangorestframework-simplejwt
 django-cors-headers==4.2.0
 psycopg2-binary==2.9.9
 Pillow==9.5.0
@@ -10,5 +12,4 @@ django-storages==1.14.4
 gunicorn==22.0.0
 python-dotenv==1.0.1
 supabase==2.6.0
-
-
+httpx[http2]
