@@ -176,6 +176,8 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         print("get_queryset called")
         user = self.request.user
+        if not user.is_authenticated:
+            return User.objects.all()
         if user.is_staff:
             return User.objects.all()
         return User.objects.filter(id=user.id)
@@ -251,7 +253,24 @@ class ListingViewSet(viewsets.ModelViewSet):
 class PartnerViewSet(viewsets.ModelViewSet):
     queryset = Partner.objects.all().prefetch_related('listings')
     serializer_class = PartnerSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+
+    # def get_queryset(self):
+    #     partner = self.request.user
+    #     if not partner.is_authenticated:
+    #         return Partner.objects.all()
+    #     if partner.user.is_staff:
+    #         return Partner.objects.all().prefetch_related('partner')
+    #     return Partner.objects.filter(user=partner).prefetch_related('partner')
+    
+    def get_queryset(self):
+        user = self.request.user  # Rename for clarity
+        if not user.is_authenticated:
+            return Partner.objects.all()
+        if user.is_staff:  # Remove the incorrect '.user' 
+            return Partner.objects.all().prefetch_related('listings')  # Fix prefetch too
+        return Partner.objects.filter(user=user).prefetch_related('listings')
 
     def perform_create(self, serializer):
         partner = serializer.save(user=self.request.user)

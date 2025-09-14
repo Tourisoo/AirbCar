@@ -138,9 +138,9 @@ class ListingSerializer(serializers.ModelSerializer):
             data.pop('pictures')
         return super().to_internal_value(data)
 
-    # def update(self, instance, validated_data):
-    #     # Don't update pictures field here, it's handled in the view
-    #     return super().update(instance, validated_data)
+    def update(self, instance, validated_data):
+        # Don't update pictures field here, it's handled in the view
+        return super().update(instance, validated_data)
 
 class BookingSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
