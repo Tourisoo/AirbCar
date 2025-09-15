@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 export default function VehicleManageModal({ 
   showModal, 
@@ -11,10 +11,22 @@ export default function VehicleManageModal({
 }) {
   const [activeTab, setActiveTab] = useState('overview')
   const [isEditing, setIsEditing] = useState(false)
-  const [editData, setEditData] = useState(vehicle || {})
+  const [vehicleData, setVehicleData] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [bookings, setBookings] = useState([])
+  const [maintenanceHistory, setMaintenanceHistory] = useState([])
+  const [editData, setEditData] = useState({
+    ...vehicle,
+    features: vehicle?.features || [],
+    description: vehicle?.description || '',
+    photos: vehicle?.photos || []
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false)
+  const [validationErrors, setValidationErrors] = useState({})
+  const [photoUploadProgress, setPhotoUploadProgress] = useState(0)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [maintenanceForm, setMaintenanceForm] = useState({
     type: '',
     description: '',
@@ -24,6 +36,133 @@ export default function VehicleManageModal({
     priority: 'medium'
   })
   const fileInputRef = useRef(null)
+
+  // Fetch vehicle data from backend
+  const fetchVehicleData = async (vehicleId) => {
+    if (!vehicleId) return
+
+    setLoading(true)
+    try {
+      const token = localStorage.getItem('access_token')
+      if (!token) {
+        throw new Error('No access token found')
+      }
+
+      const response = await fetch(`http://127.0.0.1:8000/listings/${vehicleId}/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      // Transform backend data to match frontend format
+      const transformedData = {
+        id: data.id,
+        brand: data.brand || '',
+        model: data.model || '',
+        year: data.year || new Date().getFullYear(),
+        dailyRate: data.daily_rate || 0,
+        weeklyRate: data.weekly_rate || 0,
+        monthlyRate: data.monthly_rate || 0,
+        status: data.status || 'available',
+        features: data.features || [],
+        description: data.description || '',
+        photos: data.photos || [],
+        location: data.location || '',
+        mileage: data.mileage || 0,
+        transmission: data.transmission || 'manual',
+        fuelType: data.fuel_type || 'petrol',
+        seats: data.seats || 5,
+        doors: data.doors || 4,
+        rating: data.rating || 0,
+        reviewCount: data.review_count || 0,
+        bookings: data.bookings_count || 0,
+        totalEarnings: data.total_earnings || 0,
+        isAvailable: data.is_available || false
+      }
+
+      setVehicleData(transformedData)
+      setEditData({
+        ...transformedData,
+        features: transformedData.features || [],
+        description: transformedData.description || '',
+        photos: transformedData.photos || []
+      })
+
+      // Fetch related data (bookings, maintenance)
+      await fetchBookingsData(vehicleId)
+      await fetchMaintenanceData(vehicleId)
+
+    } catch (error) {
+      console.error('Error fetching vehicle data:', error)
+      alert('Failed to load vehicle data. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fetch bookings data
+  const fetchBookingsData = async (vehicleId) => {
+    try {
+      const token = localStorage.getItem('access_token')
+      const response = await fetch(`http://127.0.0.1:8000/bookings/?vehicle=${vehicleId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setBookings(data.results || data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error)
+      // Use mock data as fallback
+      setBookings(mockBookings)
+    }
+  }
+
+  // Fetch maintenance data
+  const fetchMaintenanceData = async (vehicleId) => {
+    try {
+      const token = localStorage.getItem('access_token')
+      const response = await fetch(`http://127.0.0.1:8000/maintenance/?vehicle=${vehicleId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setMaintenanceHistory(data.results || data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching maintenance data:', error)
+      // Use mock data as fallback
+      setMaintenanceHistory(mockMaintenanceHistory)
+    }
+  }
+
+  // UseEffect to fetch data when modal opens or vehicle changes
+  useEffect(() => {
+    if (showModal && vehicle?.id) {
+      fetchVehicleData(vehicle.id)
+    }
+  }, [showModal, vehicle?.id])
 
   // Booking and maintenance mock data
   const mockBookings = [
@@ -85,7 +224,7 @@ export default function VehicleManageModal({
     try {
       // Prepare maintenance data for backend
       const maintenanceData = {
-        vehicle_id: vehicle.id,
+        vehicle_id: currentVehicle.id,
         maintenance_type: maintenanceForm.type,
         description: maintenanceForm.description,
         scheduled_date: maintenanceForm.scheduledDate,
@@ -139,6 +278,14 @@ export default function VehicleManageModal({
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
     
+    // Clear validation error for this field
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }))
+    }
+    
     if (type === 'checkbox') {
       if (name === 'features') {
         const updatedFeatures = checked 
@@ -166,7 +313,41 @@ export default function VehicleManageModal({
     }
   }
 
+  const validateForm = () => {
+    const errors = {}
+    
+    // Required field validations
+    if (!editData.brand?.trim()) errors.brand = 'Brand is required'
+    if (!editData.model?.trim()) errors.model = 'Model is required'
+    if (!editData.year) errors.year = 'Year is required'
+    if (!editData.dailyRate || editData.dailyRate <= 0) errors.dailyRate = 'Valid daily rate is required'
+    if (!editData.fuelType) errors.fuelType = 'Fuel type is required'
+    if (!editData.transmission) errors.transmission = 'Transmission is required'
+    if (!editData.seatingCapacity) errors.seatingCapacity = 'Seating capacity is required'
+    if (!editData.condition) errors.condition = 'Vehicle condition is required'
+    
+    // Range validations
+    if (editData.year && (editData.year < 1990 || editData.year > new Date().getFullYear() + 1)) {
+      errors.year = 'Please select a valid year'
+    }
+    if (editData.dailyRate && editData.dailyRate > 10000) {
+      errors.dailyRate = 'Daily rate seems too high'
+    }
+    if (editData.mileage && editData.mileage > 1000000) {
+      errors.mileage = 'Mileage seems unrealistic'
+    }
+    
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
   const handleSave = async () => {
+    // Validate form before saving
+    if (!validateForm()) {
+      alert('Please fix the validation errors before saving.')
+      return
+    }
+
     setIsSubmitting(true)
     try {
       // Check if we have an access token
@@ -200,12 +381,12 @@ export default function VehicleManageModal({
       }
 
       console.log('🔧 Updating vehicle with data:', updateData)
-      console.log('🔧 Vehicle ID:', vehicle.id)
+      console.log('🔧 Vehicle ID:', currentVehicle.id)
       console.log('🔧 Edit data:', editData)
       console.log('🔧 Access token available:', !!accessToken)
 
       // Update vehicle in backend
-      const response = await fetch(`http://127.0.0.1:8000/listings/${vehicle.id}/`, {
+      const response = await fetch(`http://127.0.0.1:8000/listings/${currentVehicle.id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -269,7 +450,8 @@ export default function VehicleManageModal({
       // Call parent component's onUpdate to refresh UI
       onUpdate(transformedVehicle)
       setIsEditing(false)
-      alert('Vehicle updated successfully!')
+      setShowSuccessMessage(true)
+      setTimeout(() => setShowSuccessMessage(false), 3000)
       
     } catch (error) {
       console.error('Error updating vehicle:', error)
@@ -283,7 +465,7 @@ export default function VehicleManageModal({
     setIsSubmitting(true)
     try {
       // Delete individual vehicle from backend
-      const response = await fetch(`http://127.0.0.1:8000/listings/${vehicle.id}/`, {
+      const response = await fetch(`http://127.0.0.1:8000/listings/${currentVehicle.id}/`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -299,10 +481,10 @@ export default function VehicleManageModal({
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      console.log('✅ Vehicle deleted successfully:', vehicle.id)
-      
+      console.log('✅ Vehicle deleted successfully:', currentVehicle.id)
+
       // Call parent component's onDelete to update UI
-      onDelete(vehicle.id)
+      onDelete(currentVehicle.id)
       setShowDeleteConfirm(false)
       setShowModal(false)
       alert('Vehicle deleted successfully!')
@@ -320,15 +502,46 @@ export default function VehicleManageModal({
     const validFiles = files.filter(file => {
       const isValidType = file.type.startsWith('image/')
       const isValidSize = file.size <= 5 * 1024 * 1024 // 5MB limit
-      return isValidType && isValidSize
+      
+      if (!isValidType) {
+        alert(`"${file.name}" is not a valid image file.`)
+        return false
+      }
+      if (!isValidSize) {
+        alert(`"${file.name}" is too large. Maximum size is 5MB.`)
+        return false
+      }
+      return true
     })
     
     if (validFiles.length > 0) {
-      const newPhotos = [...(editData.photos || []), ...validFiles]
-      setEditData({
-        ...editData,
-        photos: newPhotos
-      })
+      const currentPhotos = editData.photos || []
+      if (currentPhotos.length + validFiles.length > 10) {
+        alert('Maximum 10 photos allowed per vehicle.')
+        return
+      }
+      
+      setPhotoUploadProgress(0)
+      
+      // Simulate upload progress
+      const interval = setInterval(() => {
+        setPhotoUploadProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval)
+            return 100
+          }
+          return prev + 20
+        })
+      }, 200)
+      
+      setTimeout(() => {
+        const newPhotos = [...currentPhotos, ...validFiles]
+        setEditData({
+          ...editData,
+          photos: newPhotos
+        })
+        setPhotoUploadProgress(0)
+      }, 1000)
     }
   }
 
@@ -340,41 +553,96 @@ export default function VehicleManageModal({
     })
   }
 
+  const movePhotoUp = (index) => {
+    if (index === 0) return
+    const newPhotos = [...(editData.photos || [])]
+    const temp = newPhotos[index]
+    newPhotos[index] = newPhotos[index - 1]
+    newPhotos[index - 1] = temp
+    setEditData({
+      ...editData,
+      photos: newPhotos
+    })
+  }
+
+  const movePhotoDown = (index) => {
+    const photos = editData.photos || []
+    if (index === photos.length - 1) return
+    const newPhotos = [...photos]
+    const temp = newPhotos[index]
+    newPhotos[index] = newPhotos[index + 1]
+    newPhotos[index + 1] = temp
+    setEditData({
+      ...editData,
+      photos: newPhotos
+    })
+  }
+
   if (!showModal || !vehicle) return null
 
+  // Use fetched vehicle data if available, otherwise fall back to prop data
+  const currentVehicle = vehicleData || vehicle
+
+  // Show loading state while fetching data
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 backdrop-blur-sm" 
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}>
+        <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading Vehicle Data</h3>
+          <p className="text-gray-600">Please wait while we fetch the latest information...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="fixed inset-0 bg-opacity-50 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-      <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+        style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}>
+      <div className="bg-white rounded-3xl max-w-7xl w-full max-h-[95vh] overflow-hidden shadow-2xl border border-gray-100">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+        <div className="sticky top-0 bg-gradient-to-r from-white to-gray-50 border-b border-gray-200 p-8 rounded-t-3xl">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                {vehicle.brand} {vehicle.model}
-              </h2>
-              <p className="text-gray-600">Manage your vehicle listing and bookings</p>
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">
+                  {currentVehicle.brand} {currentVehicle.model}
+                </h2>
+                <p className="text-gray-600 mt-1 font-medium">Manage your vehicle listing and bookings</p>
+              </div>
             </div>
             <div className="flex items-center space-x-3">
               {isEditing && (
                 <>
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                    className="px-6 py-3 text-gray-600 hover:text-gray-800 transition-all duration-200 font-medium hover:bg-gray-100 rounded-xl"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSave}
                     disabled={isSubmitting}
-                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+                    className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-green-200"
                   >
-                    {isSubmitting ? 'Saving...' : 'Save Changes'}
+                    {isSubmitting ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Saving...</span>
+                      </div>
+                    ) : 'Save Changes'}
                   </button>
                 </>
               )}
               <button
                 onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl"
+                className="text-gray-400 hover:text-gray-600 text-2xl w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center transition-all duration-200"
               >
                 ×
               </button>
@@ -382,105 +650,155 @@ export default function VehicleManageModal({
           </div>
           
           {/* Navigation Tabs */}
-          <div className="mt-4">
-            <nav className="flex space-x-8">
+          <div className="mt-6">
+            <nav className="flex space-x-1 bg-gray-100 p-1 rounded-2xl">
               <button
                 onClick={() => setActiveTab('overview')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`py-3 px-6 rounded-xl font-medium text-sm transition-all duration-200 ${
                   activeTab === 'overview'
-                    ? 'border-orange-500 text-orange-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'bg-white text-orange-600 shadow-md'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white hover:bg-opacity-50'
                 }`}
               >
-                Overview
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <span>Overview</span>
+                </div>
               </button>
               <button
                 onClick={() => setActiveTab('bookings')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`py-3 px-6 rounded-xl font-medium text-sm transition-all duration-200 ${
                   activeTab === 'bookings'
-                    ? 'border-orange-500 text-orange-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'bg-white text-orange-600 shadow-md'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white hover:bg-opacity-50'
                 }`}
               >
-                Bookings
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>Bookings</span>
+                </div>
               </button>
               <button
                 onClick={() => setActiveTab('maintenance')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`py-3 px-6 rounded-xl font-medium text-sm transition-all duration-200 ${
                   activeTab === 'maintenance'
-                    ? 'border-orange-500 text-orange-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'bg-white text-orange-600 shadow-md'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white hover:bg-opacity-50'
                 }`}
               >
-                Maintenance
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>Maintenance</span>
+                </div>
               </button>
               <button
                 onClick={() => setActiveTab('analytics')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`py-3 px-6 rounded-xl font-medium text-sm transition-all duration-200 ${
                   activeTab === 'analytics'
-                    ? 'border-orange-500 text-orange-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'bg-white text-orange-600 shadow-md'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white hover:bg-opacity-50'
                 }`}
               >
-                Analytics
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>Analytics</span>
+                </div>
               </button>
               <button
                 onClick={() => setActiveTab('settings')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`py-3 px-6 rounded-xl font-medium text-sm transition-all duration-200 ${
                   activeTab === 'settings'
-                    ? 'border-orange-500 text-orange-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'bg-white text-orange-600 shadow-md'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white hover:bg-opacity-50'
                 }`}
               >
-                Settings
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100-4m0 4v2m0-6V4" />
+                  </svg>
+                  <span>Settings</span>
+                </div>
               </button>
             </nav>
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="overflow-y-auto max-h-[calc(95vh-200px)]">
+          <div className="p-8">
+          {/* Success Message */}
+          {showSuccessMessage && (
+            <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-green-800 font-medium">Vehicle updated successfully!</p>
+              </div>
+            </div>
+          )}
+
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-8">
               {/* Vehicle Status Card */}
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200">
+              <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl p-8 border border-blue-100 shadow-lg hover:shadow-xl transition-all duration-300">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className={`w-4 h-4 rounded-full ${
-                      vehicle.status === 'available' ? 'bg-green-500' :
-                      vehicle.status === 'rented' ? 'bg-blue-500' :
-                      'bg-yellow-500'
-                    }`}></div>
+                  <div className="flex items-center space-x-6">
+                    <div className={`w-6 h-6 rounded-full shadow-lg ${
+                      currentVehicle.status === 'available' ? 'bg-gradient-to-r from-green-400 to-green-500' :
+                      currentVehicle.status === 'rented' ? 'bg-gradient-to-r from-blue-400 to-blue-500' :
+                      'bg-gradient-to-r from-yellow-400 to-yellow-500'
+                    } animate-pulse`}></div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Status: <span className="capitalize">{vehicle.status}</span>
+                      <h3 className="text-2xl font-bold text-gray-900">
+                        Status: <span className="capitalize bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">{currentVehicle.status}</span>
                       </h3>
-                      <p className="text-gray-600">
-                        {vehicle.status === 'available' && 'Ready for bookings'}
-                        {vehicle.status === 'rented' && 'Currently rented out'}
-                        {vehicle.status === 'maintenance' && 'Under maintenance'}
+                      <p className="text-gray-600 mt-2 font-medium">
+                        {currentVehicle.status === 'available' && '🚗 Ready for bookings'}
+                        {currentVehicle.status === 'rented' && '🔄 Currently rented out'}
+                        {currentVehicle.status === 'maintenance' && '🔧 Under maintenance'}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-orange-600">DH{vehicle.dailyRate}/day</div>
-                    <div className="text-sm text-gray-500">{vehicle.bookings} total bookings</div>
+                    <div className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
+                      DH{currentVehicle.dailyRate}<span className="text-lg text-gray-500">/day</span>
+                    </div>
+                    <div className="text-sm text-gray-500 mt-2 bg-gray-100 px-3 py-1 rounded-full inline-block">
+                      📊 {currentVehicle.bookings} total bookings
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Vehicle Info Grid */}
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid lg:grid-cols-2 gap-8">
                 {/* Basic Information */}
-                <div className="bg-white border border-gray-200 rounded-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-semibold text-gray-900">Basic Information</h4>
+                <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <h4 className="text-xl font-bold text-gray-900">Basic Information</h4>
+                    </div>
                     {!isEditing && (
                       <button
                         onClick={() => setIsEditing(true)}
-                        className="text-orange-600 hover:text-orange-800 font-medium"
+                        className="text-orange-600 hover:text-orange-800 font-semibold bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-xl transition-all duration-200"
                       >
-                        Edit
+                        ✏️ Edit
                       </button>
                     )}
                   </div>
@@ -489,38 +807,53 @@ export default function VehicleManageModal({
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Brand *</label>
                           <input
                             type="text"
                             name="brand"
                             value={editData.brand || ''}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                              validationErrors.brand ? 'border-red-500' : 'border-gray-300'
+                            }`}
                           />
+                          {validationErrors.brand && (
+                            <p className="text-red-500 text-xs mt-1">{validationErrors.brand}</p>
+                          )}
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Model *</label>
                           <input
                             type="text"
                             name="model"
                             value={editData.model || ''}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                              validationErrors.model ? 'border-red-500' : 'border-gray-300'
+                            }`}
                           />
+                          {validationErrors.model && (
+                            <p className="text-red-500 text-xs mt-1">{validationErrors.model}</p>
+                          )}
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Year *</label>
                           <select
                             name="year"
                             value={editData.year || ''}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                              validationErrors.year ? 'border-red-500' : 'border-gray-300'
+                            }`}
                           >
                             <option value="">Select Year</option>
-                            {Array.from({ length: 15 }, (_, i) => 2024 - i).map(year => (
+                            {Array.from({ length: 25 }, (_, i) => 2024 - i).map(year => (
                               <option key={year} value={year}>{year}</option>
                             ))}
                           </select>
+                          {validationErrors.year && (
+                            <p className="text-red-500 text-xs mt-1">{validationErrors.year}</p>
+                          )}
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
@@ -566,20 +899,34 @@ export default function VehicleManageModal({
                 </div>
 
                 {/* Pricing Information */}
-                <div className="bg-white border border-gray-200 rounded-xl p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Pricing</h4>
+                <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      </svg>
+                    </div>
+                    <h4 className="text-xl font-bold text-gray-900">Pricing</h4>
+                  </div>
                   
                   {isEditing ? (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Daily Rate (DH)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Daily Rate (DH) *</label>
                         <input
                           type="number"
                           name="dailyRate"
                           value={editData.dailyRate || ''}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          min="1"
+                          max="10000"
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                            validationErrors.dailyRate ? 'border-red-500' : 'border-gray-300'
+                          }`}
                         />
+                        {validationErrors.dailyRate && (
+                          <p className="text-red-500 text-xs mt-1">{validationErrors.dailyRate}</p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Weekly Rate (DH)</label>
@@ -610,76 +957,465 @@ export default function VehicleManageModal({
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Daily Rate:</span>
-                        <span className="font-medium text-orange-600">DH{vehicle.dailyRate}</span>
+                        <span className="font-medium text-orange-600">DH{currentVehicle.dailyRate}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Weekly Rate:</span>
-                        <span className="font-medium">DH{Math.round(vehicle.dailyRate * 7 * 0.85)}</span>
+                        <span className="font-medium">DH{Math.round(currentVehicle.dailyRate * 7 * 0.85)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Monthly Rate:</span>
-                        <span className="font-medium">DH{Math.round(vehicle.dailyRate * 30 * 0.70)}</span>
+                        <span className="font-medium">DH{Math.round(currentVehicle.dailyRate * 30 * 0.70)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Security Deposit:</span>
-                        <span className="font-medium">DH{Math.round(vehicle.dailyRate * 2)}</span>
+                        <span className="font-medium">DH{Math.round(currentVehicle.dailyRate * 2)}</span>
                       </div>
                     </div>
                   )}
                 </div>
               </div>
 
+              {/* Features & Safety Section */}
+              <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-xl font-bold text-gray-900">Features & Safety</h4>
+                  </div>
+                  {!isEditing && (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="text-orange-600 hover:text-orange-800 font-semibold bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-xl transition-all duration-200"
+                    >
+                      ✏️ Edit
+                    </button>
+                  )}
+                </div>
+
+                {isEditing ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Vehicle Features</label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {[
+                          'Air Conditioning', 'GPS Navigation', 'Bluetooth', 'USB Ports', 'Backup Camera',
+                          'Sunroof', 'Leather Seats', 'Heated Seats', 'Cruise Control', 'Keyless Entry',
+                          'Push Start', 'Parking Sensors', 'Alloy Wheels', 'Power Windows', 'Central Locking',
+                          'Anti-lock Brakes (ABS)', 'Airbags', 'Electronic Stability Control', 'Tire Pressure Monitor',
+                          'Child Safety Locks', 'Emergency Brake Assist', 'Traction Control', 'Lane Departure Warning'
+                        ].map((feature) => (
+                          <label key={feature} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              name="features"
+                              value={feature}
+                              checked={(editData.features || []).includes(feature)}
+                              onChange={handleInputChange}
+                              className="text-orange-500 focus:ring-orange-500 rounded"
+                            />
+                            <span className="text-sm text-gray-700">{feature}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Fuel Type *</label>
+                        <select
+                          name="fuelType"
+                          value={editData.fuelType || ''}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          required
+                        >
+                          <option value="">Select Fuel Type</option>
+                          <option value="Petrol">Petrol</option>
+                          <option value="Diesel">Diesel</option>
+                          <option value="Hybrid">Hybrid</option>
+                          <option value="Electric">Electric</option>
+                          <option value="LPG">LPG</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Transmission *</label>
+                        <select
+                          name="transmission"
+                          value={editData.transmission || ''}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          required
+                        >
+                          <option value="">Select Transmission</option>
+                          <option value="Manual">Manual</option>
+                          <option value="Automatic">Automatic</option>
+                          <option value="CVT">CVT (Continuously Variable)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Seating Capacity *</label>
+                        <select
+                          name="seatingCapacity"
+                          value={editData.seatingCapacity || ''}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          required
+                        >
+                          <option value="">Select Capacity</option>
+                          {[2, 4, 5, 7, 8, 9].map(capacity => (
+                            <option key={capacity} value={capacity}>{capacity} seats</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Condition *</label>
+                        <select
+                          name="condition"
+                          value={editData.condition || ''}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          required
+                        >
+                          <option value="">Select Condition</option>
+                          <option value="Excellent">Excellent - Like new</option>
+                          <option value="Very Good">Very Good - Minor wear</option>
+                          <option value="Good">Good - Some wear</option>
+                          <option value="Fair">Fair - Noticeable wear</option>
+                        </select>
+                      </div>
+                    </div>
+
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-700 mb-2">Features</h5>
+                      <div className="flex flex-wrap gap-3">
+                        {(currentVehicle.features || []).map((feature, index) => (
+                          <span
+                            key={index}
+                            className="px-4 py-2 bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 rounded-xl text-sm font-medium border border-orange-200 hover:from-orange-200 hover:to-orange-300 transition-all duration-200 shadow-sm"
+                          >
+                            ✨ {feature}
+                          </span>
+                        ))}
+                        {(!currentVehicle.features || currentVehicle.features.length === 0) && (
+                          <span className="text-gray-500 text-sm italic bg-gray-100 px-4 py-2 rounded-xl">
+                            📝 No features added yet here
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Fuel Type:</span>
+                        <span className="font-medium">{currentVehicle.fuelType || 'Not specified'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Transmission:</span>
+                        <span className="font-medium">{currentVehicle.transmission || 'Not specified'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Seating Capacity:</span>
+                        <span className="font-medium">{currentVehicle.seats ? `${currentVehicle.seats} seats` : 'Not specified'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Doors:</span>
+                        <span className="font-medium">{currentVehicle.doors ? `${currentVehicle.doors} doors` : 'Not specified'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Year:</span>
+                        <span className="font-medium">{currentVehicle.year || 'Not specified'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Mileage:</span>
+                        <span className="font-medium">{currentVehicle.mileage ? `${currentVehicle.mileage.toLocaleString()} km` : 'Not specified'}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Vehicle Description Section */}
+              <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                      </svg>
+                    </div>
+                    <h4 className="text-xl font-bold text-gray-900">Vehicle Description</h4>
+                  </div>
+                  {!isEditing && (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="text-orange-600 hover:text-orange-800 font-semibold bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-xl transition-all duration-200"
+                    >
+                      ✏️ Edit
+                    </button>
+                  )}
+                </div>
+
+                {isEditing ? (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Detailed Description
+                    </label>
+                    <textarea
+                      name="description"
+                      value={editData.description || ''}
+                      onChange={handleInputChange}
+                      placeholder="Describe your vehicle in detail. Include information about its condition, unique features, maintenance history, and anything else that would help potential renters..."
+                      rows={6}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      A detailed description helps attract more bookings. Mention special features, recent maintenance, and what makes your vehicle stand out.
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    {currentVehicle.description ? (
+                      <p className="text-gray-700 leading-relaxed">{currentVehicle.description}</p>
+                    ) : (
+                      <p className="text-gray-500 italic">📝 No description added yet here. Add a detailed description to attract more renters.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Vehicle Photos Section */}
+              <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-xl font-bold text-gray-900">Vehicle Photos</h4>
+                  </div>
+                  {!isEditing && (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="text-orange-600 hover:text-orange-800 font-semibold bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-xl transition-all duration-200"
+                    >
+                      ✏️ Edit
+                    </button>
+                  )}
+                </div>
+
+                {isEditing ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {(editData.photos || []).map((photo, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={typeof photo === 'string' ? photo : URL.createObjectURL(photo)}
+                            alt={`Vehicle ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                          />
+                          
+                          {/* Photo Controls */}
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+                            <div className="flex space-x-1">
+                              {index > 0 && (
+                                <button
+                                  onClick={() => movePhotoUp(index)}
+                                  className="w-8 h-8 bg-white text-gray-700 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+                                  title="Move left"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                  </svg>
+                                </button>
+                              )}
+                              {index < (editData.photos || []).length - 1 && (
+                                <button
+                                  onClick={() => movePhotoDown(index)}
+                                  className="w-8 h-8 bg-white text-gray-700 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+                                  title="Move right"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </button>
+                              )}
+                              <button
+                                onClick={() => removePhoto(index)}
+                                className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                title="Remove photo"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          
+                          {index === 0 && (
+                            <div className="absolute bottom-2 left-2 bg-orange-500 text-white text-xs px-2 py-1 rounded">
+                              Main
+                            </div>
+                          )}
+                          
+                          <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                            {index + 1}
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Add Photo Button */}
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-colors relative"
+                      >
+                        {photoUploadProgress > 0 && photoUploadProgress < 100 ? (
+                          <div className="text-center">
+                            <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                            <span className="text-sm text-gray-600">{photoUploadProgress}%</span>
+                          </div>
+                        ) : (
+                          <>
+                            <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            <span className="text-sm text-gray-600">Add Photo</span>
+                            <span className="text-xs text-gray-500 mt-1">Max 10 photos</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                    
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-start">
+                        <svg className="w-5 h-5 text-blue-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                          <h5 className="text-sm font-medium text-blue-900 mb-2">📸 Photo Tips</h5>
+                          <ul className="text-sm text-blue-800 space-y-1">
+                            <li>• Upload high-quality photos (max 5MB each)</li>
+                            <li>• Include exterior, interior, and engine bay shots</li>
+                            <li>• First photo becomes the main listing image</li>
+                            <li>• Well-lit photos attract more bookings</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    {(vehicle.photos && vehicle.photos.length > 0) ? (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {vehicle.photos.map((photo, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={typeof photo === 'string' ? photo : URL.createObjectURL(photo)}
+                              alt={`Vehicle ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                            />
+                            {index === 0 && (
+                              <div className="absolute bottom-2 left-2 bg-orange-500 text-white text-xs px-2 py-1 rounded">
+                                Main
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p className="text-gray-500">No photos uploaded yet. Add photos to attract more renters.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Performance Metrics */}
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-6">Performance Metrics</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">85%</div>
-                    <div className="text-sm text-gray-600">Booking Rate</div>
+              <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center space-x-3 mb-8">
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">DH{(vehicle.dailyRate * 18).toLocaleString()}</div>
-                    <div className="text-sm text-gray-600">Monthly Avg</div>
+                  <h4 className="text-xl font-bold text-gray-900">Performance Metrics</h4>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">85%</div>
+                    <div className="text-sm text-blue-600 font-medium mt-2">📈 Booking Rate</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">{vehicle.rating}</div>
-                    <div className="text-sm text-gray-600">Rating</div>
+                  <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border border-green-200">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">DH{(currentVehicle.dailyRate * 18).toLocaleString()}</div>
+                    <div className="text-sm text-green-600 font-medium mt-2">💰 Monthly Avg</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">{vehicle.bookings}</div>
-                    <div className="text-sm text-gray-600">Total Bookings</div>
+                  <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border border-purple-200">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">{vehicle.rating}</div>
+                    <div className="text-sm text-purple-600 font-medium mt-2">⭐ Rating</div>
+                  </div>
+                  <div className="text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border border-orange-200">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 bg-clip-text text-transparent">{vehicle.bookings}</div>
+                    <div className="text-sm text-orange-600 font-medium mt-2">🚗 Total Bookings</div>
                   </div>
                 </div>
               </div>
 
               {/* Quick Actions */}
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <button className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-center">
-                    <svg className="w-6 h-6 text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-xl font-bold text-gray-900">Quick Actions</h4>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <button className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-2xl transition-all duration-200 text-center border border-blue-200 hover:border-blue-300 shadow-sm hover:shadow-md group">
+                    <svg className="w-8 h-8 text-blue-600 mx-auto mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <div className="text-sm font-medium text-blue-600">Add Booking</div>
+                    <div className="text-sm font-semibold text-blue-700">📅 Add Booking</div>
                   </button>
-                  <button className="p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors text-center">
-                    <svg className="w-6 h-6 text-yellow-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button className="p-6 bg-gradient-to-br from-yellow-50 to-yellow-100 hover:from-yellow-100 hover:to-yellow-200 rounded-2xl transition-all duration-200 text-center border border-yellow-200 hover:border-yellow-300 shadow-sm hover:shadow-md group">
+                    <svg className="w-8 h-8 text-yellow-600 mx-auto mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <div className="text-sm font-medium text-yellow-600">Maintenance</div>
+                    <div className="text-sm font-semibold text-yellow-700">🔧 Maintenance</div>
                   </button>
-                  <button className="p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-center">
-                    <svg className="w-6 h-6 text-green-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button className="p-6 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-2xl transition-all duration-200 text-center border border-green-200 hover:border-green-300 shadow-sm hover:shadow-md group">
+                    <svg className="w-8 h-8 text-green-600 mx-auto mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <div className="text-sm font-medium text-green-600">Mark Available</div>
+                    <div className="text-sm font-semibold text-green-700">✅ Mark Available</div>
                   </button>
-                  <button className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-center">
-                    <svg className="w-6 h-6 text-purple-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-2xl transition-all duration-200 text-center border border-purple-200 hover:border-purple-300 shadow-sm hover:shadow-md group">
+                    <svg className="w-8 h-8 text-purple-600 mx-auto mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <div className="text-sm font-medium text-purple-600">Update Photos</div>
+                    <div className="text-sm font-semibold text-purple-700">📸 Update Photos</div>
                   </button>
                 </div>
               </div>
@@ -700,7 +1436,7 @@ export default function VehicleManageModal({
               </div>
 
               <div className="space-y-4">
-                {mockBookings.map((booking) => (
+                {bookings.map((booking) => (
                   <div key={booking.id} className="bg-white border border-gray-200 rounded-xl p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-4">
@@ -779,7 +1515,7 @@ export default function VehicleManageModal({
               </div>
 
               <div className="space-y-4">
-                {mockMaintenanceHistory.map((record) => (
+                {maintenanceHistory.map((record) => (
                   <div key={record.id} className="bg-white border border-gray-200 rounded-xl p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
@@ -841,7 +1577,7 @@ export default function VehicleManageModal({
                   <div className="text-xs text-green-600 mt-1">+5% from last month</div>
                 </div>
                 <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
-                  <div className="text-2xl font-bold text-green-600">DH{(vehicle.dailyRate * 23).toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-green-600">DH{(currentVehicle.dailyRate * 23).toLocaleString()}</div>
                   <div className="text-sm text-gray-600">Avg Monthly Revenue</div>
                   <div className="text-xs text-green-600 mt-1">+12% from last month</div>
                 </div>
@@ -893,39 +1629,28 @@ export default function VehicleManageModal({
 
               {/* Photo Management */}
               <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Photo Management</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  {(vehicle.photos || []).map((photo, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={typeof photo === 'string' ? photo : URL.createObjectURL(photo)}
-                        alt={`Vehicle ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg"
-                      />
-                      <button
-                        onClick={() => removePhoto(index)}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        ×
-                      </button>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Advanced Photo Settings</h4>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900">Auto-optimize images</p>
+                      <p className="text-sm text-gray-600">Automatically compress and optimize uploaded photos</p>
                     </div>
-                  ))}
-                </div>
-                <div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                  />
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-400 transition-colors text-gray-600 hover:text-orange-600"
-                  >
-                    Add More Photos
-                  </button>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                    </label>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900">Watermark photos</p>
+                      <p className="text-sm text-gray-600">Add AirbCar watermark to protect your photos</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -958,6 +1683,7 @@ export default function VehicleManageModal({
               </div>
             </div>
           )}
+        </div>
         </div>
 
         {/* Schedule Maintenance Modal */}
@@ -1194,5 +1920,5 @@ export default function VehicleManageModal({
         )}
       </div>
     </div>
-  )
+  );
 }

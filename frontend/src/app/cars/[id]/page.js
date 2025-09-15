@@ -28,6 +28,7 @@ export default function CarDetails() {
       '/api/placeholder/600/400'
     ],
     price: 420,
+    price_per_day: 420,
     location: 'Agadir',
     transmission: 'Manual',
     fuel: 'Diesel',
@@ -105,13 +106,133 @@ export default function CarDetails() {
     ]
   }
 
-  useEffect(() => {
-    // Simulate API call
-    setLoading(true)
-    setTimeout(() => {
+  // Fetch car data from backend API
+  const fetchCarData = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`http://127.0.0.1:8000/listings/${params.id}/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const vehicle = await response.json()
+      
+      // Transform backend data to match frontend format
+      const transformedCar = {
+        id: vehicle.id,
+        name: `${vehicle.vehicle_make || vehicle.brand || 'Car'} ${vehicle.vehicle_model || vehicle.model || 'Model'}${vehicle.year ? ` ${vehicle.year}` : ''}`,
+        brand: vehicle.vehicle_make || vehicle.brand || 'Unknown',
+        model: vehicle.vehicle_model || vehicle.model || 'Model',
+        year: vehicle.year || new Date().getFullYear(),
+        images: vehicle.photos && vehicle.photos.length > 0 ? vehicle.photos : [
+          '/api/placeholder/600/400',
+          '/api/placeholder/600/400',
+          '/api/placeholder/600/400'
+        ],
+        price: vehicle.daily_rate || vehicle.price || vehicle.rate || 0,
+        price_per_day: vehicle.daily_rate || vehicle.price || vehicle.rate || 0,
+        weeklyPrice: vehicle.weekly_rate || (vehicle.daily_rate * 7 * 0.85) || 0,
+        monthlyPrice: vehicle.monthly_rate || (vehicle.daily_rate * 30 * 0.70) || 0,
+        location: vehicle.location || 'Morocco',
+        transmission: vehicle.transmission || 'Manual',
+        fuel: vehicle.fuel_type || 'Petrol',
+        seats: vehicle.seats || 5,
+        doors: vehicle.doors || 4,
+        verified: vehicle.is_verified || true,
+        rating: vehicle.rating || 4.5,
+        reviews: vehicle.review_count || 50,
+        agency: {
+          name: vehicle.owner_name || 'Premium Car Rental',
+          verified: true,
+          rating: 4.9
+        },
+        features: vehicle.features || [
+          'Air Conditioning',
+          'GPS Navigation',
+          'Bluetooth',
+          'USB Port',
+          'Power Steering',
+          'Electric Windows',
+          'Central Locking',
+          'ABS Brakes'
+        ],
+        description: vehicle.description || 'A reliable and comfortable vehicle perfect for your journey.',
+        specs: {
+          engine: vehicle.engine_details || '1.5L',
+          horsepower: vehicle.horsepower || '110 HP',
+          consumption: vehicle.fuel_consumption || '5.2L/100km',
+          tank: '50L',
+          luggage: '445L'
+        },
+        extras: [
+          {
+            id: 1,
+            name: 'GPS Navigation',
+            price: 25,
+            included: true,
+            description: 'Built-in GPS with Morocco maps'
+          },
+          {
+            id: 2,
+            name: 'Child Seat',
+            price: 30,
+            included: false,
+            description: 'Safety child seat (3-12 years)'
+          },
+          {
+            id: 3,
+            name: 'Additional Driver',
+            price: 40,
+            included: false,
+            description: 'Allow additional driver (license required)'
+          },
+          {
+            id: 4,
+            name: 'Wi-Fi Hotspot',
+            price: 35,
+            included: false,
+            description: 'Mobile internet in the car'
+          }
+        ],
+        insurance: [
+          {
+            type: 'basic',
+            name: 'Basic Insurance',
+            price: 50,
+            coverage: ['Third party liability', 'Basic theft protection']
+          },
+          {
+            type: 'comprehensive',
+            name: 'Comprehensive Insurance',
+            price: 120,
+            coverage: ['Full damage coverage', 'Theft protection', 'Glass & tires', 'Roadside assistance']
+          }
+        ]
+      }
+
+      console.log('Fetched car details:', transformedCar)
+      setCar(transformedCar)
+
+    } catch (error) {
+      console.error('Error fetching car details:', error)
+      // Fallback to mock data if API fails
       setCar(mockCar)
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
+  }
+
+  useEffect(() => {
+    if (params.id) {
+      fetchCarData()
+    }
   }, [params.id])
 
   const handleExtraToggle = (extraId) => {
@@ -125,7 +246,7 @@ export default function CarDetails() {
   const calculateTotal = () => {
     if (!car) return 0
     
-    const basePrice = car.price
+    const basePrice = car.price_per_day || car.price || 0
     const extrasPrice = car.extras
       .filter(extra => selectedExtras.includes(extra.id))
       .reduce((sum, extra) => sum + extra.price, 0)
@@ -263,6 +384,13 @@ export default function CarDetails() {
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Specifications</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="text-center p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="text-2xl mb-1">💰</div>
+                    <div className="text-sm text-gray-600">Price</div>
+                    <div className="font-semibold text-orange-600">
+                      {car.price_per_day > 0 ? `${car.price_per_day} MAD/day` : 'Price on request'}
+                    </div>
+                  </div>
                   <div className="text-center p-3 bg-gray-50 rounded-lg">
                     <div className="text-2xl mb-1">👥</div>
                     <div className="text-sm text-gray-600">Seats</div>
@@ -321,6 +449,12 @@ export default function CarDetails() {
                   {calculateTotal()} MAD
                 </div>
                 <div className="text-sm text-gray-600">per day</div>
+                <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                  <div className="text-sm text-gray-700">Base price:</div>
+                  <div className="text-lg font-semibold text-gray-900">
+                    {car.price_per_day} MAD/day
+                  </div>
+                </div>
               </div>
 
               {/* Insurance Options */}
@@ -377,6 +511,37 @@ export default function CarDetails() {
                       </div>
                     </label>
                   ))}
+                </div>
+              </div>
+
+              {/* Price Breakdown */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-semibold text-gray-900 mb-3">Price Breakdown</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-700">Daily rate:</span>
+                    <span className="font-medium">{car.price_per_day} MAD/day</span>
+                  </div>
+                  {selectedExtras.length > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-700">Extras:</span>
+                      <span className="font-medium">
+                        +{car.extras
+                          .filter(extra => selectedExtras.includes(extra.id))
+                          .reduce((sum, extra) => sum + extra.price, 0)} MAD
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-700">Insurance:</span>
+                    <span className="font-medium">
+                      +{car.insurance.find(ins => ins.type === selectedInsurance)?.price || 0} MAD
+                    </span>
+                  </div>
+                  <div className="border-t pt-2 flex justify-between font-bold text-lg">
+                    <span>Total per day:</span>
+                    <span className="text-orange-500">{calculateTotal()} MAD</span>
+                  </div>
                 </div>
               </div>
 

@@ -98,7 +98,7 @@ function SearchContent() {
         '/carsymbol.jpg',
         '/carsymbol.jpg'
       ],
-      price: 420,
+      price_per_day: 420,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Diesel',
@@ -156,7 +156,7 @@ function SearchContent() {
         '/carsymbol.jpg',
         '/carsymbol.jpg'
       ],
-      price: 600,
+      price_per_day: 600,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Diesel',
@@ -212,7 +212,7 @@ function SearchContent() {
         '/carsymbol.jpg',
         '/carsymbol.jpg'
       ],
-      price: 550,
+      price_per_day: 550,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Diesel',
@@ -272,7 +272,7 @@ function SearchContent() {
         '/carsymbol.jpg',
         '/carsymbol.jpg'
       ],
-      price: 380,
+      price_per_day: 380,
       location: 'Agadir',
       transmission: 'Manual',
       fuel: 'Petrol',
@@ -329,7 +329,7 @@ function SearchContent() {
         '/carsymbol.jpg',
         '/carsymbol.jpg'
       ],
-      price: 850,
+      price_per_day: 850,
       location: 'Casablanca',
       transmission: 'Automatic',
       fuel: 'Diesel',
@@ -394,7 +394,7 @@ function SearchContent() {
         '/carsymbol.jpg',
         '/carsymbol.jpg'
       ],
-      price: 320,
+      price_per_day: 320,
       location: 'Marrakesh',
       transmission: 'Manual',
       fuel: 'Petrol',
@@ -443,6 +443,35 @@ function SearchContent() {
     }
   ]
 
+  // Helper function to safely display price
+  const formatPrice = (price_per_day) => {
+    console.log('formatPrice input:', price_per_day, 'type:', typeof price_per_day)
+    
+    // Handle undefined, null, or empty values
+    if (price_per_day === undefined || price_per_day === null || price_per_day === '') {
+      console.log('Price is undefined/null/empty')
+      return 'Price on request'
+    }
+    
+    const numPrice = Number(price_per_day)
+    console.log('numPrice after Number conversion:', numPrice, 'isNaN:', isNaN(numPrice))
+    
+    // Check if conversion resulted in a valid number
+    if (isNaN(numPrice) || numPrice <= 0) {
+      console.log('Price is not a valid positive number')
+      return 'Price on request'
+    }
+    
+    const result = `${numPrice} MAD`
+    console.log('formatPrice result:', result)
+    return result
+  }
+
+  const showPricePerDay = (price_per_day) => {
+    const numPrice = Number(price_per_day)
+    return (numPrice && numPrice > 0) ? 'per day' : ''
+  }
+
   useEffect(() => {
     // Cleanup function to reset body overflow when component unmounts
     return () => {
@@ -450,15 +479,113 @@ function SearchContent() {
     }
   }, [])
 
-  useEffect(() => {
-    // Simulate API call
-    setLoading(true)
-    setTimeout(() => {
-      setCars(mockCars)
-      setFilteredCars(mockCars)
+  // Fetch cars from backend API
+  const fetchCars = async () => {
+    try {
+      setLoading(true)
+      // Use different API URLs for server-side vs client-side
+      const isClientSide = typeof window !== 'undefined';
+      const apiUrl = isClientSide 
+        ? (process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://127.0.0.1:8000')
+        : (process.env.DJANGO_API_URL || 'http://web:8000');
+      
+      console.log('Fetching from:', `${apiUrl}/listings/`);
+      const response = await fetch(`${apiUrl}/listings/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log('API Response Status:', response.status);
+      console.log('Number of listings received:', data?.length || 0);
+      console.log('First listing sample:', data?.[0]);
+      
+      // Transform backend data to match frontend format
+      const transformedCars = (data || []).map(vehicle => {
+        const price = Number(vehicle.price_per_day || 0)
+        
+        return {
+          id: vehicle.id,
+          name: `${vehicle.make || 'Car'} ${vehicle.model || 'Model'}${vehicle.year ? ` ${vehicle.year}` : ''}`,
+          brand: vehicle.make || 'Unknown',
+          model: vehicle.model || 'Model',
+          year: vehicle.year || new Date().getFullYear(),
+          type: 'Car',
+          style: 'Car',
+          images: vehicle.pictures && vehicle.pictures.length > 0 ? vehicle.pictures : [
+            '/api/placeholder/400/300',
+            '/api/placeholder/400/300',
+            '/api/placeholder/400/300'
+          ],
+          price_per_day: price,
+          weeklyPrice: price * 7 * 0.85,
+          monthlyPrice: price * 30 * 0.70,
+          location: vehicle.location || 'Morocco',
+          transmission: vehicle.transmission || 'Manual',
+          fuelType: vehicle.fuel_type || 'Petrol',
+          seats: vehicle.seating_capacity || 5,
+          doors: 4,
+          verified: true,
+          rating: vehicle.rating || 4.5,
+          reviews: 50,
+          instantBook: false,
+          agency: {
+            name: 'Premium Car Rental',
+            verified: true,
+            rating: 4.9,
+            responseTime: '< 1 hour'
+          },
+          features: vehicle.features || [
+            'Air Conditioning',
+            'GPS Navigation',
+            'Bluetooth',
+            'USB Port'
+          ],
+          description: vehicle.vehicle_description || 'A reliable and comfortable vehicle perfect for your journey.',
+          specifications: {
+            engine: '1.5L',
+            horsepower: '110 HP',
+            consumption: '5.2L/100km',
+            acceleration: '0-100 km/h in 10.5s',
+            topSpeed: '180 km/h',
+            co2Emission: '120 g/km'
+          },
+          availability: vehicle.availability || true,
+          pickupProcess: [
+            'Document verification at pickup location',
+            'Vehicle inspection with rental agent',
+            'Digital signature and key handover',
+            'Quick orientation of vehicle features'
+          ]
+        }
+      })
+
+      console.log('Fetched cars from backend:', transformedCars.length)
+      console.log('Sample transformed car:', transformedCars[0])
+      console.log('Sample car price_per_day:', transformedCars[0]?.price_per_day)
+      setCars(transformedCars)
+      setFilteredCars(transformedCars)
+
+    } catch (error) {
+      console.error('Error fetching cars:', error)
+      // Don't fall back to mock data - show empty state instead
+      setCars([])
+      setFilteredCars([])
+    } finally {
       setLoading(false)
-    }, 1000)
-  }, []) // Empty dependency array is correct here since mockCars is static
+    }
+  }
+
+  useEffect(() => {
+    fetchCars()
+  }, []) // Empty dependency array is correct here
 
   // Check if user is authenticated and skip auth step
   useEffect(() => {
@@ -525,10 +652,10 @@ function SearchContent() {
   useEffect(() => {
     let filtered = cars.filter(car => {
       return (
-        car.price >= filters.priceRange[0] &&
-        car.price <= filters.priceRange[1] &&
+        (car.price_per_day || 0) >= filters.priceRange[0] &&
+        (car.price_per_day || 0) <= filters.priceRange[1] &&
         (filters.transmission.length === 0 || filters.transmission.includes(car.transmission)) &&
-        (filters.fuelType.length === 0 || filters.fuelType.includes(car.fuel)) &&
+        (filters.fuelType.length === 0 || filters.fuelType.includes(car.fuelType || car.fuel)) &&
         (filters.seats.length === 0 || filters.seats.includes(car.seats.toString())) &&
         (filters.style.length === 0 || filters.style.includes(car.style)) &&
         (filters.brand.length === 0 || filters.brand.includes(car.brand)) &&
@@ -540,10 +667,10 @@ function SearchContent() {
     // Apply sorting
     switch (sortBy) {
       case 'price_low':
-        filtered.sort((a, b) => a.price - b.price)
+        filtered.sort((a, b) => (a.price_per_day || 0) - (b.price_per_day || 0))
         break
       case 'price_high':
-        filtered.sort((a, b) => b.price - a.price)
+        filtered.sort((a, b) => (b.price_per_day || 0) - (a.price_per_day || 0))
         break
       case 'rating':
         filtered.sort((a, b) => b.rating - a.rating)
@@ -634,10 +761,8 @@ function SearchContent() {
   }
 
   const handleViewDetails = (car) => {
-    setSelectedCar(car)
-    setCurrentImageIndex(0)
-    setShowCarModal(true)
-    document.body.style.overflow = 'hidden'
+    // Navigate to car details page using backend car ID
+    router.push(`/cars/${car.id}`)
   }
 
   const handleCloseModal = () => {
@@ -1652,8 +1777,12 @@ function SearchContent() {
                           </p>
                         </div>
                         <div className="text-right">
-                          <div className="text-2xl font-bold text-orange-500">{car.price} MAD</div>
-                          <div className="text-sm text-gray-700">per day</div>
+                          <div className="text-2xl font-bold text-orange-500">
+                            {formatPrice(car.price_per_day)}
+                          </div>
+                          <div className="text-sm text-gray-700 font-medium">
+                            {showPricePerDay(car.price_per_day)}
+                          </div>
                         </div>
                       </div>
 
@@ -1977,7 +2106,7 @@ function SearchContent() {
                   <div className="bg-white rounded-xl p-6 shadow-sm border">
                     <div className="text-center mb-6">
                       <div className="text-3xl font-bold text-orange-500 mb-2">
-                        {selectedCar.price} MAD
+                        {selectedCar.price_per_day} MAD
                       </div>
                       <div className="text-gray-700">per day</div>
                     </div>
@@ -2004,8 +2133,8 @@ function SearchContent() {
                       <h5 className="font-semibold text-gray-900 mb-3">Total Price</h5>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-700">{selectedCar.price} MAD × 1 day</span>
-                          <span className="text-gray-900">{selectedCar.price} MAD</span>
+                          <span className="text-gray-700">{selectedCar.price_per_day} MAD × 1 day</span>
+                          <span className="text-gray-900">{selectedCar.price_per_day} MAD</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-700">Service fee</span>
@@ -2013,7 +2142,7 @@ function SearchContent() {
                         </div>
                         <div className="border-t pt-2 flex justify-between font-semibold">
                           <span className="text-gray-900">Total</span>
-                          <span className="text-gray-900">{selectedCar.price + 50} MAD</span>
+                          <span className="text-gray-900">{selectedCar.price_per_day + 50} MAD</span>
                         </div>
                       </div>
                     </div>
@@ -2701,7 +2830,7 @@ function SearchContent() {
                       </div>
                       <div className="border-t pt-2 flex justify-between font-semibold">
                         <span className="text-gray-900">Total</span>
-                        <span className="text-gray-900">{selectedCar ? selectedCar.price + 1050 : 1050} MAD</span>
+                        <span className="text-gray-900">{selectedCar ? selectedCar.price_per_day + 1050 : 1050} MAD</span>
                       </div>
                     </div>
                   </div>
@@ -2816,7 +2945,7 @@ function SearchContent() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Total Paid:</span>
-                        <span className="font-medium">{selectedCar ? selectedCar.price + 1050 : 1050} MAD</span>
+                        <span className="font-medium">{selectedCar ? selectedCar.price_per_day + 1050 : 1050} MAD</span>
                       </div>
                     </div>
                   </div>

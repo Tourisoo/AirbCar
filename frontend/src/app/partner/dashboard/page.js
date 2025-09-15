@@ -898,6 +898,70 @@ export default function PartnerDashboard() {
     setVehicles(prev => prev.filter(v => v.id !== vehicleId))
   }
 
+  // Toggle vehicle availability for search results
+  const handleToggleAvailability = async (vehicle) => {
+    try {
+      const newAvailability = !vehicle.availability
+      const token = localStorage.getItem('access_token')
+      
+      if (!token) {
+        alert('Please log in to update vehicle availability')
+        return
+      }
+
+      console.log('Toggling availability for vehicle:', vehicle.id, 'to:', newAvailability)
+
+      // Update in backend - try multiple field combinations
+      const updateData = {
+        is_available: newAvailability,
+        available: newAvailability,
+        availability: newAvailability,
+        status: newAvailability ? 'available' : 'unavailable'
+      }
+
+      console.log('Sending update data:', updateData)
+
+      const response = await fetch(`http://127.0.0.1:8000/listings/${vehicle.id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updateData)
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Backend response error:', response.status, errorText)
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+      }
+
+      const result = await response.json()
+      console.log('Backend response:', result)
+
+      // Update local state
+      setVehicles(prev => prev.map(v => 
+        v.id === vehicle.id 
+          ? { 
+              ...v, 
+              availability: newAvailability,
+              is_available: newAvailability,
+              available: newAvailability,
+              status: newAvailability ? 'available' : 'unavailable' 
+            } 
+          : v
+      ))
+
+      // Show success message
+      alert(`Vehicle ${newAvailability ? 'enabled' : 'disabled'} for booking in search results`)
+      
+    } catch (error) {
+      console.error('Error toggling availability:', error)
+      alert(`Failed to update availability: ${error.message}`)
+    }
+  }
+
   // Load reservations from backend
   const loadReservations = async () => {
     try {
@@ -2783,10 +2847,14 @@ export default function PartnerDashboard() {
                     <p className="text-sm text-gray-600 mb-4">{vehicle.bookings} bookings</p>
                     <div className="flex space-x-2">
                       <button 
-                        onClick={() => handleQuickEditVehicle(vehicle)}
-                        className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded text-sm hover:bg-gray-200 transition-colors"
+                        onClick={() => handleToggleAvailability(vehicle)}
+                        className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-colors ${
+                          vehicle.availability 
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                            : 'bg-red-100 text-red-700 hover:bg-red-200'
+                        }`}
                       >
-                        Quick Edit
+                        {vehicle.availability ? '✅ Available' : '❌ Unavailable'}
                       </button>
                       <button 
                         onClick={() => handleManageVehicle(vehicle)}
@@ -2995,10 +3063,14 @@ export default function PartnerDashboard() {
                     <p className="text-sm text-gray-600 mb-4">{vehicle.bookings} bookings</p>
                     <div className="flex space-x-2">
                       <button 
-                        onClick={() => handleQuickEditVehicle(vehicle)}
-                        className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded text-sm hover:bg-gray-200 transition-colors"
+                        onClick={() => handleToggleAvailability(vehicle)}
+                        className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-colors ${
+                          vehicle.availability 
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                            : 'bg-red-100 text-red-700 hover:bg-red-200'
+                        }`}
                       >
-                        Quick Edit
+                        {vehicle.availability ? '✅ Available' : '❌ Unavailable'}
                       </button>
                       <button 
                         onClick={() => handleManageVehicle(vehicle)}
