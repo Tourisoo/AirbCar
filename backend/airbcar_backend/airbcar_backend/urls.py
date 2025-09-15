@@ -31,7 +31,7 @@ router = DefaultRouter()
 router.register(r'users', UserViewSet) # Get: get user info
 router.register(r'partners', PartnerViewSet) # Post: add partner
 router.register(r'listings', ListingViewSet) # Post: add a listing
-router.register(r'bookings', BookingViewSet) # Post: add a booking
+router.register(r'bookings', BookingViewSet, basename='booking') # Post: add a booking
 
 
 urlpatterns = [

@@ -216,7 +216,7 @@ class ListingViewSet(viewsets.ModelViewSet):
         if partner_id:
             qs = qs.filter(partner_id=partner_id)
         return qs
-        
+
     def perform_create(self, serializer):
         request = self.request
         pictures = request.FILES.getlist("pictures")
@@ -254,7 +254,6 @@ class PartnerViewSet(viewsets.ModelViewSet):
     queryset = Partner.objects.all().prefetch_related('listings')
     serializer_class = PartnerSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-
 
     # def get_queryset(self):
     #     partner = self.request.user
