@@ -11,5 +11,5 @@ def upload_file_to_supabase(file, folder="listings"):
     filename = f"{folder}/{uuid.uuid4()}_{file}"    
     file.seek(0)
     file_content = file.read()
-    supabase.storage.from_("Pics").upload(filename, file_content)
+    supabase.storage.from_("Pics").upload(filename, file_content, {"content-type": "image/png"})
     return f"{url}/storage/v1/object/public/Pics/{filename}"
