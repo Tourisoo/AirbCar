@@ -279,9 +279,13 @@ class PartnerViewSet(viewsets.ModelViewSet):
             self.request.user.save(update_fields=['is_partner'])
 
 class BookingViewSet(viewsets.ModelViewSet):
-    queryset = Booking.objects.all()
     serializer_class = BookingSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Users can only see their own bookings
+        return Booking.objects.filter(user=self.request.user).order_by('-date')
+    
     def perform_create(self, serializer):
         listing_id = self.request.data.get('listing')
         try:
