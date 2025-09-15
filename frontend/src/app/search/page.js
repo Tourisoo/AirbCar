@@ -769,9 +769,11 @@ function SearchContent() {
     setShowAllStyles(false)
   }
 
-  const handleViewDetails = (car) => {
-    // Navigate to car details page using backend car ID
-    router.push(`/cars/${car.id}`)
+ const handleViewDetails = (car) => {
+    setSelectedCar(car)
+    setCurrentImageIndex(0)
+    setShowCarModal(true)
+    document.body.style.overflow = 'hidden'
   }
 
   const handleCloseModal = () => {
