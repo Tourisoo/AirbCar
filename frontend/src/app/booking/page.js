@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { bookingAPI, listingAPI } from '@/lib/api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
@@ -12,14 +11,11 @@ function BookingContent() {
   const [car, setCar] = useState(null)
   const [loading, setLoading] = useState(true)
   const [bookingStep, setBookingStep] = useState(1)
-  const [submitLoading, setSubmitLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [formData, setFormData] = useState({
-    pickupDate: '',
-    pickupTime: '10:00',
-    returnDate: '',
-    returnTime: '10:00',
+    pickupDate: 'Wed, Aug 20, 2024',
+    pickupTime: '01:30 PM',
+    returnDate: 'Thu, Aug 21, 2024',
+    returnTime: '01:30 PM',
     firstName: '',
     lastName: '',
     email: '',
@@ -30,167 +26,43 @@ function BookingContent() {
 
   const carId = searchParams.get('carId')
 
-  // Check authentication
-  const checkAuth = () => {
-    const token = localStorage.getItem('accessToken')
-    if (!token) {
-      router.push('/login?redirect=/booking?carId=' + carId)
-      return false
-    }
-    return true
+  // Mock car data - same as details page
+  const mockCarData = {
+    id: 1,
+    name: 'Dacia Duster 2020',
+    image: '/api/placeholder/300/200',
+    price: 420,
+    location: 'Agadir, Morocco',
+    owner: 'Mirian I.',
+    rating: 4.8,
+    reviewCount: 124
   }
 
   useEffect(() => {
-    if (!checkAuth()) return
-
     if (carId) {
       setLoading(true)
-      // Try to fetch real car data first, fallback to mock data
-      listingAPI.getListing(carId)
-        .then(carData => {
-          setCar({
-            id: carData.id,
-            name: `${carData.make} ${carData.model} ${carData.year}`,
-            image: carData.picture_url || '/api/placeholder/300/200',
-            price: carData.price_per_day,
-            location: carData.location,
-            owner: 'Car Owner', // You might want to add owner info to the listing model
-            rating: carData.rating || 4.8,
-            reviewCount: 124 // You might want to add review count to the model
-          })
-          setLoading(false)
-        })
-        .catch(error => {
-          console.error('Error fetching car data:', error)
-          // Fallback to mock data
-          setCar({
-            id: carId,
-            name: 'Dacia Duster 2020',
-            image: '/api/placeholder/300/200',
-            price: 420,
-            location: 'Agadir, Morocco',
-            owner: 'Mirian I.',
-            rating: 4.8,
-            reviewCount: 124
-          })
-          setLoading(false)
-        })
+      setTimeout(() => {
+        setCar(mockCarData)
+        setLoading(false)
+      }, 1000)
     }
-
-    // Set default dates (today and tomorrow)
-    const today = new Date()
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    
-    setFormData(prev => ({
-      ...prev,
-      pickupDate: today.toISOString().split('T')[0],
-      returnDate: tomorrow.toISOString().split('T')[0]
-    }))
-  }, [carId, router])
+  }, [carId])
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }))
-    // Clear error when user starts typing
-    if (error) setError('')
   }
 
-  const calculateDays = () => {
-    if (!formData.pickupDate || !formData.returnDate) return 1
-    const pickup = new Date(formData.pickupDate)
-    const returnDate = new Date(formData.returnDate)
-    const diffTime = Math.abs(returnDate - pickup)
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return Math.max(1, diffDays)
-  }
-
-  const calculateTotal = () => {
-    const days = calculateDays()
-    const serviceFee = 25
-    return (car?.price * days) + serviceFee
-  }
-
-  const validateForm = () => {
-    if (!formData.firstName.trim()) {
-      setError('First name is required')
-      return false
-    }
-    if (!formData.lastName.trim()) {
-      setError('Last name is required')
-      return false
-    }
-    if (!formData.email.trim()) {
-      setError('Email is required')
-      return false
-    }
-    if (!formData.phone.trim()) {
-      setError('Phone number is required')
-      return false
-    }
-    if (!formData.drivingLicense.trim()) {
-      setError('Driving license number is required')
-      return false
-    }
-    if (!formData.pickupDate) {
-      setError('Pickup date is required')
-      return false
-    }
-    if (!formData.returnDate) {
-      setError('Return date is required')
-      return false
-    }
-    if (new Date(formData.returnDate) <= new Date(formData.pickupDate)) {
-      setError('Return date must be after pickup date')
-      return false
-    }
-    return true
-  }
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
-    setError('')
-    setSuccess('')
-
     if (bookingStep === 1) {
-      if (!validateForm()) return
       setBookingStep(2)
     } else {
-      // Final booking submission
-      if (!checkAuth()) return
-
-      try {
-        setSubmitLoading(true)
-
-        // Create booking data for the API
-        const pickupDateTime = new Date(`${formData.pickupDate}T${formData.pickupTime}:00`)
-        const returnDateTime = new Date(`${formData.returnDate}T${formData.returnTime}:00`)
-        
-        const bookingData = {
-          listing: parseInt(carId),
-          start_time: pickupDateTime.toISOString(),
-          end_time: returnDateTime.toISOString(),
-          price: calculateTotal(),
-          status: 'pending'
-        }
-
-        const result = await bookingAPI.createBooking(bookingData)
-        
-        setSuccess('Booking request submitted successfully!')
-        
-        // Redirect to bookings page or success page after a delay
-        setTimeout(() => {
-          router.push('/bookings')
-        }, 2000)
-
-      } catch (error) {
-        console.error('Booking submission error:', error)
-        setError(error.message || 'Failed to submit booking request. Please try again.')
-      } finally {
-        setSubmitLoading(false)
-      }
+      // Handle final booking submission
+      alert('Booking request submitted successfully!')
+      router.push('/search')
     }
   }
 
@@ -293,36 +165,6 @@ function BookingContent() {
                 {bookingStep === 1 ? 'Trip Details' : 'Confirm Your Booking'}
               </h1>
 
-              {error && (
-                <div className="mb-6 rounded-md bg-red-50 p-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-red-700">{error}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {success && (
-                <div className="mb-6 rounded-md bg-green-50 p-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-green-700">{success}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               <form onSubmit={handleSubmit}>
                 {bookingStep === 1 ? (
                   <div className="space-y-6">
@@ -335,11 +177,9 @@ function BookingContent() {
                             Pickup Date
                           </label>
                           <input
-                            type="date"
-                            required
+                            type="text"
                             value={formData.pickupDate}
                             onChange={(e) => handleInputChange('pickupDate', e.target.value)}
-                            min={new Date().toISOString().split('T')[0]}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                           />
                         </div>
@@ -348,7 +188,7 @@ function BookingContent() {
                             Pickup Time
                           </label>
                           <input
-                            type="time"
+                            type="text"
                             value={formData.pickupTime}
                             onChange={(e) => handleInputChange('pickupTime', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -359,11 +199,9 @@ function BookingContent() {
                             Return Date
                           </label>
                           <input
-                            type="date"
-                            required
+                            type="text"
                             value={formData.returnDate}
                             onChange={(e) => handleInputChange('returnDate', e.target.value)}
-                            min={formData.pickupDate || new Date().toISOString().split('T')[0]}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                           />
                         </div>
@@ -372,7 +210,7 @@ function BookingContent() {
                             Return Time
                           </label>
                           <input
-                            type="time"
+                            type="text"
                             value={formData.returnTime}
                             onChange={(e) => handleInputChange('returnTime', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -475,10 +313,6 @@ function BookingContent() {
                           <span>{formData.returnDate} at {formData.returnTime}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Duration:</span>
-                          <span>{calculateDays()} day{calculateDays() > 1 ? 's' : ''}</span>
-                        </div>
-                        <div className="flex justify-between">
                           <span className="text-gray-600">Guest:</span>
                           <span>{formData.firstName} {formData.lastName}</span>
                         </div>
@@ -522,17 +356,9 @@ function BookingContent() {
                   )}
                   <button
                     type="submit"
-                    disabled={submitLoading}
-                    className="ml-auto bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="ml-auto bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors"
                   >
-                    {submitLoading ? (
-                      <div className="flex items-center space-x-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        <span>Processing...</span>
-                      </div>
-                    ) : (
-                      bookingStep === 1 ? 'Continue' : 'Submit Request'
-                    )}
+                    {bookingStep === 1 ? 'Continue' : 'Submit Request'}
                   </button>
                 </div>
               </form>
@@ -573,8 +399,8 @@ function BookingContent() {
 
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">{calculateDays()} day{calculateDays() > 1 ? 's' : ''} rental</span>
-                    <span className="font-medium">{car.price * calculateDays()} MAD</span>
+                    <span className="text-gray-600">1 day rental</span>
+                    <span className="font-medium">{car.price} MAD</span>
                   </div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-600">Service fee</span>
@@ -582,7 +408,7 @@ function BookingContent() {
                   </div>
                   <div className="flex justify-between items-center font-semibold text-lg border-t border-gray-200 pt-2">
                     <span>Total</span>
-                    <span>{calculateTotal()} MAD</span>
+                    <span>{car.price + 25} MAD</span>
                   </div>
                 </div>
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { userAPI, authAPI, bookingAPI } from '@/lib/api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
@@ -83,6 +84,14 @@ function SearchContent() {
   const [uploadedDocuments, setUploadedDocuments] = useState({
     idFrontDocument: null,
     idBackDocument: null
+  })
+  
+  // Booking-specific state
+  const [bookingDetails, setBookingDetails] = useState({
+    pickupDate: '',
+    dropoffDate: '',
+    pickupTime: '09:00',
+    dropoffTime: '18:00'
   })
 
   // Mock data - replace with actual API call
@@ -451,14 +460,116 @@ function SearchContent() {
   }, [])
 
   useEffect(() => {
-    // Simulate API call
-    setLoading(true)
-    setTimeout(() => {
-      setCars(mockCars)
-      setFilteredCars(mockCars)
-      setLoading(false)
-    }, 1000)
-  }, []) // Empty dependency array is correct here since mockCars is static
+    // Capture booking details from URL parameters
+    const pickupDate = searchParams.get('pickupDate')
+    const dropoffDate = searchParams.get('dropoffDate')
+    const pickupTime = searchParams.get('pickupTime') || '09:00'
+    const dropoffTime = searchParams.get('dropoffTime') || '18:00'
+    
+    if (pickupDate && dropoffDate) {
+      setBookingDetails({
+        pickupDate,
+        dropoffDate,
+        pickupTime,
+        dropoffTime
+      })
+    }
+  }, [searchParams])
+
+  useEffect(() => {
+    const loadCars = async () => {
+      try {
+        setLoading(true)
+        // Fetch real listings from the API
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/listings/`)
+        if (response.ok) {
+          const listings = await response.json()
+          
+          // Transform API listings to match frontend car structure
+          const transformedCars = listings.map(listing => ({
+            id: listing.id,
+            name: `${listing.make} ${listing.model}`,
+            modelYear: listing.year,
+            image: listing.pictures && listing.pictures.length > 0 ? listing.pictures[0] : '/carsymbol.jpg',
+            images: listing.pictures && listing.pictures.length > 0 ? listing.pictures : ['/carsymbol.jpg'],
+            price: parseInt(listing.price_per_day),
+            location: listing.location || 'Not specified',
+            transmission: listing.transmission,
+            fuel: listing.fuel_type,
+            seats: listing.seating_capacity,
+            style: 'Car', // Default style since it's not in the API
+            brand: listing.make,
+            mileage: 'Not specified', // Not available in API
+            verified: true,
+            rating: listing.rating || 4.5,
+            reviews: Math.floor(Math.random() * 200) + 50, // Random reviews since not in API
+            color: 'Not specified',
+            fuelEconomy: 'Not specified',
+            engineSize: 'Not specified',
+            acceleration: 'Not specified',
+            topSpeed: 'Not specified',
+            description: listing.vehicle_description || `${listing.year} ${listing.make} ${listing.model} in ${listing.vehicle_condition} condition.`,
+            features: listing.features || [],
+            availableFeatures: ['GPS', 'AC', '4WD', 'Child Seat', 'Roof Box'], // Default available features
+            ownerRules: [
+              'No smoking in the vehicle',
+              'Return with same fuel level',
+              'Maximum 2 additional drivers',
+              'No pets allowed',
+              'Clean the car before return'
+            ],
+            technicalFeatures: [
+              'ABS Brakes',
+              'Power Steering',
+              'Electric Windows',
+              'Central Locking',
+              'Airbags',
+              'Stability Control'
+            ],
+            optionsAccessories: [
+              'Air Conditioning',
+              'GPS Navigation',
+              'Bluetooth Connectivity',
+              'USB Charging Ports',
+              'Radio/CD Player'
+            ],
+            pickupProcess: {
+              steps: [
+                'Meet at the designated pickup location',
+                'Vehicle inspection together',
+                'Review rental agreement',
+                'Provide driving license and ID',
+                'Quick tutorial of car features'
+              ],
+              duration: '15-20 minutes',
+              requirements: ['Valid driving license', 'Credit card', 'ID/Passport']
+            },
+            cancellationPolicy: 'Free cancellation up to 24 hours before pickup. 50% refund for cancellations within 24 hours.',
+            insuranceIncluded: true,
+            roadSideAssistance: true,
+            gpsIncluded: true
+          }))
+          
+          setCars(transformedCars)
+          setFilteredCars(transformedCars)
+        } else {
+          console.error('Failed to fetch listings:', response.status)
+          // Fallback to mock data if API fails
+          setCars(mockCars)
+          setFilteredCars(mockCars)
+        }
+      } catch (error) {
+        console.error('Error fetching listings:', error)
+        // Fallback to mock data if API fails
+        setCars(mockCars)
+        setFilteredCars(mockCars)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadCars()
+  }, []) // Empty dependency array is correct here
 
   // Check if user is authenticated and skip auth step
   useEffect(() => {
@@ -1002,6 +1113,10 @@ function SearchContent() {
         setProfileCompleteness(prev => ({ ...prev, license: true }))
         setSuccessMessage('License information and documents saved successfully!')
       }
+      else if (bookingStep === 'payment') {
+        await processPaymentAndCreateBooking()
+        setSuccessMessage('Payment processed successfully! Your booking has been confirmed.')
+      }
 
       // Wait a bit to show success message, then move to next step (only for non-auth steps)
       if (bookingStep !== 'auth') {
@@ -1202,6 +1317,73 @@ function SearchContent() {
       return await response.json()
     } catch (error) {
       console.error('Error saving license info:', error)
+      throw error
+    }
+  }
+
+  const processPaymentAndCreateBooking = async () => {
+    try {
+      // Debug: Check authentication
+      const token = localStorage.getItem('access_token')
+      console.log('Access token available:', !!token)
+      
+      if (!token) {
+        throw new Error('User not authenticated. Please log in again.')
+      }
+
+      // Use booking details from state, with fallback to URL params
+      let { pickupDate, dropoffDate, pickupTime, dropoffTime } = bookingDetails
+      
+      // Fallback to URL params if state is empty
+      if (!pickupDate || !dropoffDate) {
+        pickupDate = searchParams.get('pickupDate')
+        dropoffDate = searchParams.get('dropoffDate')
+        pickupTime = searchParams.get('pickupTime') || '09:00'
+        dropoffTime = searchParams.get('dropoffTime') || '18:00'
+      }
+      
+      if (!pickupDate || !dropoffDate) {
+        throw new Error('Pickup and dropoff dates are required. Please go back and select your dates.')
+      }
+
+      if (!selectedCar) {
+        throw new Error('No car selected for booking')
+      }
+
+      // Calculate total price (basic calculation - you might want to add more logic)
+      const startDate = new Date(pickupDate)
+      const endDate = new Date(dropoffDate)
+      const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
+      const totalPrice = days * selectedCar.price
+
+      // Create booking data with proper datetime formatting
+      const startDateTime = new Date(`${pickupDate}T${pickupTime}:00`).toISOString()
+      const endDateTime = new Date(`${dropoffDate}T${dropoffTime}:00`).toISOString()
+
+      const bookingData = {
+        listing: selectedCar.id,
+        start_time: startDateTime,
+        end_time: endDateTime,
+        price: totalPrice,
+        status: 'confirmed' // Set as confirmed after payment
+      }
+
+      console.log('Creating booking with data:', bookingData)
+      console.log('Selected car object:', selectedCar)
+      console.log('Car ID type:', typeof selectedCar.id)
+      console.log('Auth token exists:', !!localStorage.getItem('access_token'))
+
+      // Create the booking
+      const booking = await bookingAPI.createBooking(bookingData)
+      
+      console.log('Booking created successfully:', booking)
+      
+      // Store booking ID for reference
+      localStorage.setItem('lastBookingId', booking.id)
+      
+      return booking
+    } catch (error) {
+      console.error('Error processing payment and creating booking:', error)
       throw error
     }
   }
@@ -1882,19 +2064,19 @@ function SearchContent() {
                         <div>
                           <h5 className="font-medium text-gray-900 mb-2">Process Steps:</h5>
                           <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
-                            {selectedCar.pickupProcess.steps.map((step, index) => (
+                            {(selectedCar.pickupProcess?.steps || []).map((step, index) => (
                               <li key={index}>{step}</li>
                             ))}
                           </ol>
                         </div>
                         <div>
                           <h5 className="font-medium text-gray-900 mb-2">Duration:</h5>
-                          <p className="text-sm text-gray-700">{selectedCar.pickupProcess.duration}</p>
+                          <p className="text-sm text-gray-700">{selectedCar.pickupProcess?.duration || 'Not specified'}</p>
                         </div>
                         <div>
                           <h5 className="font-medium text-gray-900 mb-2">Requirements:</h5>
                           <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                            {selectedCar.pickupProcess.requirements.map((req, index) => (
+                            {(selectedCar.pickupProcess?.requirements || []).map((req, index) => (
                               <li key={index}>{req}</li>
                             ))}
                           </ul>
@@ -1913,7 +2095,7 @@ function SearchContent() {
                   <div className="bg-gray-50 rounded-xl p-6">
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">Owner Rules</h4>
                     <ul className="space-y-2">
-                      {selectedCar.ownerRules.map((rule, index) => (
+                      {(selectedCar.ownerRules || []).map((rule, index) => (
                         <li key={index} className="flex items-start">
                           <svg className="w-4 h-4 text-orange-500 mt-1 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -1943,7 +2125,7 @@ function SearchContent() {
                   <div className="bg-gray-50 rounded-xl p-6">
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">Technical Features</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {selectedCar.technicalFeatures.map((feature, index) => (
+                      {(selectedCar.technicalFeatures || []).map((feature, index) => (
                         <div key={index} className="flex items-center">
                           <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -1958,7 +2140,7 @@ function SearchContent() {
                   <div className="bg-gray-50 rounded-xl p-6">
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">Options & Accessories</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {selectedCar.optionsAccessories.map((option, index) => (
+                      {(selectedCar.optionsAccessories || []).map((option, index) => (
                         <div key={index} className="flex items-center">
                           <svg className="w-4 h-4 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -2028,7 +2210,7 @@ function SearchContent() {
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h6 className="font-semibold text-gray-900 mb-2">Cancellation Policy</h6>
                       <p className="text-xs text-gray-700 leading-relaxed">
-                        {selectedCar.cancellationPolicy}
+                        {selectedCar.cancellationPolicy || 'Cancellation policy not specified'}
                       </p>
                     </div>
                   </div>
@@ -2825,12 +3007,20 @@ function SearchContent() {
                     <p className="text-sm text-gray-700">
                       You will receive a confirmation email with all the details and pickup instructions.
                     </p>
-                    <button
-                      onClick={handleCloseModal}
-                      className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium"
-                    >
-                      Close
-                    </button>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => router.push('/bookings')}
+                        className="flex-1 bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium"
+                      >
+                        View My Bookings
+                      </button>
+                      <button
+                        onClick={handleCloseModal}
+                        className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                      >
+                        Close
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

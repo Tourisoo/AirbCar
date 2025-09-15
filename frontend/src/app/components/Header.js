@@ -110,7 +110,7 @@ export default function Header() {
   }
 
   const handleMyBookingsClick = () => {
-    router.push('/bookings')
+    router.push('/account?section=bookings')
   }
 
   const handleAdminClick = () => {
