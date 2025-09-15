@@ -106,8 +106,6 @@ class PartnerSerializer(serializers.ModelSerializer):
         class Meta:
             model = Listing
             fields = ['id', 'make', 'model', 'year', 'location', 'price_per_day', 'pictures']
-                    # 'availability', 'created_at', 'fuel_type', 'transmission',
-                    # 'seating_capacity', 'vehicle_condition', 'rating', 'features', 'pictures']
 
     class UserBriefSerializer(serializers.ModelSerializer):
         class Meta:
@@ -138,9 +136,9 @@ class ListingSerializer(serializers.ModelSerializer):
             data.pop('pictures')
         return super().to_internal_value(data)
 
-    def update(self, instance, validated_data):
-        # Don't update pictures field here, it's handled in the view
-        return super().update(instance, validated_data)
+    # def update(self, instance, validated_data):
+    #     # Don't update pictures field here, it's handled in the view
+    #     return super().update(instance, validated_data)
 
 class BookingSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
