@@ -236,31 +236,92 @@ export default function PartnerDashboard() {
   // Fetch partner data from backend API
   const fetchPartnerData = async (partnerId) => {
     try {
+      const token = localStorage.getItem('access_token')
+      if (!token) {
+        console.error('No access token available for partner data fetch')
+        return null
+      }
+
+      console.log('Attempting to fetch partner data for ID:', partnerId)
+      console.log('Using token:', token.substring(0, 20) + '...')
+
       const response = await fetch(`http://127.0.0.1:8000/partners/${partnerId}/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          'Authorization': `Bearer ${token}`
         },
       })
+
+      console.log('Partner API Response status:', response.status)
+      console.log('Partner API URL used:', `http://127.0.0.1:8000/partners/${partnerId}/`)
 
       if (!response.ok) {
         console.error(`Partner API Error: ${response.status} ${response.statusText}`)
         const errorText = await response.text()
         console.error('Error response body:', errorText)
         
+        // If 404, try to find the partner by searching all partners
+        if (response.status === 404) {
+          console.log('Partner not found, trying to find partner by user ID...')
+          return await findPartnerByUserId(partnerId)
+        }
+        
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const partnerData = await response.json()
-      console.log('Partner API URL used:', `http://127.0.0.1:8000/partners/${partnerId}/`)
-      console.log('Partner Response status:', response.status)
-      console.log('Fetched partner data:', partnerData)
+      console.log('Fetched partner data successfully:', partnerData)
       
       return partnerData
     } catch (error) {
       console.error('Error fetching partner data:', error)
+      // Try fallback method
+      console.log('Trying fallback method to find partner...')
+      return await findPartnerByUserId(partnerId)
+    }
+  }
+
+  // Fallback function to find partner by user ID
+  const findPartnerByUserId = async (userId) => {
+    try {
+      const token = localStorage.getItem('access_token')
+      if (!token) {
+        console.error('No access token available for partner search')
+        return null
+      }
+
+      console.log('Searching for partner with user ID:', userId)
+      
+      const response = await fetch('http://127.0.0.1:8000/partners/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+      })
+
+      if (!response.ok) {
+        console.error(`Partners list API Error: ${response.status} ${response.statusText}`)
+        return null
+      }
+
+      const partnersData = await response.json()
+      console.log('All partners data:', partnersData)
+      
+      // Find partner record for current user
+      const userPartner = partnersData.find(partner => partner.user?.id === parseInt(userId))
+      if (userPartner) {
+        console.log('Found partner record:', userPartner)
+        return userPartner
+      } else {
+        console.log('No partner record found for user ID:', userId)
+        return null
+      }
+    } catch (error) {
+      console.error('Error in fallback partner search:', error)
       return null
     }
   }
@@ -268,17 +329,28 @@ export default function PartnerDashboard() {
   // Fetch vehicles from backend API
   const fetchVehicles = async (partnerId) => {
     try {
+      const token = localStorage.getItem('access_token')
+      if (!token) {
+        console.error('No access token available for vehicles fetch')
+        return []
+      }
+
+      console.log('Fetching vehicles for partner ID:', partnerId)
+      
       const response = await fetch(`http://127.0.0.1:8000/listings/?partner=${partnerId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          'Authorization': `Bearer ${token}`
         },
       })
 
+      console.log('Vehicles API Response status:', response.status)
+      console.log('Vehicles API URL used:', `http://127.0.0.1:8000/listings/?partner=${partnerId}`)
+
       if (!response.ok) {
-        console.error(`API Error: ${response.status} ${response.statusText}`)
+        console.error(`Vehicles API Error: ${response.status} ${response.statusText}`)
         const errorText = await response.text()
         console.error('Error response body:', errorText)
         
@@ -290,12 +362,11 @@ export default function PartnerDashboard() {
           console.error('Error response is not JSON')
         }
         
-        throw new Error(`HTTP error! status: ${response.status}`)
+        // Return empty array instead of throwing error
+        return []
       }
 
       const data = await response.json()
-      console.log('API URL used:', `http://127.0.0.1:8000/listings/?partner=${partnerId}`)
-      console.log('Response status:', response.status)
       console.log('Fetched vehicles data:', data)
       console.log('Data type:', typeof data)
       console.log('Is array:', Array.isArray(data))
@@ -3248,7 +3319,7 @@ export default function PartnerDashboard() {
                         name="firstName"
                         value={accountData.firstName}
                         onChange={handleAccountDataChange}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                           validationErrors.firstName 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3268,7 +3339,7 @@ export default function PartnerDashboard() {
                         name="lastName"
                         value={accountData.lastName}
                         onChange={handleAccountDataChange}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                           validationErrors.lastName 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3288,7 +3359,7 @@ export default function PartnerDashboard() {
                         name="email"
                         value={accountData.email}
                         onChange={handleAccountDataChange}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                           validationErrors.email 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3307,7 +3378,7 @@ export default function PartnerDashboard() {
                         value={accountData.phone}
                         onChange={handleAccountDataChange}
                         placeholder="+1234567890"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                           validationErrors.phone 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3325,7 +3396,7 @@ export default function PartnerDashboard() {
                         value={accountData.address}
                         onChange={handleAccountDataChange}
                         placeholder="Full address including city and country"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                           validationErrors.address 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3343,7 +3414,7 @@ export default function PartnerDashboard() {
                         value={accountData.dateOfBirth}
                         onChange={handleAccountDataChange}
                         max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                           validationErrors.dateOfBirth 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3361,7 +3432,7 @@ export default function PartnerDashboard() {
                         value={accountData.idNumber}
                         onChange={handleAccountDataChange}
                         placeholder="Government issued ID number"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                           validationErrors.idNumber 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3386,7 +3457,7 @@ export default function PartnerDashboard() {
                         value={accountData.businessName}
                         onChange={handleAccountDataChange}
                         placeholder="Your company or business name"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                           validationErrors.businessName 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3404,7 +3475,7 @@ export default function PartnerDashboard() {
                         value={accountData.taxId}
                         onChange={handleAccountDataChange}
                         placeholder="Business tax identification number"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                           validationErrors.taxId 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'

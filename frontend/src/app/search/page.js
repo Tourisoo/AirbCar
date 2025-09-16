@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { userAPI, authAPI, bookingAPI } from '@/lib/api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
@@ -84,14 +83,6 @@ function SearchContent() {
   const [uploadedDocuments, setUploadedDocuments] = useState({
     idFrontDocument: null,
     idBackDocument: null
-  })
-  
-  // Booking-specific state
-  const [bookingDetails, setBookingDetails] = useState({
-    pickupDate: '',
-    dropoffDate: '',
-    pickupTime: '09:00',
-    dropoffTime: '18:00'
   })
 
   // Mock data - replace with actual API call
@@ -453,31 +444,13 @@ function SearchContent() {
   ]
 
   // Helper function to safely display price
-  const formatPrice = (price_per_day) => {
-    console.log('formatPrice input:', price_per_day, 'type:', typeof price_per_day)
-    
-    // Handle undefined, null, or empty values
-    if (price_per_day === undefined || price_per_day === null || price_per_day === '') {
-      console.log('Price is undefined/null/empty')
-      return 'Price on request'
-    }
-    
-    const numPrice = Number(price_per_day)
-    console.log('numPrice after Number conversion:', numPrice, 'isNaN:', isNaN(numPrice))
-    
-    // Check if conversion resulted in a valid number
-    if (isNaN(numPrice) || numPrice <= 0) {
-      console.log('Price is not a valid positive number')
-      return 'Price on request'
-    }
-    
-    const result = `${numPrice} MAD`
-    console.log('formatPrice result:', result)
-    return result
+  const formatPrice = (price) => {
+    const numPrice = Number(price)
+    return (numPrice && numPrice > 0) ? `${numPrice} MAD` : 'Price on request'
   }
 
-  const showPricePerDay = (price_per_day) => {
-    const numPrice = Number(price_per_day)
+  const showPricePerDay = (price) => {
+    const numPrice = Number(price)
     return (numPrice && numPrice > 0) ? 'per day' : ''
   }
 
@@ -492,14 +465,7 @@ function SearchContent() {
   const fetchCars = async () => {
     try {
       setLoading(true)
-      // Use different API URLs for server-side vs client-side
-      const isClientSide = typeof window !== 'undefined';
-      const apiUrl = isClientSide 
-        ? (process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://127.0.0.1:8000')
-        : (process.env.DJANGO_API_URL || 'http://web:8000');
-      
-      console.log('Fetching from:', `${apiUrl}/listings/`);
-      const response = await fetch(`${apiUrl}/listings/`, {
+      const response = await fetch('http://127.0.0.1:8000/listings/', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -512,41 +478,41 @@ function SearchContent() {
       }
 
       const data = await response.json()
-      console.log('API Response Status:', response.status);
-      console.log('Number of listings received:', data?.length || 0);
-      console.log('First listing sample:', data?.[0]);
+      console.log('Raw backend data:', data.results || data)
       
       // Transform backend data to match frontend format
-      const transformedCars = (data || []).map(vehicle => {
-        const price = Number(vehicle.price_per_day || 0)
+      const transformedCars = (data.results || data || []).map(vehicle => {
+        console.log('Raw vehicle data:', vehicle)
+        const price = Number(vehicle.daily_rate || vehicle.price || vehicle.rate || 0)
+        console.log('Transformed price:', price)
         
         return {
           id: vehicle.id,
-          name: `${vehicle.make || 'Car'} ${vehicle.model || 'Model'}${vehicle.year ? ` ${vehicle.year}` : ''}`,
-          brand: vehicle.make || 'Unknown',
-          model: vehicle.model || 'Model',
+          name: `${vehicle.vehicle_make || vehicle.brand || 'Car'} ${vehicle.vehicle_model || vehicle.model || 'Model'}${vehicle.year ? ` ${vehicle.year}` : ''}`,
+          brand: vehicle.vehicle_make || vehicle.brand || 'Unknown',
+          model: vehicle.vehicle_model || vehicle.model || 'Model',
           year: vehicle.year || new Date().getFullYear(),
-          type: 'Car',
-          style: 'Car',
-          images: vehicle.pictures && vehicle.pictures.length > 0 ? vehicle.pictures : [
+          type: vehicle.vehicle_type || 'SUV',
+          style: vehicle.style || 'SUV',
+          images: vehicle.photos && vehicle.photos.length > 0 ? vehicle.photos : [
             '/api/placeholder/400/300',
             '/api/placeholder/400/300',
             '/api/placeholder/400/300'
           ],
           price_per_day: price,
-          weeklyPrice: price * 7 * 0.85,
-          monthlyPrice: price * 30 * 0.70,
+          weeklyPrice: vehicle.weekly_rate || (vehicle.daily_rate * 7 * 0.85) || 0,
+          monthlyPrice: vehicle.monthly_rate || (vehicle.daily_rate * 30 * 0.70) || 0,
           location: vehicle.location || 'Morocco',
           transmission: vehicle.transmission || 'Manual',
           fuelType: vehicle.fuel_type || 'Petrol',
-          seats: vehicle.seating_capacity || 5,
-          doors: 4,
-          verified: true,
+          seats: vehicle.seats || 5,
+          doors: vehicle.doors || 4,
+          verified: vehicle.is_verified || true,
           rating: vehicle.rating || 4.5,
-          reviews: 50,
-          instantBook: false,
+          reviews: vehicle.review_count || 50,
+          instantBook: vehicle.instant_book || false,
           agency: {
-            name: 'Premium Car Rental',
+            name: vehicle.owner_name || 'Premium Car Rental',
             verified: true,
             rating: 4.9,
             responseTime: '< 1 hour'
@@ -557,16 +523,16 @@ function SearchContent() {
             'Bluetooth',
             'USB Port'
           ],
-          description: vehicle.vehicle_description || 'A reliable and comfortable vehicle perfect for your journey.',
+          description: vehicle.description || 'A reliable and comfortable vehicle perfect for your journey.',
           specifications: {
-            engine: '1.5L',
-            horsepower: '110 HP',
-            consumption: '5.2L/100km',
+            engine: vehicle.engine_details || '1.5L',
+            horsepower: vehicle.horsepower || '110 HP',
+            consumption: vehicle.fuel_consumption || '5.2L/100km',
             acceleration: '0-100 km/h in 10.5s',
             topSpeed: '180 km/h',
             co2Emission: '120 g/km'
           },
-          availability: vehicle.availability || true,
+          availability: vehicle.is_available || true,
           pickupProcess: [
             'Document verification at pickup location',
             'Vehicle inspection with rental agent',
@@ -584,9 +550,9 @@ function SearchContent() {
 
     } catch (error) {
       console.error('Error fetching cars:', error)
-      // Don't fall back to mock data - show empty state instead
-      setCars([])
-      setFilteredCars([])
+      // Fallback to mock data if API fails
+      setCars(mockCars)
+      setFilteredCars(mockCars)
     } finally {
       setLoading(false)
     }
@@ -769,11 +735,9 @@ function SearchContent() {
     setShowAllStyles(false)
   }
 
- const handleViewDetails = (car) => {
-    setSelectedCar(car)
-    setCurrentImageIndex(0)
-    setShowCarModal(true)
-    document.body.style.overflow = 'hidden'
+  const handleViewDetails = (car) => {
+    // Navigate to car details page using backend car ID
+    router.push(`/cars/${car.id}`)
   }
 
   const handleCloseModal = () => {
@@ -1138,10 +1102,6 @@ function SearchContent() {
         setProfileCompleteness(prev => ({ ...prev, license: true }))
         setSuccessMessage('License information and documents saved successfully!')
       }
-      else if (bookingStep === 'payment') {
-        await processPaymentAndCreateBooking()
-        setSuccessMessage('Payment processed successfully! Your booking has been confirmed.')
-      }
 
       // Wait a bit to show success message, then move to next step (only for non-auth steps)
       if (bookingStep !== 'auth') {
@@ -1342,73 +1302,6 @@ function SearchContent() {
       return await response.json()
     } catch (error) {
       console.error('Error saving license info:', error)
-      throw error
-    }
-  }
-
-  const processPaymentAndCreateBooking = async () => {
-    try {
-      // Debug: Check authentication
-      const token = localStorage.getItem('access_token')
-      console.log('Access token available:', !!token)
-      
-      if (!token) {
-        throw new Error('User not authenticated. Please log in again.')
-      }
-
-      // Use booking details from state, with fallback to URL params
-      let { pickupDate, dropoffDate, pickupTime, dropoffTime } = bookingDetails
-      
-      // Fallback to URL params if state is empty
-      if (!pickupDate || !dropoffDate) {
-        pickupDate = searchParams.get('pickupDate')
-        dropoffDate = searchParams.get('dropoffDate')
-        pickupTime = searchParams.get('pickupTime') || '09:00'
-        dropoffTime = searchParams.get('dropoffTime') || '18:00'
-      }
-      
-      if (!pickupDate || !dropoffDate) {
-        throw new Error('Pickup and dropoff dates are required. Please go back and select your dates.')
-      }
-
-      if (!selectedCar) {
-        throw new Error('No car selected for booking')
-      }
-
-      // Calculate total price (basic calculation - you might want to add more logic)
-      const startDate = new Date(pickupDate)
-      const endDate = new Date(dropoffDate)
-      const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
-      const totalPrice = days * selectedCar.price
-
-      // Create booking data with proper datetime formatting
-      const startDateTime = new Date(`${pickupDate}T${pickupTime}:00`).toISOString()
-      const endDateTime = new Date(`${dropoffDate}T${dropoffTime}:00`).toISOString()
-
-      const bookingData = {
-        listing: selectedCar.id,
-        start_time: startDateTime,
-        end_time: endDateTime,
-        price: totalPrice,
-        status: 'confirmed' // Set as confirmed after payment
-      }
-
-      console.log('Creating booking with data:', bookingData)
-      console.log('Selected car object:', selectedCar)
-      console.log('Car ID type:', typeof selectedCar.id)
-      console.log('Auth token exists:', !!localStorage.getItem('access_token'))
-
-      // Create the booking
-      const booking = await bookingAPI.createBooking(bookingData)
-      
-      console.log('Booking created successfully:', booking)
-      
-      // Store booking ID for reference
-      localStorage.setItem('lastBookingId', booking.id)
-      
-      return booking
-    } catch (error) {
-      console.error('Error processing payment and creating booking:', error)
       throw error
     }
   }
@@ -1886,7 +1779,7 @@ function SearchContent() {
                           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                           </svg>
-                          {car.fuel}
+                          {car.fuelType || car.fuel}
                         </span>
                       </div>
 
@@ -2055,7 +1948,7 @@ function SearchContent() {
                       <svg className="w-6 h-6 mx-auto mb-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
-                      <div className="text-sm font-medium text-gray-900">{selectedCar.fuel}</div>
+                      <div className="text-sm font-medium text-gray-900">{selectedCar.fuelType || selectedCar.fuel}</div>
                       <div className="text-xs text-gray-700">Fuel</div>
                     </div>
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
@@ -2093,19 +1986,19 @@ function SearchContent() {
                         <div>
                           <h5 className="font-medium text-gray-900 mb-2">Process Steps:</h5>
                           <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
-                            {(selectedCar.pickupProcess?.steps || []).map((step, index) => (
+                            {selectedCar.pickupProcess.steps.map((step, index) => (
                               <li key={index}>{step}</li>
                             ))}
                           </ol>
                         </div>
                         <div>
                           <h5 className="font-medium text-gray-900 mb-2">Duration:</h5>
-                          <p className="text-sm text-gray-700">{selectedCar.pickupProcess?.duration || 'Not specified'}</p>
+                          <p className="text-sm text-gray-700">{selectedCar.pickupProcess.duration}</p>
                         </div>
                         <div>
                           <h5 className="font-medium text-gray-900 mb-2">Requirements:</h5>
                           <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                            {(selectedCar.pickupProcess?.requirements || []).map((req, index) => (
+                            {selectedCar.pickupProcess.requirements.map((req, index) => (
                               <li key={index}>{req}</li>
                             ))}
                           </ul>
@@ -2124,7 +2017,7 @@ function SearchContent() {
                   <div className="bg-gray-50 rounded-xl p-6">
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">Owner Rules</h4>
                     <ul className="space-y-2">
-                      {(selectedCar.ownerRules || []).map((rule, index) => (
+                      {selectedCar.ownerRules.map((rule, index) => (
                         <li key={index} className="flex items-start">
                           <svg className="w-4 h-4 text-orange-500 mt-1 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -2141,7 +2034,7 @@ function SearchContent() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <h5 className="font-medium text-gray-900 mb-2">Fuel Type</h5>
-                        <p className="text-gray-700">{selectedCar.fuel}</p>
+                        <p className="text-gray-700">{selectedCar.fuelType || selectedCar.fuel}</p>
                       </div>
                       <div>
                         <h5 className="font-medium text-gray-900 mb-2">Transmission</h5>
@@ -2154,7 +2047,7 @@ function SearchContent() {
                   <div className="bg-gray-50 rounded-xl p-6">
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">Technical Features</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {(selectedCar.technicalFeatures || []).map((feature, index) => (
+                      {selectedCar.technicalFeatures.map((feature, index) => (
                         <div key={index} className="flex items-center">
                           <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -2169,7 +2062,7 @@ function SearchContent() {
                   <div className="bg-gray-50 rounded-xl p-6">
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">Options & Accessories</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {(selectedCar.optionsAccessories || []).map((option, index) => (
+                      {selectedCar.optionsAccessories.map((option, index) => (
                         <div key={index} className="flex items-center">
                           <svg className="w-4 h-4 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -2239,7 +2132,7 @@ function SearchContent() {
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h6 className="font-semibold text-gray-900 mb-2">Cancellation Policy</h6>
                       <p className="text-xs text-gray-700 leading-relaxed">
-                        {selectedCar.cancellationPolicy || 'Cancellation policy not specified'}
+                        {selectedCar.cancellationPolicy}
                       </p>
                     </div>
                   </div>
@@ -2896,11 +2789,11 @@ function SearchContent() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-700">{selectedCar?.name} {selectedCar?.modelYear}</span>
-                        <span className="text-gray-900">{selectedCar?.price} MAD/day</span>
+                        <span className="text-gray-900">{selectedCar?.price_per_day} MAD/day</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">1 day rental</span>
-                        <span className="text-gray-900">{selectedCar?.price} MAD</span>
+                        <span className="text-gray-900">{selectedCar?.price_per_day} MAD</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Service fee</span>
@@ -3036,20 +2929,12 @@ function SearchContent() {
                     <p className="text-sm text-gray-700">
                       You will receive a confirmation email with all the details and pickup instructions.
                     </p>
-                    <div className="flex space-x-3">
-                      <button
-                        onClick={() => router.push('/bookings')}
-                        className="flex-1 bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium"
-                      >
-                        View My Bookings
-                      </button>
-                      <button
-                        onClick={handleCloseModal}
-                        className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                      >
-                        Close
-                      </button>
-                    </div>
+                    <button
+                      onClick={handleCloseModal}
+                      className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium"
+                    >
+                      Close
+                    </button>
                   </div>
                 </div>
               )}
