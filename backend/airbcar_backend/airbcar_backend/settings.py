@@ -62,8 +62,8 @@ REST_FRAMEWORK = {
 
 # Add JWT settings
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1440),  # 1 day
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=43800),  # 1 month
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=31),
     'ROTATE_REFRESH_TOKENS': True,
 }
 

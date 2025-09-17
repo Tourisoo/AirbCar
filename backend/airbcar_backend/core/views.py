@@ -19,6 +19,7 @@ from django.contrib.auth.tokens import default_token_generator
 from rest_framework import status
 from rest_framework.response import Response
 from .utils import upload_file_to_supabase
+from rest_framework.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -259,7 +260,11 @@ class PartnerViewSet(viewsets.ModelViewSet):
         return Partner.objects.filter(user=user).prefetch_related('listings')
 
     def perform_create(self, serializer):
-        partner = serializer.save(user=self.request.user)
+
+        if self.request.user.is_partner:
+           raise ValidationError({"detail": "You are already registered as a partner."})
+
+        serializer.save(user=self.request.user)
         if not self.request.user.is_partner:
             self.request.user.is_partner = True
             self.request.user.save(update_fields=['is_partner'])
