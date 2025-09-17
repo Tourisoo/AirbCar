@@ -236,92 +236,31 @@ export default function PartnerDashboard() {
   // Fetch partner data from backend API
   const fetchPartnerData = async (partnerId) => {
     try {
-      const token = localStorage.getItem('access_token')
-      if (!token) {
-        console.error('No access token available for partner data fetch')
-        return null
-      }
-
-      console.log('Attempting to fetch partner data for ID:', partnerId)
-      console.log('Using token:', token.substring(0, 20) + '...')
-
       const response = await fetch(`http://127.0.0.1:8000/partners/${partnerId}/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         },
       })
-
-      console.log('Partner API Response status:', response.status)
-      console.log('Partner API URL used:', `http://127.0.0.1:8000/partners/${partnerId}/`)
 
       if (!response.ok) {
         console.error(`Partner API Error: ${response.status} ${response.statusText}`)
         const errorText = await response.text()
         console.error('Error response body:', errorText)
         
-        // If 404, try to find the partner by searching all partners
-        if (response.status === 404) {
-          console.log('Partner not found, trying to find partner by user ID...')
-          return await findPartnerByUserId(partnerId)
-        }
-        
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const partnerData = await response.json()
-      console.log('Fetched partner data successfully:', partnerData)
+      console.log('Partner API URL used:', `http://127.0.0.1:8000/partners/${partnerId}/`)
+      console.log('Partner Response status:', response.status)
+      console.log('Fetched partner data:', partnerData)
       
       return partnerData
     } catch (error) {
       console.error('Error fetching partner data:', error)
-      // Try fallback method
-      console.log('Trying fallback method to find partner...')
-      return await findPartnerByUserId(partnerId)
-    }
-  }
-
-  // Fallback function to find partner by user ID
-  const findPartnerByUserId = async (userId) => {
-    try {
-      const token = localStorage.getItem('access_token')
-      if (!token) {
-        console.error('No access token available for partner search')
-        return null
-      }
-
-      console.log('Searching for partner with user ID:', userId)
-      
-      const response = await fetch('http://127.0.0.1:8000/partners/', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-      })
-
-      if (!response.ok) {
-        console.error(`Partners list API Error: ${response.status} ${response.statusText}`)
-        return null
-      }
-
-      const partnersData = await response.json()
-      console.log('All partners data:', partnersData)
-      
-      // Find partner record for current user
-      const userPartner = partnersData.find(partner => partner.user?.id === parseInt(userId))
-      if (userPartner) {
-        console.log('Found partner record:', userPartner)
-        return userPartner
-      } else {
-        console.log('No partner record found for user ID:', userId)
-        return null
-      }
-    } catch (error) {
-      console.error('Error in fallback partner search:', error)
       return null
     }
   }
@@ -329,28 +268,17 @@ export default function PartnerDashboard() {
   // Fetch vehicles from backend API
   const fetchVehicles = async (partnerId) => {
     try {
-      const token = localStorage.getItem('access_token')
-      if (!token) {
-        console.error('No access token available for vehicles fetch')
-        return []
-      }
-
-      console.log('Fetching vehicles for partner ID:', partnerId)
-      
       const response = await fetch(`http://127.0.0.1:8000/listings/?partner=${partnerId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         },
       })
 
-      console.log('Vehicles API Response status:', response.status)
-      console.log('Vehicles API URL used:', `http://127.0.0.1:8000/listings/?partner=${partnerId}`)
-
       if (!response.ok) {
-        console.error(`Vehicles API Error: ${response.status} ${response.statusText}`)
+        console.error(`API Error: ${response.status} ${response.statusText}`)
         const errorText = await response.text()
         console.error('Error response body:', errorText)
         
@@ -362,11 +290,12 @@ export default function PartnerDashboard() {
           console.error('Error response is not JSON')
         }
         
-        // Return empty array instead of throwing error
-        return []
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const data = await response.json()
+      console.log('API URL used:', `http://127.0.0.1:8000/listings/?partner=${partnerId}`)
+      console.log('Response status:', response.status)
       console.log('Fetched vehicles data:', data)
       console.log('Data type:', typeof data)
       console.log('Is array:', Array.isArray(data))
@@ -2191,6 +2120,16 @@ export default function PartnerDashboard() {
               >
                 Listings
               </button>
+              <button
+                onClick={() => setActiveTab('bookings')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'bookings'
+                    ? 'border-black text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Bookings
+              </button>
               <div className="relative">
                 <button
                   onClick={() => setActiveTab('menu')}
@@ -3158,34 +3097,270 @@ export default function PartnerDashboard() {
         )}
 
         {activeTab === 'bookings' && (
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Bookings</h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dates</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Royal Enfield Classic 350</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">John Doe</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Aug 15-17, 2025</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">DH2,400</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          Active
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+          <div className="space-y-6">
+            {/* Bookings Header */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Booking Management</h2>
+                <div className="flex space-x-4">
+                  <div className="text-sm text-gray-600">
+                    Total Bookings: <span className="font-semibold">{reservations.length}</span>
+                  </div>
+                  <button
+                    onClick={() => fetchReservations()}
+                    className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center space-x-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>Refresh</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Booking Filter Tabs */}
+              <div className="border-b border-gray-200">
+                <nav className="-mb-px flex space-x-8">
+                  {[
+                    { id: 'checking-out', label: 'Checking Out Today', icon: '🚗' },
+                    { id: 'currently-hosting', label: 'Currently Hosting', icon: '📍' },
+                    { id: 'checking-in', label: 'Checking In Today', icon: '🏁' },
+                    { id: 'upcoming', label: 'Upcoming', icon: '📅' },
+                    { id: 'pending-review', label: 'Pending Review', icon: '⭐' },
+                    { id: 'all', label: 'All Bookings', icon: '📋' }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveReservationTab(tab.id)}
+                      className={`${
+                        activeReservationTab === tab.id
+                          ? 'border-orange-500 text-orange-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2`}
+                    >
+                      <span>{tab.icon}</span>
+                      <span>{tab.label}</span>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </div>
+
+            {/* Bookings Content */}
+            <div className="bg-white rounded-lg shadow-sm border">
+              {reservationsLoading ? (
+                <div className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading bookings...</p>
+                </div>
+              ) : reservations.length === 0 ? (
+                <div className="p-8 text-center">
+                  <div className="text-gray-400 mb-4">
+                    <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {activeReservationTab === 'checking-out' && "No vehicles checking out today"}
+                    {activeReservationTab === 'checking-in' && "No vehicles checking in today"}
+                    {activeReservationTab === 'currently-hosting' && "No active bookings at the moment"}
+                    {activeReservationTab === 'upcoming' && "No upcoming bookings"}
+                    {activeReservationTab === 'pending-review' && "No completed bookings pending review"}
+                    {activeReservationTab === 'all' && "No bookings found"}
+                  </h3>
+                  <p className="text-gray-600">
+                    {activeReservationTab === 'checking-out' && "Vehicle returns will appear here."}
+                    {activeReservationTab === 'checking-in' && "Vehicle pickups will appear here."}
+                    {activeReservationTab === 'currently-hosting' && "Active bookings will appear here."}
+                    {activeReservationTab === 'upcoming' && "Future bookings will appear here."}
+                    {activeReservationTab === 'pending-review' && "Completed bookings awaiting review will appear here."}
+                    {activeReservationTab === 'all' && "All your bookings will appear here once customers start booking your vehicles."}
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Customer
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Vehicle
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Dates
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Amount
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {reservations.map((booking) => {
+                        const startDate = new Date(booking.start_time)
+                        const endDate = new Date(booking.end_time)
+                        const vehicle = vehicles.find(v => v.id === booking.listing) || {}
+                        
+                        return (
+                          <tr key={booking.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 h-10 w-10">
+                                  <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
+                                    <span className="text-sm font-medium text-orange-600">
+                                      {booking.customer_name ? booking.customer_name.charAt(0).toUpperCase() : '?'}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="ml-4">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {booking.customer_name || 'Customer'}
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    {booking.customer_email || 'No email'}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {vehicle.brand || booking.vehicle_brand} {vehicle.model || booking.vehicle_model}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {vehicle.year || booking.vehicle_year} • {vehicle.location || 'Location'}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))} days
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              DH{booking.price}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                booking.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                                booking.status === 'active' ? 'bg-green-100 text-green-800' :
+                                booking.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+                                booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {booking.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex space-x-2">
+                                <button className="text-orange-600 hover:text-orange-900">
+                                  View Details
+                                </button>
+                                {booking.status === 'confirmed' && (
+                                  <button className="text-green-600 hover:text-green-900">
+                                    Start Rental
+                                  </button>
+                                )}
+                                {booking.status === 'active' && (
+                                  <button className="text-blue-600 hover:text-blue-900">
+                                    Complete
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Booking Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Total Bookings</dt>
+                      <dd className="text-lg font-medium text-gray-900">{reservations.length}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Active Bookings</dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {reservations.filter(r => r.status === 'active' || r.status === 'confirmed').length}
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        DH{reservations.reduce((sum, booking) => sum + (parseFloat(booking.price) || 0), 0).toLocaleString()}
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Avg. Rating</dt>
+                      <dd className="text-lg font-medium text-gray-900">4.8</dd>
+                    </dl>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -3319,7 +3494,7 @@ export default function PartnerDashboard() {
                         name="firstName"
                         value={accountData.firstName}
                         onChange={handleAccountDataChange}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
                           validationErrors.firstName 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3339,7 +3514,7 @@ export default function PartnerDashboard() {
                         name="lastName"
                         value={accountData.lastName}
                         onChange={handleAccountDataChange}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
                           validationErrors.lastName 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3359,7 +3534,7 @@ export default function PartnerDashboard() {
                         name="email"
                         value={accountData.email}
                         onChange={handleAccountDataChange}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
                           validationErrors.email 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3378,7 +3553,7 @@ export default function PartnerDashboard() {
                         value={accountData.phone}
                         onChange={handleAccountDataChange}
                         placeholder="+1234567890"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
                           validationErrors.phone 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3396,7 +3571,7 @@ export default function PartnerDashboard() {
                         value={accountData.address}
                         onChange={handleAccountDataChange}
                         placeholder="Full address including city and country"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
                           validationErrors.address 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3414,7 +3589,7 @@ export default function PartnerDashboard() {
                         value={accountData.dateOfBirth}
                         onChange={handleAccountDataChange}
                         max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
                           validationErrors.dateOfBirth 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3432,7 +3607,7 @@ export default function PartnerDashboard() {
                         value={accountData.idNumber}
                         onChange={handleAccountDataChange}
                         placeholder="Government issued ID number"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
                           validationErrors.idNumber 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3457,7 +3632,7 @@ export default function PartnerDashboard() {
                         value={accountData.businessName}
                         onChange={handleAccountDataChange}
                         placeholder="Your company or business name"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
                           validationErrors.businessName 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
@@ -3475,7 +3650,7 @@ export default function PartnerDashboard() {
                         value={accountData.taxId}
                         onChange={handleAccountDataChange}
                         placeholder="Business tax identification number"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
                           validationErrors.taxId 
                             ? 'border-red-500 bg-red-50' 
                             : 'border-gray-300'
