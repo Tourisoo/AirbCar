@@ -21,7 +21,7 @@ Backend Documentation: https://hip-shield-dca.notion.site/Backend-Documentation-
 
 ### 1. Login
 * **Method**: POST  
-* **URL**: `/api/token/`  
+* **URL**: `/api/login/`  
 * **Body**:  
   ```json
   {
@@ -152,7 +152,7 @@ Backend Documentation: https://hip-shield-dca.notion.site/Backend-Documentation-
 
 ### How to Use
 * **Sign up**: POST `/api/register/`  
-* **Login**: POST `/api/token/` for access/refresh tokens  
+* **Login**: POST `/api/login/` for access/refresh tokens  
 * **Store tokens**: In `localStorage` or cookies  
 * **Use**: `Authorization: Bearer <access_token>` for `/api/users/`  
 * **Refresh**: POST `/api/token/refresh/`  

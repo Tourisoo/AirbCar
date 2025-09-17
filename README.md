@@ -124,7 +124,7 @@ The backend API includes the following endpoints:
 
 ### Authentication
 - `POST /api/register/` - User registration
-- `POST /api/token/` - Login (get JWT tokens)
+- `POST /api/login/` - Login (get JWT tokens)
 - `POST /api/token/refresh/` - Refresh access token
 
 ### Users

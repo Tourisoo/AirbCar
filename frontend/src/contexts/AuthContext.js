@@ -81,7 +81,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/token/`, {
+      const response = await fetch(`${apiUrl}/api/login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

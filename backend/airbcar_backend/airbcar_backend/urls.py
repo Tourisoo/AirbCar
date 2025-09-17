@@ -40,7 +40,8 @@ urlpatterns = [
     path('', include(router.urls)),
     path('api/users/list/', user_list, name='user_list'),
     path('api/bookings/list/', booking_list, name='bookings_list'),
-    path('api/token/', CustomLoginView.as_view(), name='token_obtain_pair'), # sign-in
+    # path('api/login/', CustomLoginView.as_view(), name='token_obtain_pair'), # sign-in
+    path('api/login/', CustomLoginView.as_view(), name='login'), # sign-in - log-in
     path('api/register/', UserViewSet.as_view({'post': 'create'}), name='user_register'), # sign-up
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/verify-token/', TokenVerifyView.as_view(), name='token_verify'),

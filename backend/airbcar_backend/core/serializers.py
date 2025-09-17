@@ -10,70 +10,30 @@ from .models import User, Booking, Partner, Listing
 
 
 #  This serializer class contains the logic for how to take the incoming 
-# data from the request and convert it into a model instance
-
+#  data from the request and convert it into a model instance
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    email = serializers.EmailField(required=False)
-    username = serializers.CharField(required=False)
+    email = serializers.EmailField(required=True)
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Force the username_field to be 'username'
-        self.username_field = 'username'
+        # Force username field to accept email
+        self.username_field = 'email'
     
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        token['username'] = user.username
         token['email'] = user.email
         token['is_partner'] = user.is_partner
         token['is_verified'] = user.is_verified
         return token
 
     def validate(self, attrs):
-        print(f"DEBUG: Received attrs: {attrs}")
-        print(f"DEBUG: username_field: {self.username_field}")
-        
-        # Handle both email and username login
-        username = attrs.get('username')
-        email = attrs.get('email')
-        password = attrs.get('password')
-        
-        print(f"DEBUG: username: {username}, email: {email}, password: {password}")
-        
-        if not password:
-            raise serializers.ValidationError('Password is required')
+        # Rename email to username for Django's authentication
+        if 'email' in attrs:
+            attrs['username'] = attrs['email']
             
-        # If email is provided, look up the user and get their username
-        if email and not username:
-            try:
-                from core.models import User
-                user = User.objects.get(email=email)
-                print(f"DEBUG: Found user by email: {user.username}")
-                attrs['username'] = user.username
-                # Remove email from attrs to avoid confusion
-                if 'email' in attrs:
-                    del attrs['email']
-            except User.DoesNotExist:
-                raise serializers.ValidationError('Invalid credentials')
-        elif not username and not email:
-            raise serializers.ValidationError('Username or email is required')
-        
-        print(f"DEBUG: Final attrs before parent call: {attrs}")
-        
-        # Call parent validate method which will authenticate using username
-        data = super().validate(attrs)
-        
-        # Add user data to response
-        data['user'] = {
-            'id': self.user.id,
-            'username': self.user.username,
-            'email': self.user.email,
-            'is_partner': self.user.is_partner,
-            'is_verified': self.user.is_verified
-        }
-        return data
+        return super().validate(attrs)
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
@@ -91,9 +51,8 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         print("User create serializer called")
         password = validated_data.pop('password')
-        # username = validated_data.get('username', validated_data['email'].split('@')[0])
-        validated_data['username'] = validated_data['email']
-        
+        if 'username' not in validated_data or not validated_data['username']:
+            validated_data['username'] = validated_data['email']
         user = User.objects.create(**validated_data)
         user.set_password(password)
         user.save()

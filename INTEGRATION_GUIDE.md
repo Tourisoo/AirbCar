@@ -52,7 +52,7 @@ The AddVehicleModal component now connects directly to the Django REST API backe
 ### Backend Endpoints Used
 
 1. **Authentication:**
-   - `POST /api/token/` - User login
+   - `POST /api/login/` - User login
    - `POST /api/register/` - User registration
    - `GET /api/verify-token/` - Token validation
 

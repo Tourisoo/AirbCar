@@ -82,7 +82,7 @@ async function testDjangoDatabase() {
       console.log('✅ User registration works')
       
       // Test 4: Test login
-      const loginResponse = await makeRequest('http://localhost:8000/api/token/', {
+      const loginResponse = await makeRequest('http://localhost:8000/api/login/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

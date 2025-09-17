@@ -423,7 +423,7 @@ def home_view(request):
 
             <div class="section">
                 <h2>✅ Login</h2>
-                <p><strong>POST</strong> <code>/api/token/</code></p>
+                <p><strong>POST</strong> <code>/api/login/</code></p>
                 <pre>   {
         "username": "testuser2",
         "password": "testpass123"

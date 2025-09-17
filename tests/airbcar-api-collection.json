@@ -109,7 +109,7 @@
               "raw": "{\n  \"username\": \"testuser2\",\n  \"password\": \"testpass123\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/token/",
+              "raw": "{{base_url}}/api/login/",
               "host": ["{{base_url}}"],
               "path": ["api", "token", ""]
             }
