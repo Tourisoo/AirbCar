@@ -131,11 +131,6 @@ class CustomLoginView(APIView):
         else:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-# class UserRegisterView(generics.CreateAPIView):
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
-
-
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -254,14 +249,6 @@ class PartnerViewSet(viewsets.ModelViewSet):
     queryset = Partner.objects.all().prefetch_related('listings')
     serializer_class = PartnerSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-
-    # def get_queryset(self):
-    #     partner = self.request.user
-    #     if not partner.is_authenticated:
-    #         return Partner.objects.all()
-    #     if partner.user.is_staff:
-    #         return Partner.objects.all().prefetch_related('partner')
-    #     return Partner.objects.filter(user=partner).prefetch_related('partner')
     
     def get_queryset(self):
         user = self.request.user  # Rename for clarity

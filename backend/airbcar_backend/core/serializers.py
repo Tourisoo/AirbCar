@@ -91,8 +91,8 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         print("User create serializer called")
         password = validated_data.pop('password')
-        username = validated_data.get('username', validated_data['email'].split('@')[0])
-        validated_data['username'] = username
+        # username = validated_data.get('username', validated_data['email'].split('@')[0])
+        validated_data['username'] = validated_data['email']
         
         user = User.objects.create(**validated_data)
         user.set_password(password)
