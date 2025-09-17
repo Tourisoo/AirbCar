@@ -74,8 +74,8 @@ export default function VehicleManageModal({
         monthlyRate: data.monthly_rate || 0,
         status: data.status || 'available',
         features: data.features || [],
-        description: data.description || '',
-        photos: data.photos || [],
+        description: data.vehicle_description || '',
+        photos: data.pictures || [],
         location: data.location || '',
         mileage: data.mileage || 0,
         transmission: data.transmission || 'manual',
@@ -163,6 +163,18 @@ export default function VehicleManageModal({
       fetchVehicleData(vehicle.id)
     }
   }, [showModal, vehicle?.id])
+
+  // UseEffect to reinitialize editData when vehicle prop changes
+  useEffect(() => {
+    if (vehicle) {
+      setEditData({
+        ...vehicle,
+        features: vehicle?.features || [],
+        description: vehicle?.description || '',
+        photos: vehicle?.photos || []
+      })
+    }
+  }, [vehicle])
 
   // Booking and maintenance mock data
   const mockBookings = [
@@ -278,6 +290,8 @@ export default function VehicleManageModal({
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
     
+    console.log('🔧 Input changed:', { name, value, type })
+    
     // Clear validation error for this field
     if (validationErrors[name]) {
       setValidationErrors(prev => ({
@@ -305,11 +319,11 @@ export default function VehicleManageModal({
         if (!isNaN(daily) && daily > 0) {
           updatedData.weeklyRate = Math.round(daily * 7 * 0.85)
           updatedData.monthlyRate = Math.round(daily * 30 * 0.70)
-          updatedData.securityDeposit = Math.round(daily * 2)
         }
       }
       
       setEditData(updatedData)
+      console.log('🔧 Updated editData:', updatedData)
     }
   }
 
@@ -371,6 +385,8 @@ export default function VehicleManageModal({
         year: parseInt(editData.year) || new Date().getFullYear(),
         location: String(editData.location || '').trim(),
         price_per_day: parseFloat(editData.dailyRate) || 0,
+        weekly_rate: parseFloat(editData.weeklyRate) || 0,
+        monthly_rate: parseFloat(editData.monthlyRate) || 0,
         availability: editData.availability !== false,
         fuel_type: String(editData.fuelType).trim(),
         transmission: String(editData.transmission).trim(),
@@ -438,6 +454,8 @@ export default function VehicleManageModal({
         year: updatedVehicle.year,
         location: updatedVehicle.location,
         dailyRate: parseFloat(updatedVehicle.price_per_day || 0),
+        weeklyRate: parseFloat(updatedVehicle.weekly_rate || 0),
+        monthlyRate: parseFloat(updatedVehicle.monthly_rate || 0),
         availability: updatedVehicle.availability,
         fuelType: updatedVehicle.fuel_type,
         transmission: updatedVehicle.transmission,
@@ -446,6 +464,15 @@ export default function VehicleManageModal({
         features: updatedVehicle.features || [],
         description: updatedVehicle.vehicle_description || ''
       }
+
+      // Update both vehicleData and editData with the response
+      setVehicleData(transformedVehicle)
+      setEditData({
+        ...transformedVehicle,
+        features: transformedVehicle.features || [],
+        description: transformedVehicle.description || '',
+        photos: transformedVehicle.photos || []
+      })
 
       // Call parent component's onUpdate to refresh UI
       onUpdate(transformedVehicle)
@@ -763,18 +790,10 @@ export default function VehicleManageModal({
                         Status: <span className="capitalize bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">{currentVehicle.status}</span>
                       </h3>
                       <p className="text-gray-600 mt-2 font-medium">
-                        {currentVehicle.status === 'available' && '🚗 Ready for bookings'}
-                        {currentVehicle.status === 'rented' && '🔄 Currently rented out'}
-                        {currentVehicle.status === 'maintenance' && '🔧 Under maintenance'}
+                        {currentVehicle.status === 'available' && 'Ready for bookings'}
+                        {currentVehicle.status === 'rented' && 'Currently rented out'}
+                        {currentVehicle.status === 'maintenance' && 'Under maintenance'}
                       </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
-                      DH{currentVehicle.dailyRate}<span className="text-lg text-gray-500">/day</span>
-                    </div>
-                    <div className="text-sm text-gray-500 mt-2 bg-gray-100 px-3 py-1 rounded-full inline-block">
-                      📊 {currentVehicle.bookings} total bookings
                     </div>
                   </div>
                 </div>
@@ -798,7 +817,7 @@ export default function VehicleManageModal({
                         onClick={() => setIsEditing(true)}
                         className="text-orange-600 hover:text-orange-800 font-semibold bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-xl transition-all duration-200"
                       >
-                        ✏️ Edit
+                        Edit
                       </button>
                     )}
                   </div>
@@ -813,7 +832,7 @@ export default function VehicleManageModal({
                             name="brand"
                             value={editData.brand || ''}
                             onChange={handleInputChange}
-                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                               validationErrors.brand ? 'border-red-500' : 'border-gray-300'
                             }`}
                           />
@@ -828,7 +847,7 @@ export default function VehicleManageModal({
                             name="model"
                             value={editData.model || ''}
                             onChange={handleInputChange}
-                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                               validationErrors.model ? 'border-red-500' : 'border-gray-300'
                             }`}
                           />
@@ -842,7 +861,7 @@ export default function VehicleManageModal({
                             name="year"
                             value={editData.year || ''}
                             onChange={handleInputChange}
-                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                               validationErrors.year ? 'border-red-500' : 'border-gray-300'
                             }`}
                           >
@@ -862,7 +881,7 @@ export default function VehicleManageModal({
                             name="location"
                             value={editData.location || ''}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
                           />
                         </div>
                       </div>
@@ -871,19 +890,19 @@ export default function VehicleManageModal({
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Brand:</span>
-                        <span className="font-medium">{vehicle.brand}</span>
+                        <span className="font-medium text-gray-600">{vehicle.brand}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Model:</span>
-                        <span className="font-medium">{vehicle.model}</span>
+                        <span className="font-medium text-gray-600">{vehicle.model}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Year:</span>
-                        <span className="font-medium">{vehicle.year}</span>
+                        <span className="font-medium text-gray-600">{vehicle.year}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Location:</span>
-                        <span className="font-medium">{vehicle.location}</span>
+                        <span className="font-medium text-gray-600">{vehicle.location}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Rating:</span>
@@ -891,7 +910,7 @@ export default function VehicleManageModal({
                           <svg className="w-4 h-4 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                           </svg>
-                          <span className="font-medium">{vehicle.rating}</span>
+                          <span className="font-medium text-gray-600">{vehicle.rating}</span>
                         </div>
                       </div>
                     </div>
@@ -920,7 +939,7 @@ export default function VehicleManageModal({
                           onChange={handleInputChange}
                           min="1"
                           max="10000"
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                             validationErrors.dailyRate ? 'border-red-500' : 'border-gray-300'
                           }`}
                         />
@@ -935,7 +954,7 @@ export default function VehicleManageModal({
                           name="weeklyRate"
                           value={editData.weeklyRate || ''}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50 text-gray-900"
                           readOnly
                         />
                         <p className="text-xs text-gray-700 mt-1">Auto-calculated with 15% discount</p>
@@ -947,7 +966,7 @@ export default function VehicleManageModal({
                           name="monthlyRate"
                           value={editData.monthlyRate || ''}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50 text-gray-900"
                           readOnly
                         />
                         <p className="text-xs text-gray-700 mt-1">Auto-calculated with 30% discount</p>
@@ -957,19 +976,15 @@ export default function VehicleManageModal({
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Daily Rate:</span>
-                        <span className="font-medium text-orange-600">DH{currentVehicle.dailyRate}</span>
+                        <span className="font-medium text-orange-600">DH{(isEditing ? editData.dailyRate : currentVehicle.dailyRate) || 0}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Weekly Rate:</span>
-                        <span className="font-medium">DH{Math.round(currentVehicle.dailyRate * 7 * 0.85)}</span>
+                        <span className="font-medium text-gray-600">DH{(isEditing ? editData.weeklyRate : currentVehicle.weeklyRate) || Math.round((currentVehicle.dailyRate || 0) * 7 * 0.85)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Monthly Rate:</span>
-                        <span className="font-medium">DH{Math.round(currentVehicle.dailyRate * 30 * 0.70)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Security Deposit:</span>
-                        <span className="font-medium">DH{Math.round(currentVehicle.dailyRate * 2)}</span>
+                        <span className="font-medium text-gray-600">DH{(isEditing ? editData.monthlyRate : currentVehicle.monthlyRate) || Math.round((currentVehicle.dailyRate || 0) * 30 * 0.70)}</span>
                       </div>
                     </div>
                   )}
@@ -992,7 +1007,7 @@ export default function VehicleManageModal({
                       onClick={() => setIsEditing(true)}
                       className="text-orange-600 hover:text-orange-800 font-semibold bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-xl transition-all duration-200"
                     >
-                      ✏️ Edit
+                      Edit
                     </button>
                   )}
                 </div>
@@ -1031,7 +1046,7 @@ export default function VehicleManageModal({
                           name="fuelType"
                           value={editData.fuelType || ''}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
                           required
                         >
                           <option value="">Select Fuel Type</option>
@@ -1048,7 +1063,7 @@ export default function VehicleManageModal({
                           name="transmission"
                           value={editData.transmission || ''}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
                           required
                         >
                           <option value="">Select Transmission</option>
@@ -1063,7 +1078,7 @@ export default function VehicleManageModal({
                           name="seatingCapacity"
                           value={editData.seatingCapacity || ''}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
                           required
                         >
                           <option value="">Select Capacity</option>
@@ -1078,7 +1093,7 @@ export default function VehicleManageModal({
                           name="condition"
                           value={editData.condition || ''}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
                           required
                         >
                           <option value="">Select Condition</option>
@@ -1101,12 +1116,12 @@ export default function VehicleManageModal({
                             key={index}
                             className="px-4 py-2 bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 rounded-xl text-sm font-medium border border-orange-200 hover:from-orange-200 hover:to-orange-300 transition-all duration-200 shadow-sm"
                           >
-                            ✨ {feature}
+                            {feature}
                           </span>
                         ))}
                         {(!currentVehicle.features || currentVehicle.features.length === 0) && (
                           <span className="text-gray-500 text-sm italic bg-gray-100 px-4 py-2 rounded-xl">
-                            📝 No features added yet here
+                            No features added yet here
                           </span>
                         )}
                       </div>
@@ -1115,27 +1130,27 @@ export default function VehicleManageModal({
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Fuel Type:</span>
-                        <span className="font-medium">{currentVehicle.fuelType || 'Not specified'}</span>
+                        <span className="font-medium text-gray-600">{currentVehicle.fuelType || 'Not specified'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Transmission:</span>
-                        <span className="font-medium">{currentVehicle.transmission || 'Not specified'}</span>
+                        <span className="font-medium text-gray-600">{currentVehicle.transmission || 'Not specified'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Seating Capacity:</span>
-                        <span className="font-medium">{currentVehicle.seats ? `${currentVehicle.seats} seats` : 'Not specified'}</span>
+                        <span className="font-medium text-gray-600">{currentVehicle.seats ? `${currentVehicle.seats} seats` : 'Not specified'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Doors:</span>
-                        <span className="font-medium">{currentVehicle.doors ? `${currentVehicle.doors} doors` : 'Not specified'}</span>
+                        <span className="font-medium text-gray-600">{currentVehicle.doors ? `${currentVehicle.doors} doors` : 'Not specified'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Year:</span>
-                        <span className="font-medium">{currentVehicle.year || 'Not specified'}</span>
+                        <span className="font-medium text-gray-600">{currentVehicle.year || 'Not specified'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Mileage:</span>
-                        <span className="font-medium">{currentVehicle.mileage ? `${currentVehicle.mileage.toLocaleString()} km` : 'Not specified'}</span>
+                        <span className="font-medium text-gray-600">{currentVehicle.mileage ? `${currentVehicle.mileage.toLocaleString()} km` : 'Not specified'}</span>
                       </div>
                     </div>
                   </div>
@@ -1158,7 +1173,7 @@ export default function VehicleManageModal({
                       onClick={() => setIsEditing(true)}
                       className="text-orange-600 hover:text-orange-800 font-semibold bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-xl transition-all duration-200"
                     >
-                      ✏️ Edit
+                      Edit
                     </button>
                   )}
                 </div>
@@ -1174,7 +1189,7 @@ export default function VehicleManageModal({
                       onChange={handleInputChange}
                       placeholder="Describe your vehicle in detail. Include information about its condition, unique features, maintenance history, and anything else that would help potential renters..."
                       rows={6}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       A detailed description helps attract more bookings. Mention special features, recent maintenance, and what makes your vehicle stand out.
@@ -1182,10 +1197,12 @@ export default function VehicleManageModal({
                   </div>
                 ) : (
                   <div>
-                    {currentVehicle.description ? (
-                      <p className="text-gray-700 leading-relaxed">{currentVehicle.description}</p>
+                    {(isEditing ? editData.description : currentVehicle.description) ? (
+                      <p className="text-gray-700 leading-relaxed">
+                        {isEditing ? editData.description : currentVehicle.description}
+                      </p>
                     ) : (
-                      <p className="text-gray-500 italic">📝 No description added yet here. Add a detailed description to attract more renters.</p>
+                      <p className="text-gray-500 italic">No description added yet here. Add a detailed description to attract more renters.</p>
                     )}
                   </div>
                 )}
@@ -1207,7 +1224,7 @@ export default function VehicleManageModal({
                       onClick={() => setIsEditing(true)}
                       className="text-orange-600 hover:text-orange-800 font-semibold bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-xl transition-all duration-200"
                     >
-                      ✏️ Edit
+                      Edit
                     </button>
                   )}
                 </div>
@@ -1349,75 +1366,6 @@ export default function VehicleManageModal({
                     )}
                   </div>
                 )}
-              </div>
-
-              {/* Performance Metrics */}
-              <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center space-x-3 mb-8">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                  <h4 className="text-xl font-bold text-gray-900">Performance Metrics</h4>
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200">
-                    <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">85%</div>
-                    <div className="text-sm text-blue-600 font-medium mt-2">📈 Booking Rate</div>
-                  </div>
-                  <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border border-green-200">
-                    <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">DH{(currentVehicle.dailyRate * 18).toLocaleString()}</div>
-                    <div className="text-sm text-green-600 font-medium mt-2">💰 Monthly Avg</div>
-                  </div>
-                  <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border border-purple-200">
-                    <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">{vehicle.rating}</div>
-                    <div className="text-sm text-purple-600 font-medium mt-2">⭐ Rating</div>
-                  </div>
-                  <div className="text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border border-orange-200">
-                    <div className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 bg-clip-text text-transparent">{vehicle.bookings}</div>
-                    <div className="text-sm text-orange-600 font-medium mt-2">🚗 Total Bookings</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <h4 className="text-xl font-bold text-gray-900">Quick Actions</h4>
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <button className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-2xl transition-all duration-200 text-center border border-blue-200 hover:border-blue-300 shadow-sm hover:shadow-md group">
-                    <svg className="w-8 h-8 text-blue-600 mx-auto mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <div className="text-sm font-semibold text-blue-700">📅 Add Booking</div>
-                  </button>
-                  <button className="p-6 bg-gradient-to-br from-yellow-50 to-yellow-100 hover:from-yellow-100 hover:to-yellow-200 rounded-2xl transition-all duration-200 text-center border border-yellow-200 hover:border-yellow-300 shadow-sm hover:shadow-md group">
-                    <svg className="w-8 h-8 text-yellow-600 mx-auto mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <div className="text-sm font-semibold text-yellow-700">🔧 Maintenance</div>
-                  </button>
-                  <button className="p-6 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-2xl transition-all duration-200 text-center border border-green-200 hover:border-green-300 shadow-sm hover:shadow-md group">
-                    <svg className="w-8 h-8 text-green-600 mx-auto mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div className="text-sm font-semibold text-green-700">✅ Mark Available</div>
-                  </button>
-                  <button className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-2xl transition-all duration-200 text-center border border-purple-200 hover:border-purple-300 shadow-sm hover:shadow-md group">
-                    <svg className="w-8 h-8 text-purple-600 mx-auto mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <div className="text-sm font-semibold text-purple-700">📸 Update Photos</div>
-                  </button>
-                </div>
               </div>
             </div>
           )}
