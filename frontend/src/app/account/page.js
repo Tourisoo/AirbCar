@@ -2854,7 +2854,7 @@ export default function PartnerDashboard() {
                             : 'bg-red-100 text-red-700 hover:bg-red-200'
                         }`}
                       >
-                        {vehicle.availability ? '✅ Available' : '❌ Unavailable'}
+                        {vehicle.availability ? 'Available' : 'Unavailable'}
                       </button>
                       <button 
                         onClick={() => handleManageVehicle(vehicle)}
@@ -3070,7 +3070,7 @@ export default function PartnerDashboard() {
                             : 'bg-red-100 text-red-700 hover:bg-red-200'
                         }`}
                       >
-                        {vehicle.availability ? '✅ Available' : '❌ Unavailable'}
+                        {vehicle.availability ? 'Available' : 'Unavailable'}
                       </button>
                       <button 
                         onClick={() => handleManageVehicle(vehicle)}

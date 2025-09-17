@@ -237,11 +237,11 @@ export default function PartnerDashboard() {
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8 px-6">
               {[
-                { id: 'overview', name: 'Overview', icon: '📊' },
-                { id: 'vehicles', name: 'My Vehicles', icon: '🚗' },
-                { id: 'bookings', name: 'Bookings', icon: '📅' },
-                { id: 'earnings', name: 'Earnings', icon: '💰' },
-                { id: 'settings', name: 'Settings', icon: '⚙️' }
+                { id: 'overview', name: 'Overview'},
+                { id: 'vehicles', name: 'My Vehicles'},
+                { id: 'bookings', name: 'Bookings'},
+                { id: 'earnings', name: 'Earnings'},
+                { id: 'settings', name: 'Settings'}
               ].map((tab) => (
                 <button
                   key={tab.id}

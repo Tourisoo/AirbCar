@@ -2101,6 +2101,16 @@ export default function PartnerDashboard() {
                 Today
               </button>
               <button
+                onClick={() => setActiveTab('bookings')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'bookings'
+                    ? 'border-black text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Bookings
+              </button>
+              <button
                 onClick={() => setActiveTab('calendar')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === 'calendar'
@@ -2119,16 +2129,6 @@ export default function PartnerDashboard() {
                 }`}
               >
                 Listings
-              </button>
-              <button
-                onClick={() => setActiveTab('bookings')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === 'bookings'
-                    ? 'border-black text-black'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Bookings
               </button>
               <div className="relative">
                 <button
@@ -2864,7 +2864,7 @@ export default function PartnerDashboard() {
                             : 'bg-red-100 text-red-700 hover:bg-red-200'
                         }`}
                       >
-                        {vehicle.availability ? '✅ Available' : '❌ Unavailable'}
+                        {vehicle.availability ? 'Available' : 'Unavailable'}
                       </button>
                       <button 
                         onClick={() => handleManageVehicle(vehicle)}
@@ -3080,7 +3080,7 @@ export default function PartnerDashboard() {
                             : 'bg-red-100 text-red-700 hover:bg-red-200'
                         }`}
                       >
-                        {vehicle.availability ? '✅ Available' : '❌ Unavailable'}
+                        {vehicle.availability ? 'Available' : 'Unavailable'}
                       </button>
                       <button 
                         onClick={() => handleManageVehicle(vehicle)}
@@ -3122,12 +3122,12 @@ export default function PartnerDashboard() {
               <div className="border-b border-gray-200">
                 <nav className="-mb-px flex space-x-8">
                   {[
-                    { id: 'checking-out', label: 'Checking Out Today', icon: '🚗' },
-                    { id: 'currently-hosting', label: 'Currently Hosting', icon: '📍' },
-                    { id: 'checking-in', label: 'Checking In Today', icon: '🏁' },
-                    { id: 'upcoming', label: 'Upcoming', icon: '📅' },
-                    { id: 'pending-review', label: 'Pending Review', icon: '⭐' },
-                    { id: 'all', label: 'All Bookings', icon: '📋' }
+                    { id: 'checking-out', label: 'Checking Out Today'},
+                    { id: 'currently-hosting', label: 'Currently Hosting'},
+                    { id: 'checking-in', label: 'Checking In Today'},
+                    { id: 'upcoming', label: 'Upcoming'},
+                    { id: 'pending-review', label: 'Pending Review'},
+                    { id: 'all', label: 'All Bookings'}
                   ].map((tab) => (
                     <button
                       key={tab.id}
