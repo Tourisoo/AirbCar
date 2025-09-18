@@ -117,10 +117,8 @@ jobs:
           python -c "
           import os
           print('Environment DJANGO_SETTINGS_MODULE:', os.environ.get('DJANGO_SETTINGS_MODULE'))
-          
           import django
           django.setup()
-          
           from django.conf import settings
           print('Django settings module:', settings.SETTINGS_MODULE)
           print('Database configuration:')
@@ -129,13 +127,15 @@ jobs:
           print('  NAME:', settings.DATABASES['default']['NAME'])
           print('  USER:', settings.DATABASES['default']['USER'])
           print('  PORT:', settings.DATABASES['default']['PORT'])
-          
-          # Verify HOST is localhost
-          if settings.DATABASES['default']['HOST'] != 'localhost':
-              print('ERROR: Database HOST is not localhost!')
-              exit(1)
+          # Only check HOST if not using SQLite
+          if settings.DATABASES['default']['ENGINE'] != 'django.db.backends.sqlite3':
+              if settings.DATABASES['default']['HOST'] != 'localhost':
+                  print('ERROR: Database HOST is not localhost!')
+                  exit(1)
+              else:
+                  print('SUCCESS: Database HOST is correctly set to localhost')
           else:
-              print('SUCCESS: Database HOST is correctly set to localhost')
+              print('SQLite detected, skipping HOST check.')
           "
         env:
           GITHUB_ACTIONS: true
