@@ -11,10 +11,10 @@ DEBUG = False
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# You can override database settings here for CI if needed:
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+# Use SQLite for CI to avoid external DB dependency
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
