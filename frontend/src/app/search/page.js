@@ -2040,7 +2040,7 @@ function SearchContent() {
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-1">{selectedCar.name}</h3>
+                      <h3 className="text-2xl font-bold text-gray-900">{selectedCar.name}</h3>
                       <p className="text-gray-700">Model Year: {selectedCar.modelYear}</p>
                     </div>
                     {selectedCar.verified && (
