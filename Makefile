@@ -52,11 +52,19 @@ dev:
 	@echo "🚀 Starting development environment with Docker..."
 	docker-compose up --build
 
+# Local development environment variables
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_NAME=airbcar_db
+export DB_USER=airbcar_user
+export DB_PASSWORD=amineamine
+
 dev-local: dev-backend dev-frontend
+
 
 dev-backend:
 	@echo "🚀 Starting Django development server..."
-	cd backend/airbcar_backend && python manage.py runserver 0.0.0.0:8000 &
+	cd backend/airbcar_backend && python3 manage.py runserver 0.0.0.0:8000 &
 
 dev-frontend:
 	@echo "🚀 Starting Next.js development server..."
@@ -85,7 +93,7 @@ migrate:
 
 migrate-local:
 	@echo "🗄️ Running Django migrations locally..."
-	cd backend/airbcar_backend && python manage.py migrate
+	cd backend/airbcar_backend && python3 manage.py migrate
 
 makemigrations:
 	@echo "📝 Creating Django migrations..."
@@ -93,7 +101,7 @@ makemigrations:
 
 makemigrations-local:
 	@echo "📝 Creating Django migrations locally..."
-	cd backend/airbcar_backend && python manage.py makemigrations
+	cd backend/airbcar_backend && python3 manage.py makemigrations
 
 superuser:
 	@echo "👤 Creating Django superuser..."
@@ -101,7 +109,7 @@ superuser:
 
 superuser-local:
 	@echo "👤 Creating Django superuser locally..."
-	cd backend/airbcar_backend && python manage.py createsuperuser
+	cd backend/airbcar_backend && python3 manage.py createsuperuser
 
 shell:
 	@echo "🐚 Opening Django shell..."
@@ -109,7 +117,7 @@ shell:
 
 shell-local:
 	@echo "🐚 Opening Django shell locally..."
-	cd backend/airbcar_backend && python manage.py shell
+	cd backend/airbcar_backend && python3 manage.py shell
 
 dbshell:
 	@echo "🗄️ Opening database shell..."
@@ -125,7 +133,7 @@ test-backend:
 
 test-backend-local:
 	@echo "🧪 Running Django tests locally..."
-	cd backend/airbcar_backend && python manage.py test
+	cd backend/airbcar_backend && python3 manage.py test
 
 test-frontend:
 	@echo "🧪 Running frontend tests..."
@@ -200,7 +208,7 @@ collectstatic:
 
 collectstatic-local:
 	@echo "📁 Collecting static files locally..."
-	cd backend/airbcar_backend && python manage.py collectstatic --noinput
+	cd backend/airbcar_backend && python3 manage.py collectstatic --noinput
 
 # Setup commands
 setup: install migrate superuser
