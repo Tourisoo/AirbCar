@@ -92,7 +92,7 @@ Backend Documentation: https://hip-shield-dca.notion.site/Backend-Documentation-
 
 ### 4. List Users
 * **Method**: GET  
-* **URL**: `/api/users/list/`  
+* **URL**: `/users/`  
 * **Headers**: `Authorization: Bearer <token>` (optional)  
 * **Response (200)**:  
   ```json

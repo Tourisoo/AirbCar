@@ -6,7 +6,7 @@ export async function GET() {
     console.log('🔍 Testing Django PostgreSQL database connection...')
     
     // Test Django backend connection
-    const response = await fetch('http://localhost:8000/api/users/list/', {
+    const response = await fetch('http://localhost:8000/users/', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

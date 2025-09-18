@@ -46,7 +46,7 @@ async function testDjangoDatabase() {
     console.log('✅ Django backend is running')
     
     // Test 2: Fetch users from Django API
-    const usersResponse = await makeRequest('http://localhost:8000/api/users/list/', {
+    const usersResponse = await makeRequest('http://localhost:8000/users/', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ async function testDjangoDatabase() {
     console.log('1. Make sure Docker containers are running: docker-compose up -d')
     console.log('2. Check Django backend logs: docker-compose logs web')
     console.log('3. Verify PostgreSQL is running: docker-compose logs db')
-    console.log('4. Test manual curl: curl http://localhost:8000/api/users/list/')
+    console.log('4. Test manual curl: curl http://localhost:8000/users/')
   }
 }
 

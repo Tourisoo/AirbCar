@@ -44,7 +44,8 @@ class UserSerializer(serializers.ModelSerializer):
             'is_partner', 'is_verified', 'password', 'profile_picture', 'email_verified',
             'license_number', 'address', 'role', 'first_name', 'last_name', 'issue_date', 
             'license_origin_country', 'nationality', 'country_of_residence', 'city', 'postal_code',
-            'date_of_birth', 'id_verification_status', 'id_front_document_url', 'id_back_document_url']
+            'date_of_birth', 'id_verification_status', 'id_front_document_url', 'id_back_document_url',
+            'is_superuser', 'is_staff']
         read_only_fields = ['id', 'is_partner', 'is_verified', 'email_verified', 
             'id_front_document_url', 'id_back_document_url', 'profile_picture']
 

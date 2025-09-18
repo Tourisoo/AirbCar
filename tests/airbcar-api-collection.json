@@ -203,7 +203,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/users/list/",
+              "raw": "{{base_url}}/users/",
               "host": ["{{base_url}}"],
               "path": ["api", "users", "list", ""]
             }

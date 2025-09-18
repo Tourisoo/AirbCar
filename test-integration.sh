@@ -33,7 +33,7 @@ fi
 
 # Test database connection
 echo "🗄️ Testing database connection..."
-if curl -s http://localhost:8000/api/users/list/ > /dev/null; then
+if curl -s http://localhost:8000/users/ > /dev/null; then
     echo "✅ Database connection successful"
 else
     echo "⚠️ Database connection may have issues"

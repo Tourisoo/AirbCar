@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 export async function GET() {
   try {
     // Test Django backend connection instead of Prisma
-    const response = await fetch('http://localhost:8000/api/users/list/', {
+    const response = await fetch('http://localhost:8000/users/', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

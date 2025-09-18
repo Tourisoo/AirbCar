@@ -129,7 +129,7 @@ The backend API includes the following endpoints:
 
 ### Users
 - `GET /api/users/` - List all users
-- `GET /api/users/list/` - List users (alternative endpoint)
+- `GET /users/` - List users (alternative endpoint)
 - `GET /api/users/<id>/` - Get user by ID
 - `PUT /api/users/<id>/` - Update user
 - `DELETE /api/users/<id>/` - Delete user

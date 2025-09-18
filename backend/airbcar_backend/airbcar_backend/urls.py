@@ -38,7 +38,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_view),
     path('', include(router.urls)),
-    path('api/users/list/', user_list, name='user_list'),
+    path('users/', user_list, name='user_list'),
     path('api/bookings/list/', booking_list, name='bookings_list'),
     # path('api/login/', CustomLoginView.as_view(), name='token_obtain_pair'), # sign-in
     path('api/login/', CustomLoginView.as_view(), name='login'), # sign-in - log-in

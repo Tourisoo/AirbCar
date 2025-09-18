@@ -25,7 +25,7 @@ async function viewUsers() {
   try {
     console.log('🔍 Fetching users from Django API...')
     
-    const response = await makeRequest('http://localhost:8000/api/users/list/', {
+    const response = await makeRequest('http://localhost:8000/users/', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ async function viewUsers() {
   } catch (error) {
     console.error('❌ Error fetching users from Django API:', error.message)
     console.log('💡 Make sure Django backend is running on http://localhost:8000')
-    console.log('🧪 Test with: curl http://localhost:8000/api/users/list/')
+    console.log('🧪 Test with: curl http://localhost:8000/users/')
   }
 }
 

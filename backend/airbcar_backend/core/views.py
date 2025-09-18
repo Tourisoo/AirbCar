@@ -45,18 +45,10 @@ class UserVerificationView(generics.GenericAPIView):
             return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # token_generator = PasswordResetTokenGenerator()
-        # if user and token_generator.check_token(user, token):
-        #     user.set_password(serializer.validated_data['password'])
-        #     user.save()
-        #     return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
-        # return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)
-
 class AdminVerificationView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # Check if user is admin/staff
         if request.user.is_staff or request.user.is_superuser:
             return Response({'is_admin': True}, status=status.HTTP_200_OK)
         else:
@@ -137,6 +129,15 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
+    def get_queryset(self):
+        print("get_queryset called")
+        user = self.request.user
+        if not user.is_authenticated:
+            raise ValidationError({"detail": "You are not loged in."})
+        if user.is_staff or user.is_superuser:
+            return User.objects.all()
+        return User.objects.filter(id=user.id)
+
     def perform_create(self, serializer):
         print("perform_create called")
         user = serializer.save()
@@ -168,15 +169,6 @@ class UserViewSet(viewsets.ModelViewSet):
             recipient_list=[user.email],
             fail_silently=False,
         )
-
-    def get_queryset(self):
-        print("get_queryset called")
-        user = self.request.user
-        if not user.is_authenticated:
-            return User.objects.all()
-        if user.is_staff:
-            return User.objects.all()
-        return User.objects.filter(id=user.id)
 
     def perform_update(self, serializer):
         print("perform_update called")
@@ -252,15 +244,16 @@ class PartnerViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     
     def get_queryset(self):
-        user = self.request.user  # Rename for clarity
+        user = self.request.user
         if not user.is_authenticated:
-            return Partner.objects.all()
-        if user.is_staff:  # Remove the incorrect '.user' 
-            return Partner.objects.all().prefetch_related('listings')  # Fix prefetch too
+            raise ValidationError({"detail": "You are not loged in."})
+        if user.is_staff or user.is_superuser:
+            return Partner.objects.all().prefetch_related('listings')
+        if not user.is_partner and user.is_authenticated:
+            raise ValidationError({"detail": "You are not loged in."})
         return Partner.objects.filter(user=user).prefetch_related('listings')
 
     def perform_create(self, serializer):
-
         if self.request.user.is_partner:
            raise ValidationError({"detail": "You are already registered as a partner."})
 
@@ -460,7 +453,7 @@ def home_view(request):
                 <ul>
                     <li>GET <code>/api/users/</code> — List all users</li>
                     <li>GET <code>/api/users/&lt;id&gt;/</code> — Get specific user</li>
-                    <li>GET <code>/api/users/list/</code> — User list view</li>
+                    <li>GET <code>/users/</code> — User list view</li>
                 </ul>
             </div>
 
