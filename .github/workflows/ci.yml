@@ -151,8 +151,8 @@ jobs:
           cd backend/airbcar_backend
           echo "=== Pre-migration debug ==="
           echo "DJANGO_SETTINGS_MODULE: $DJANGO_SETTINGS_MODULE"
-          echo "=== Running migrations with custom script ==="
-          python run_ci_migration.py
+          echo "=== Running migrations with Django manage.py ==="
+          python manage.py migrate --settings=airbcar_backend.settings_ci_simple
         env:
           GITHUB_ACTIONS: true
           DB_HOST: localhost
