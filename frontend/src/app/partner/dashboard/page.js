@@ -10,6 +10,7 @@ import VehicleManageModal from '../../components/VehicleManageModal'
 import QuickEditModal from '../../components/QuickEditModal'
 
 export default function PartnerDashboard() {
+  const [activeSection, setActiveSection] = useState('general')
   const { user, loading, updateUser } = useAuth()
   const router = useRouter()
   // State variables
@@ -725,7 +726,7 @@ export default function PartnerDashboard() {
     const tabParam = urlParams.get('tab')
     const actionParam = urlParams.get('action')
     
-    if (tabParam && ['today', 'calendar', 'listings', 'bookings', 'earnings', 'menu'].includes(tabParam)) {
+    if (tabParam && ['today', 'calendar', 'listings', 'bookings','rentalpolicies', 'earnings', 'menu'].includes(tabParam)) {
       setActiveTab(tabParam)
     }
     
@@ -911,12 +912,16 @@ export default function PartnerDashboard() {
 
       console.log('Toggling availability for vehicle:', vehicle.id, 'to:', newAvailability)
 
-      // Update in backend - try multiple field combinations
+      // Show loading state by temporarily updating the UI
+      setVehicles(prev => prev.map(v => 
+        v.id === vehicle.id 
+          ? { ...v, isUpdating: true } 
+          : v
+      ))
+
+      // Update in backend - use the correct field name from the model
       const updateData = {
-        is_available: newAvailability,
-        available: newAvailability,
-        availability: newAvailability,
-        status: newAvailability ? 'available' : 'unavailable'
+        availability: newAvailability
       }
 
       console.log('Sending update data:', updateData)
@@ -934,31 +939,61 @@ export default function PartnerDashboard() {
       if (!response.ok) {
         const errorText = await response.text()
         console.error('Backend response error:', response.status, errorText)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+        
+        // Try to parse error response for better user feedback
+        let errorMessage = `HTTP error! status: ${response.status}`
+        try {
+          const errorJson = JSON.parse(errorText)
+          if (errorJson.detail) {
+            errorMessage = errorJson.detail
+          } else if (errorJson.availability) {
+            errorMessage = `Availability: ${errorJson.availability.join(', ')}`
+          }
+        } catch (parseError) {
+          // Use default error message
+        }
+        
+        throw new Error(errorMessage)
       }
 
       const result = await response.json()
       console.log('Backend response:', result)
 
-      // Update local state
+      // Update local state with the response from backend
       setVehicles(prev => prev.map(v => 
         v.id === vehicle.id 
           ? { 
               ...v, 
-              availability: newAvailability,
-              is_available: newAvailability,
-              available: newAvailability,
-              status: newAvailability ? 'available' : 'unavailable' 
+              availability: result.availability !== undefined ? result.availability : newAvailability,
+              status: (result.availability !== undefined ? result.availability : newAvailability) ? 'available' : 'unavailable',
+              isUpdating: false
             } 
           : v
       ))
 
-      // Show success message
-      alert(`Vehicle ${newAvailability ? 'enabled' : 'disabled'} for booking in search results`)
+      // Show success message with better UX
+      const statusText = newAvailability ? 'available for booking' : 'unavailable for booking'
+      const successMessage = `✅ ${vehicle.brand} ${vehicle.model} is now ${statusText}`
+      
+      // You could replace this alert with a toast notification for better UX
+      alert(successMessage)
       
     } catch (error) {
       console.error('Error toggling availability:', error)
-      alert(`Failed to update availability: ${error.message}`)
+      
+      // Revert the loading state
+      setVehicles(prev => prev.map(v => 
+        v.id === vehicle.id 
+          ? { ...v, isUpdating: false } 
+          : v
+      ))
+      
+      // Show user-friendly error message
+      const errorMessage = error.message.includes('HTTP error') 
+        ? 'Failed to update vehicle availability. Please try again.'
+        : error.message
+      
+      alert(`❌ ${errorMessage}`)
     }
   }
 
@@ -1665,7 +1700,157 @@ export default function PartnerDashboard() {
   if (!user) {
     return null
   }
-
+  
+    const sections = [
+      { id: 'general', title: 'General Terms'},
+      { id: 'booking', title: 'Booking & Cancellation'},
+      { id: 'insurance', title: 'Insurance & Protection'},
+      { id: 'vehicle', title: 'Vehicle Usage'},
+      { id: 'payment', title: 'Payment & Fees'},
+      { id: 'support', title: 'Support & Contact'}
+    ]
+  
+    const policies = {
+      general: {
+        title: 'General Terms & Conditions',
+        content: [
+          {
+            subtitle: 'Eligibility Requirements',
+            items: [
+              'Must be at least 21 years old to rent a vehicle',
+              'Valid driver\'s license required (minimum 1 year)',
+              'International driving permit required for foreign licenses',
+              'Credit card in the primary driver\'s name required'
+            ]
+          },
+          {
+            subtitle: 'Rental Agreement',
+            items: [
+              'All rentals are subject to vehicle availability',
+              'Rental period begins and ends at specified times',
+              'Late returns may incur additional charges',
+              'All drivers must be listed on the rental agreement'
+            ]
+          }
+        ]
+      },
+      booking: {
+        title: 'Booking & Cancellation Policy',
+        content: [
+          {
+            subtitle: 'Booking Process',
+            items: [
+              'Reservations can be made online or through our mobile app',
+              'Confirmation email will be sent within 24 hours',
+              'Full payment or deposit required at time of booking',
+              'Vehicle pickup location and time must be confirmed'
+            ]
+          },
+          {
+            subtitle: 'Cancellation Policy',
+            items: [
+              'Free cancellation up to 48 hours before pickup',
+              '50% refund for cancellations 24-48 hours before pickup',
+              'No refund for cancellations less than 24 hours before pickup',
+              'Emergency cancellations will be reviewed case by case'
+            ]
+          }
+        ]
+      },
+      insurance: {
+        title: 'Insurance & Protection Plans',
+        content: [
+          {
+            subtitle: 'Basic Coverage',
+            items: [
+              'Third-party liability insurance included',
+              'Collision damage waiver available',
+              'Theft protection coverage available',
+              'Personal accident insurance optional'
+            ]
+          },
+          {
+            subtitle: 'Damage Policy',
+            items: [
+              'Renter responsible for damage not covered by insurance',
+              'Security deposit held until vehicle inspection',
+              'Minor damages may be deducted from deposit',
+              'Major damages require insurance claim process'
+            ]
+          }
+        ]
+      },
+      vehicle: {
+        title: 'Vehicle Usage Guidelines',
+        content: [
+          {
+            subtitle: 'Permitted Use',
+            items: [
+              'Personal use only, no commercial activities',
+              'Driving within specified geographic boundaries',
+              'Maximum number of passengers as per vehicle capacity',
+              'No smoking or pets allowed in vehicles'
+            ]
+          },
+          {
+            subtitle: 'Prohibited Activities',
+            items: [
+              'Off-road driving or racing',
+              'Towing other vehicles or trailers',
+              'Transporting hazardous materials',
+              'Using vehicle under influence of alcohol or drugs'
+            ]
+          }
+        ]
+      },
+      payment: {
+        title: 'Payment Terms & Fees',
+        content: [
+          {
+            subtitle: 'Payment Methods',
+            items: [
+              'Credit cards (Visa, MasterCard, American Express)',
+              'Debit cards accepted with additional verification',
+              'Cash payments not accepted',
+              'Payment must be in the name of primary driver'
+            ]
+          },
+          {
+            subtitle: 'Additional Fees',
+            items: [
+              'Late return fee: €25 per hour',
+              'Fuel service charge if returned empty',
+              'Cleaning fee for excessive dirt or odors',
+              'Traffic violation fees passed to renter'
+            ]
+          }
+        ]
+      },
+      support: {
+        title: 'Customer Support & Contact',
+        content: [
+          {
+            subtitle: 'Emergency Support',
+            items: [
+              '24/7 roadside assistance available',
+              'Emergency contact number provided with rental',
+              'Breakdown and accident reporting procedures',
+              'Replacement vehicle service when available'
+            ]
+          },
+          {
+            subtitle: 'Contact Information',
+            items: [
+              'Customer service: +212 5XX-XXXXXX',
+              'Email support: support@airbcar.com',
+              'Emergency line: +212 6XX-XXXXXX',
+              'Online chat available 9 AM - 6 PM'
+            ]
+          }
+        ]
+      }
+    }
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -2905,6 +3090,18 @@ export default function PartnerDashboard() {
                   </svg>
                   Reservations
                 </button>
+                <button
+                  onClick={() => setActiveTab('rentalpolicies')}
+                  className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center text-gray-500"
+                >
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1.5" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="14" y="14" width="7" height="7" rx="1.5" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1.5" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                  Rental Policies
+                </button>
                 <button 
                   onClick={() => setActiveTab('earnings')}
                   className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center text-gray-500"
@@ -2913,15 +3110,6 @@ export default function PartnerDashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                   </svg>
                   Earnings
-                </button>
-                <button 
-                  onClick={handleAddVehicle}
-                  className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center text-gray-500"
-                >
-                  <svg className="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Create New Listing
                 </button>
                 <hr className="my-2 border-gray-200" />
                 <button className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center text-gray-500">
@@ -2936,7 +3124,7 @@ export default function PartnerDashboard() {
                   </svg>
                   Help Center
                 </button>
-                <button className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium text-red-600 flex items-center text-gray-500">
+                <button className="w-full text-left py-3 px-4 rounded-lg hover:bg-red-50 transition-colors font-medium text-red-600 flex items-center text-gray-500">
                   <svg className="w-5 h-5 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
@@ -3387,6 +3575,114 @@ export default function PartnerDashboard() {
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === 'rentalpolicies' && (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Rental Policies & Terms
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Everything you need to know about renting with Airbcar. 
+              Please read these policies carefully before making your reservation.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar Navigation */}
+          <div className="lg:w-1/4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Policy Sections</h3>
+              <nav className="space-y-2">
+                {sections.map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => setActiveSection(section.id)}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                      activeSection === section.id
+                        ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                        : 'text-gray-700 hover:bg-gray-50 border border-transparent hover:border-gray-200'
+                    }`}
+                  >
+                    <span className="text-xl">{section.icon}</span>
+                    <span className="font-medium">{section.title}</span>
+                  </button>
+                ))}
+              </nav>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="lg:w-3/4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  {policies[activeSection].title}
+                </h2>
+              </div>
+
+              <div className="space-y-8">
+                {policies[activeSection].content.map((section, index) => (
+                  <div key={index} className="border-b border-gray-100 pb-8 last:border-b-0 last:pb-0">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                      {section.subtitle}
+                    </h3>
+                    <ul className="space-y-3">
+                      {section.items.map((item, itemIndex) => (
+                        <li key={itemIndex} className="flex items-start space-x-3">
+                          <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <span className="text-gray-700 leading-relaxed">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+
+              {/* Important Notice */}
+              <div className="mt-12 p-6 bg-orange-50 border border-orange-200 rounded-xl">
+                <div className="flex items-start space-x-3">
+                  <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-orange-800 mb-2">Important Notice</h4>
+                    <p className="text-orange-700 leading-relaxed">
+                      These policies are subject to change without notice. By completing a reservation, 
+                      you agree to abide by all current terms and conditions. For questions about our 
+                      policies, please contact our customer support team.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact CTA */}
+              <div className="mt-8 text-center">
+                <div className="inline-flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="text-2xl">🤝</div>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-gray-900">Need clarification?</p>
+                    <p className="text-sm text-gray-600">Our support team is here to help</p>
+                  </div>
+                  <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200">
+                    Contact Support
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
         )}
       </div>
 

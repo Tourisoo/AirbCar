@@ -19,9 +19,9 @@ export default function Header() {
 
   // Language and Currency options
   const languageOptions = [
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'ar', name: 'العربية', flag: '🇲🇦' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' }
+    { code: 'en', name: 'English'},
+    { code: 'ar', name: 'العربية'},
+    { code: 'fr', name: 'Français'}
   ]
 
   const currencyOptions = [
