@@ -102,7 +102,7 @@
 // GET /api/cars/:id
 // Detailed car information for the car details page
 
-// POST /api/bookings
+// POST /bookings
 // Create a new booking
 {
   "car_id": 1,

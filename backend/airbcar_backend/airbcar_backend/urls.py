@@ -18,10 +18,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from core.views import home_view, user_list, booking_list, UserViewSet, \
-    PartnerViewSet, ListingViewSet, BookingViewSet, \
-    PasswordResetRequestView, PasswordResetConfirmView, UserVerificationView, \
-    TokenVerifyView, AdminVerificationView, CustomLoginView, verify_email # UserRegisterView
+from core.views import home_view, UserViewSet, PartnerViewSet, ListingViewSet, \
+    BookingViewSet, PasswordResetRequestView, PasswordResetConfirmView, \
+    UserVerificationView, TokenVerifyView, AdminVerificationView, CustomLoginView, verify_email
 from rest_framework_simplejwt.views import TokenRefreshView
 from django.conf import settings
 from django.conf.urls.static import static
@@ -38,9 +37,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_view),
     path('', include(router.urls)),
-    path('users/', user_list, name='user_list'),
-    path('api/bookings/list/', booking_list, name='bookings_list'),
-    # path('api/login/', CustomLoginView.as_view(), name='token_obtain_pair'), # sign-in
+    # path('api/bookings/list/', booking_list, name='bookings_list'),
     path('api/login/', CustomLoginView.as_view(), name='login'), # sign-in - log-in
     path('api/register/', UserViewSet.as_view({'post': 'create'}), name='user_register'), # sign-up
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

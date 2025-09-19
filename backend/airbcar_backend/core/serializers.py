@@ -44,8 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
             'is_partner', 'is_verified', 'password', 'profile_picture', 'email_verified',
             'license_number', 'address', 'role', 'first_name', 'last_name', 'issue_date', 
             'license_origin_country', 'nationality', 'country_of_residence', 'city', 'postal_code',
-            'date_of_birth', 'id_verification_status', 'id_front_document_url', 'id_back_document_url',
-            'is_superuser', 'is_staff']
+            'date_of_birth', 'id_verification_status', 'id_front_document_url', 'id_back_document_url', 'is_staff']
         read_only_fields = ['id', 'is_partner', 'is_verified', 'email_verified', 
             'id_front_document_url', 'id_back_document_url', 'profile_picture']
 
@@ -95,10 +94,6 @@ class ListingSerializer(serializers.ModelSerializer):
             data = data.copy()  # Make a copy to avoid modifying the original
             data.pop('pictures')
         return super().to_internal_value(data)
-
-    # def update(self, instance, validated_data):
-    #     # Don't update pictures field here, it's handled in the view
-    #     return super().update(instance, validated_data)
 
 class BookingSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

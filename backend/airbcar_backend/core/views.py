@@ -49,7 +49,7 @@ class AdminVerificationView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        if request.user.is_staff or request.user.is_superuser:
+        if request.user.is_staff:
             return Response({'is_admin': True}, status=status.HTTP_200_OK)
         else:
             return Response({'is_admin': False}, status=status.HTTP_403_FORBIDDEN)
@@ -68,7 +68,7 @@ class TokenVerifyView(generics.GenericAPIView):
             'is_verified': user.is_verified,
             'email_verified': user.email_verified,
             'is_staff': user.is_staff,
-            'is_superuser': user.is_superuser
+            # 'is_superuser': user.is_superuser
         })
 
 class CustomLoginView(APIView):
@@ -134,7 +134,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user.is_authenticated:
             raise ValidationError({"detail": "You are not loged in."})
-        if user.is_staff or user.is_superuser:
+        if user.is_staff:
             return User.objects.all()
         return User.objects.filter(id=user.id)
 
@@ -245,12 +245,12 @@ class PartnerViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         user = self.request.user
+        if user.is_staff:
+            return Partner.objects.all().prefetch_related('listings')
         if not user.is_authenticated:
             raise ValidationError({"detail": "You are not loged in."})
-        if user.is_staff or user.is_superuser:
-            return Partner.objects.all().prefetch_related('listings')
         if not user.is_partner and user.is_authenticated:
-            raise ValidationError({"detail": "You are not loged in."})
+            raise ValidationError({"detail": "You are not a partner."})
         return Partner.objects.filter(user=user).prefetch_related('listings')
 
     def perform_create(self, serializer):
@@ -267,9 +267,14 @@ class BookingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        # Users can only see their own bookings
-        return Booking.objects.filter(user=self.request.user).order_by('-date')
-    
+        user = self.request.user
+        if user.is_staff:
+            return Booking.objects.all()
+        if not user.is_authenticated:
+            raise ValidationError({"detail": "You are not loged in."})
+        return Booking.objects.filter(user=user).order_by('-date')
+
+
     def perform_create(self, serializer):
         listing_id = self.request.data.get('listing')
         try:
@@ -337,29 +342,6 @@ def verify_email(request):
         return HttpResponse("Email successfully verified!")
     except User.DoesNotExist:
         return HttpResponse("Invalid or expired token", status=400)
-
-def user_list(request):
-    users = User.objects.filter(is_superuser=False)
-
-    if not users:
-        return JsonResponse({"message": "No users found."}, status=404)
-
-    user_data = [
-        {"username": user.username, "id": user.id, "email": user.email, "is_partner": user.is_partner}
-        for user in users
-    ]
-    return JsonResponse(user_data, safe=False)
-
-def booking_list(request):
-    bookings = Booking.objects.all()
-    if not bookings:
-        return JsonResponse({"message": "No bookings found."}, status=404)
-
-    booking_data = [
-        {"id": booking.id, "user": booking.user.username, "listing": booking.listing.id, "date": booking.date}
-        for booking in bookings
-    ]
-    return JsonResponse(booking_data, safe=False)
 
 def home_view(request):
     html_content = """
