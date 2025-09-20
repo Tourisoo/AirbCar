@@ -58,7 +58,6 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-
 class PartnerSerializer(serializers.ModelSerializer):
     
     class ListingBriefSerializer(serializers.ModelSerializer):
