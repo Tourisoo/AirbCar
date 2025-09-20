@@ -10,7 +10,7 @@ import VehicleManageModal from '../../components/VehicleManageModal'
 import QuickEditModal from '../../components/QuickEditModal'
 
 export default function PartnerDashboard() {
-  const { user, loading, updateUser } = useAuth()
+  const { user, loading, updateUser, logout } = useAuth()
   const router = useRouter()
   // State variables
   const [activeTab, setActiveTab] = useState('today')
@@ -83,6 +83,7 @@ export default function PartnerDashboard() {
   const [accountFormLoading, setAccountFormLoading] = useState(false)
   const [testResult, setTestResult] = useState('')
   const [showTestModal, setShowTestModal] = useState(false)
+  const [saveMessage, setSaveMessage] = useState('')
   const [accountData, setAccountData] = useState({
     firstName: '',
     lastName: '',
@@ -1347,6 +1348,7 @@ export default function PartnerDashboard() {
   const handleAccountSubmit = async (e) => {
     e.preventDefault()
     setAccountFormLoading(true)
+    setSaveMessage('')
     
     try {
       // Input validation
@@ -1541,7 +1543,7 @@ export default function PartnerDashboard() {
       setShowAccountSettings(false)
       
       // Show success message
-      alert('Account information updated successfully!')
+      setSaveMessage('Profile updated successfully')
       
       // Optionally refresh the page to ensure all components show updated data
       // window.location.reload()
@@ -1664,6 +1666,360 @@ export default function PartnerDashboard() {
 
   if (!user) {
     return null
+  }
+
+  // Standard user profile view (non-partner)
+  if (!user?.is_partner && user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 md:grid-cols-4 gap-6">
+          <aside className="md:col-span-1">
+            <div className="bg-white rounded-xl border shadow-sm p-6">
+              <div className="mb-6">
+                <p className="text-sm text-gray-500">Hi there!</p>
+                <p className="mt-1 text-sm text-gray-700 break-all">{user.email}</p>
+              </div>
+              <div className="divide-y">
+                <button
+                  type="button"
+                  onClick={() => router.push('/account?tab=bookings')}
+                  className="w-full text-left py-3 flex items-center justify-between hover:text-orange-600 text-gray-600"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-6 h-6">
+                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                    </span>
+                    <span>Your bookings</span>
+                  </span>
+                  <span className="text-gray-600 hover:text-orange-600">›</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push('/account?section=favorites')}
+                  className="w-full text-left py-3 flex items-center justify-between hover:text-red-600 text-gray-600"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-6 h-6">
+                      <svg className="w-4 h-4 text-red-600 hover:text-red-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                      </svg>
+                    </span>
+                    <span>Your Favorite cars</span>
+                  </span>
+                  <span className="text-gray-600 hover:text-red-600">›</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push('/account?tab=alerts')}
+                  className="w-full text-left py-3 flex items-center justify-between hover:text-orange-600 text-gray-600"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-6 h-6">
+                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1" />
+                      </svg>
+                    </span>
+                    <span>Price Alerts</span>
+                  </span>
+                  <span className="text-gray-600 hover:text-orange-600">›</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push('/account?tab=account')}
+                  className="w-full text-left py-3 flex items-center justify-between hover:text-orange-600 text-gray-600"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-6 h-6">
+                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </span>
+                    <span>Account</span>
+                  </span>
+                  <span className="text-gray-600 hover:text-orange-600">›</span>
+                </button>
+              </div>
+              <div className="pt-6">
+                <button
+                  type="button"
+                  onClick={() => logout()}
+                  className="w-full py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700"
+                >
+                  Log out
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          <main className="md:col-span-3">
+            <div className="bg-white rounded-xl border shadow-sm">
+              <div className="px-6 pt-6">
+                <span className="inline-block text-xs uppercase tracking-wide text-gray-600 bg-gray-100 px-2 py-1 rounded">Your account</span>
+                <h1 className="mt-2 text-2xl font-bold text-gray-600">Account</h1>
+              </div>
+
+              <form onSubmit={handleAccountSubmit} className="p-6 space-y-8">
+                {saveMessage && (
+                  <div className="bg-green-50 text-green-800 border border-green-200 rounded-lg px-4 py-3 text-sm">
+                    {saveMessage}
+                  </div>
+                )}
+
+                {/* Profile Photo */}
+                <section>
+                  <h2 className="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-2 rounded">Profile Photo</h2>
+                  <div className="mt-4 flex items-center gap-4">
+                    <img src={accountData.profileImage} alt="Profile" className="w-16 h-16 rounded-full object-cover border" />
+                    <div className="flex gap-2">
+                      <label className="inline-flex items-center px-3 py-2 border rounded-lg cursor-pointer bg-white hover:bg-gray-50">
+                        <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                        Change photo
+                      </label>
+                      <button type="button" onClick={handleRemovePhoto} className="px-3 py-2 border rounded-lg hover:bg-gray-50">Remove</button>
+                    </div>
+                  </div>
+                </section>
+                {/* Personal Information */}
+                <section>
+                  <h2 className="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-2 rounded">Personal Information</h2>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-gray-700">Last name</label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={accountData.lastName || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">First name</label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={accountData.firstName || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">Birth date</label>
+                      <input
+                        type="date"
+                        name="dateOfBirth"
+                        value={accountData.dateOfBirth || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">Place of birth</label>
+                      <input
+                        type="text"
+                        name="placeOfBirth"
+                        value={accountData.placeOfBirth || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                {/* Driving license */}
+                <section>
+                  <h2 className="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-2 rounded">Driving license</h2>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="text-sm text-gray-700">License number</label>
+                      <input
+                        type="text"
+                        name="idNumber"
+                        placeholder="e.g. 121075012XXX"
+                        value={accountData.idNumber || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">First issue date</label>
+                      <input
+                        type="date"
+                        name="licenseFirstIssueDate"
+                        value={accountData.licenseFirstIssueDate || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">Country of issue</label>
+                      <input
+                        type="text"
+                        name="licenseCountry"
+                        value={accountData.licenseCountry || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                {/* Contact */}
+                <section>
+                  <h2 className="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-2 rounded">Contact</h2>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="text-sm text-gray-700">Email</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={accountData.email || user.email || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg bg-gray-50"
+                        disabled
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">SMS notifications will be sent to</label>
+                      <input
+                        type="text"
+                        name="smsCountryCode"
+                        placeholder="Country code (e.g. +1)"
+                        value={accountData.smsCountryCode || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">Phone</label>
+                      <input
+                        type="text"
+                        name="phone"
+                        placeholder="+1234567890"
+                        value={accountData.phone || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                {/* Address */}
+                <section>
+                  <h2 className="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-2 rounded">Adresse</h2>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="text-sm text-gray-700">Address</label>
+                      <input
+                        type="text"
+                        name="address"
+                        value={accountData.address || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="text-sm text-gray-700">Address line 2</label>
+                      <input
+                        type="text"
+                        name="address2"
+                        value={accountData.address2 || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">Postal code</label>
+                      <input
+                        type="text"
+                        name="postalCode"
+                        value={accountData.postalCode || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">City</label>
+                      <input
+                        type="text"
+                        name="city"
+                        value={accountData.city || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="text-sm text-gray-700">Country</label>
+                      <input
+                        type="text"
+                        name="country"
+                        value={accountData.country || ''}
+                        onChange={handleAccountDataChange}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                {/* Subscriptions */}
+                <section>
+                  <h2 className="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-2 rounded">Subscriptions</h2>
+                  <div className="mt-4">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        name="subscribe"
+                        checked={!!accountData.subscribe}
+                        onChange={(e) => handleAccountInputChange('subscribe', e.target.checked)}
+                        className="mr-2"
+                      />
+                      <span className="text-sm text-gray-700">I'd like to get the latest travel deals, news and inspiration sent straight to my inbox.</span>
+                    </label>
+                  </div>
+                </section>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={accountFormLoading}
+                    className={`inline-flex items-center px-4 py-2 rounded-lg text-white ${accountFormLoading ? 'bg-orange-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700'}`}
+                  >
+                    {accountFormLoading && (
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                      </svg>
+                    )}
+                    {accountFormLoading ? 'Saving...' : 'Update my profile'}
+                  </button>
+                </div>
+
+                {/* Account */}
+                <section className="pt-4">
+                  <h2 className="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-2 rounded">Account</h2>
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center text-gray-700"
+                    >
+                      <span>Delete account</span>
+                      <svg className="ml-auto w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </section>
+              </form>
+            </div>
+          </main>
+        </div>
+        <Footer />
+      </div>
+    )
   }
 
   return (
