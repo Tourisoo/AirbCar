@@ -110,7 +110,7 @@ export default function Header() {
   }
 
   const handleMyBookingsClick = () => {
-    router.push('/account?section=bookings')
+    router.push('/bookings')
   }
 
   const handleAdminClick = () => {
@@ -492,7 +492,7 @@ export default function Header() {
                         <span className="font-medium">Profile</span>
                       </button>
                       <button 
-                        onClick={() => router.push('/account?section=bookings')}
+                        onClick={() => router.push('/bookings')}
                         className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 group"
                       >
                         <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-gray-200 transition-colors duration-150">
