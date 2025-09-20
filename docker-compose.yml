@@ -16,6 +16,7 @@ services:
       DJANGO_SUPERUSER_EMAIL: amine@a.com
       DJANGO_SUPERUSER_PASSWORD: amineamine
       LOAD_INITIAL_FIXTURE: "1"
+      
     # depends_on removed, no local db
     restart: unless-stopped
 
@@ -30,7 +31,7 @@ services:
       - NEXTAUTH_URL=http://localhost:3000
       - NEXTAUTH_SECRET=your-secret-key-here-replace-in-production
       - DATABASE_URL=postgresql://postgres.wtbmqtmmdobfvvecinif:Mayache+123455@aws-1-eu-north-1.pooler.supabase.com:5432/postgres
-
+      - NODE_OPTIONS=--max-old-space-size=4096
     volumes:
       - ./frontend:/app
       - /app/node_modules
