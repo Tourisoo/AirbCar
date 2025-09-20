@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { bookingsAPI } from '@/lib/api'
+import { bookingAPI } from '@/lib/api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
@@ -33,7 +33,7 @@ export default function BookingsPage() {
     try {
       setLoading(true)
       setError('')
-      const data = await bookingsAPI.getUserBookings()
+      const data = await bookingAPI.getUserBookings()
       setBookings(data)
     } catch (err) {
       console.error('Error fetching bookings:', err)
@@ -50,7 +50,7 @@ export default function BookingsPage() {
 
     try {
       setCancelLoading(true)
-      await bookingsAPI.cancelBooking(bookingId)
+      await bookingAPI.cancelBooking(bookingId)
       // Update the booking status in the local state
       setBookings(prev => prev.map(booking => 
         booking.id === bookingId 
@@ -85,6 +85,22 @@ export default function BookingsPage() {
       default:
         return bookings
     }
+  }
+
+  // Count functions for tabs (independent of current filter)
+  const getUpcomingCount = () => {
+    const now = new Date()
+    return bookings.filter(booking => 
+      new Date(booking.start_time) > now && booking.status !== 'cancelled'
+    ).length
+  }
+
+  const getCompletedCount = () => {
+    return bookings.filter(booking => booking.status === 'completed').length
+  }
+
+  const getCancelledCount = () => {
+    return bookings.filter(booking => booking.status === 'cancelled').length
   }
 
   const getStatusColor = (status) => {
@@ -156,9 +172,9 @@ export default function BookingsPage() {
           <div className="flex space-x-0 overflow-x-auto">
             {[
               { key: 'all', label: 'All Bookings', count: bookings.length },
-              { key: 'upcoming', label: 'Upcoming', count: getFilteredBookings().length },
-              { key: 'completed', label: 'Completed', count: bookings.filter(b => b.status === 'completed').length },
-              { key: 'cancelled', label: 'Cancelled', count: bookings.filter(b => b.status === 'cancelled').length }
+              { key: 'upcoming', label: 'Upcoming', count: getUpcomingCount() },
+              { key: 'completed', label: 'Completed', count: getCompletedCount() },
+              { key: 'cancelled', label: 'Cancelled', count: getCancelledCount() }
             ].map((tab) => (
               <button
                 key={tab.key}

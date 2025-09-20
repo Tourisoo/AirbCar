@@ -1140,6 +1140,16 @@ function SearchContent() {
         setSuccessMessage('License information and documents saved successfully!')
       }
       else if (bookingStep === 'payment') {
+        // Additional validation before processing payment
+        if (!isLoggedIn) {
+          throw new Error('Session expired. Please log in again to complete your booking.')
+        }
+        
+        if (!localStorage.getItem('access_token')) {
+          setIsLoggedIn(false)
+          throw new Error('Authentication token missing. Please log in again.')
+        }
+        
         await processPaymentAndCreateBooking()
         setSuccessMessage('Payment processed successfully! Your booking has been confirmed.')
       }
@@ -1354,7 +1364,16 @@ function SearchContent() {
       console.log('Access token available:', !!token)
       
       if (!token) {
-        throw new Error('User not authenticated. Please log in again.')
+        console.error('❌ No authentication token found - user should not be at payment step')
+        throw new Error('Authentication required. Please log in again.')
+      }
+
+      // Double-check the user is actually logged in according to our state
+      if (!isLoggedIn) {
+        console.error('❌ User state shows not logged in - resetting booking flow')
+        setShowBookingFlow(false)
+        setBookingStep('auth')
+        throw new Error('Session expired. Please log in again to continue booking.')
       }
 
       // Use booking details from state, with fallback to URL params
@@ -1380,7 +1399,22 @@ function SearchContent() {
       const startDate = new Date(pickupDate)
       const endDate = new Date(dropoffDate)
       const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
-      const totalPrice = days * selectedCar.price
+      
+      // Use the correct price field and ensure it's a valid number
+      const dailyPrice = Number(selectedCar.price_per_day || 0)
+      const totalPrice = days * dailyPrice
+      
+      console.log('💰 Price calculation:', {
+        days,
+        dailyPrice,
+        totalPrice,
+        priceField: selectedCar.price_per_day,
+        selectedCarKeys: Object.keys(selectedCar)
+      })
+      
+      if (!totalPrice || totalPrice <= 0) {
+        throw new Error('Invalid price calculation. Please check the car pricing information.')
+      }
 
       // Create booking data with proper datetime formatting
       const startDateTime = new Date(`${pickupDate}T${pickupTime}:00`).toISOString()
@@ -1394,22 +1428,41 @@ function SearchContent() {
         status: 'confirmed' // Set as confirmed after payment
       }
 
-      console.log('Creating booking with data:', bookingData)
-      console.log('Selected car object:', selectedCar)
-      console.log('Car ID type:', typeof selectedCar.id)
-      console.log('Auth token exists:', !!localStorage.getItem('access_token'))
+      console.log('✅ Creating booking with data:', bookingData)
+      console.log('✅ Selected car object:', selectedCar)
+      console.log('✅ Car ID type:', typeof selectedCar.id, 'Value:', selectedCar.id)
+      console.log('✅ Price type:', typeof totalPrice, 'Value:', totalPrice)
+      console.log('✅ Auth token exists:', !!localStorage.getItem('access_token'))
+      console.log('✅ User logged in state:', isLoggedIn)
+      
+      // Final validation before sending
+      if (!bookingData.listing || bookingData.listing <= 0) {
+        throw new Error('Invalid listing ID for booking')
+      }
+      
+      if (!bookingData.price || bookingData.price <= 0) {
+        throw new Error('Invalid price for booking')
+      }
 
       // Create the booking
       const booking = await bookingAPI.createBooking(bookingData)
       
-      console.log('Booking created successfully:', booking)
+      console.log('✅ Booking created successfully:', booking)
       
       // Store booking ID for reference
       localStorage.setItem('lastBookingId', booking.id)
       
       return booking
     } catch (error) {
-      console.error('Error processing payment and creating booking:', error)
+      console.error('❌ Error processing payment and creating booking:', error)
+      
+      // If it's an authentication error, reset the flow
+      if (error.message.includes('Authentication') || error.message.includes('Session expired')) {
+        setIsLoggedIn(false)
+        setShowBookingFlow(false)
+        setBookingStep('auth')
+      }
+      
       throw error
     }
   }
@@ -2397,7 +2450,7 @@ function SearchContent() {
                           onChange={(e) => handleBookingDataChange('name', e.target.value)}
                           className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="Enter your full name"
-                          // required
+                          required
                         />
                       </div>
                     )}
@@ -2410,7 +2463,7 @@ function SearchContent() {
                         onChange={(e) => handleBookingDataChange('email', e.target.value)}
                         className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="Enter your email"
-                        // required
+                        required
                       />
                     </div>
 
@@ -2422,7 +2475,7 @@ function SearchContent() {
                         onChange={(e) => handleBookingDataChange('password', e.target.value)}
                         className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="Enter your password"
-                        // required
+                        required
                       />
                     </div>
 
@@ -2435,7 +2488,7 @@ function SearchContent() {
                           onChange={(e) => handleBookingDataChange('confirmPassword', e.target.value)}
                           className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="Confirm your password"
-                          // required
+                          required
                         />
                       </div>
                     )}
@@ -2520,7 +2573,7 @@ function SearchContent() {
                         value={bookingData.licenseCountry}
                         onChange={(e) => handleBookingDataChange('licenseCountry', e.target.value)}
                         className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
-                        // required
+                        required
                       >
                         <option value="">Select country</option>
                         <option value="morocco">Morocco</option>
@@ -2542,7 +2595,7 @@ function SearchContent() {
                         onChange={(e) => handleBookingDataChange('licenseNumber', e.target.value)}
                         className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="Enter license number"
-                        // required
+                        required
                       />
                     </div>
 
@@ -2553,7 +2606,7 @@ function SearchContent() {
                         value={bookingData.licenseIssueDate}
                         onChange={(e) => handleBookingDataChange('licenseIssueDate', e.target.value)}
                         className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
-                        // required
+                        required
                       />
                     </div>
 
@@ -2683,7 +2736,7 @@ function SearchContent() {
                           onChange={(e) => handleBookingDataChange('firstName', e.target.value)}
                           className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="First name"
-                          // required
+                          required
                         />
                       </div>
                       <div>
@@ -2694,7 +2747,7 @@ function SearchContent() {
                           onChange={(e) => handleBookingDataChange('lastName', e.target.value)}
                           className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="Last name"
-                          // required
+                          required
                         />
                       </div>
                     </div>
@@ -2706,7 +2759,7 @@ function SearchContent() {
                         value={bookingData.dateOfBirth}
                         onChange={(e) => handleBookingDataChange('dateOfBirth', e.target.value)}
                         className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
-                        // required
+                        required
                       />
                     </div>
 
@@ -2716,7 +2769,7 @@ function SearchContent() {
                         value={bookingData.nationality}
                         onChange={(e) => handleBookingDataChange('nationality', e.target.value)}
                         className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
-                        // required
+                        required
                       >
                         <option value="">Select nationality</option>
                         <option value="moroccan">Moroccan</option>
@@ -2792,7 +2845,7 @@ function SearchContent() {
                         onChange={(e) => handleBookingDataChange('phoneNumber', e.target.value)}
                         className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="+212 6XX XXX XXX"
-                        // required
+                        required
                       />
                     </div>
 
@@ -2826,7 +2879,7 @@ function SearchContent() {
                         onChange={(e) => handleBookingDataChange('address', e.target.value)}
                         className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="Street address"
-                        // required
+                        required
                       />
                     </div>
 
@@ -2839,7 +2892,7 @@ function SearchContent() {
                           onChange={(e) => handleBookingDataChange('city', e.target.value)}
                           className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="City"
-                          // required
+                          required
                         />
                       </div>
                       <div>
@@ -2850,7 +2903,7 @@ function SearchContent() {
                           onChange={(e) => handleBookingDataChange('postalCode', e.target.value)}
                           className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="Postal code"
-                          // required
+                          required
                         />
                       </div>
                     </div>
@@ -2861,7 +2914,7 @@ function SearchContent() {
                         value={bookingData.country}
                         onChange={(e) => handleBookingDataChange('country', e.target.value)}
                         className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
-                        // required
+                        required
                       >
                         <option value="">Select country</option>
                         <option value="morocco">Morocco</option>
@@ -2936,7 +2989,7 @@ function SearchContent() {
                         onChange={(e) => handleBookingDataChange('cardholderName', e.target.value)}
                         className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="Name on card"
-                        // required
+                        required
                       />
                     </div>
 
@@ -2949,7 +3002,7 @@ function SearchContent() {
                         className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                         placeholder="1234 5678 9012 3456"
                         maxLength="19"
-                        // required
+                        required
                       />
                     </div>
 
@@ -2963,7 +3016,7 @@ function SearchContent() {
                           className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="MM/YY"
                           maxLength="5"
-                          // required
+                          required
                         />
                       </div>
                       <div>
@@ -2975,7 +3028,7 @@ function SearchContent() {
                           className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
                           placeholder="123"
                           maxLength="4"
-                          // required
+                          required
                         />
                       </div>
                     </div>
