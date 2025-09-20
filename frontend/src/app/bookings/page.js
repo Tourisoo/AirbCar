@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { bookingAPI } from '@/lib/api'
+import { bookingsAPI } from '@/lib/api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
@@ -33,7 +33,7 @@ export default function BookingsPage() {
     try {
       setLoading(true)
       setError('')
-      const data = await bookingAPI.getUserBookings()
+      const data = await bookingsAPI.getBookings()
       setBookings(data)
     } catch (err) {
       console.error('Error fetching bookings:', err)

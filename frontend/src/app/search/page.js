@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { userAPI, authAPI, bookingAPI } from '@/lib/api'
+import { userAPI, authAPI, bookingAPI, favoritesAPI } from '@/lib/api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
@@ -21,7 +21,11 @@ function SearchContent() {
     style: [],
     brand: [],
     features: [],
-    verified: false
+    verified: false,
+    location: '',
+    pickupDate: '',
+    returnDate: '',
+    instantBooking: false
   })
   const [sortBy, setSortBy] = useState('relevance')
   const [loading, setLoading] = useState(true)
@@ -46,6 +50,13 @@ function SearchContent() {
     license: false
   })
   const [userDataLoaded, setUserDataLoaded] = useState(false)
+  const [favorites, setFavorites] = useState(new Set())
+  const [favoritesLoading, setFavoritesLoading] = useState(false)
+  const [searchSuggestions, setSearchSuggestions] = useState([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [comparisonCars, setComparisonCars] = useState([])
+  const [showComparison, setShowComparison] = useState(false)
+  const [viewMode, setViewMode] = useState('grid') // grid, list, map
   const [bookingData, setBookingData] = useState({
     // Auth data
     name: '',
@@ -659,6 +670,27 @@ function SearchContent() {
     initializeUserProfile()
   }, [user, authLoading, userDataLoaded])
 
+  // Load user's favorites
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (user) {
+        try {
+          const userFavorites = await favoritesAPI.getFavorites()
+          if (Array.isArray(userFavorites)) {
+            setFavorites(new Set(userFavorites.map(fav => fav.car_id || fav.id)))
+          } else {
+            setFavorites(new Set())
+          }
+        } catch (error) {
+          console.error('Error loading favorites:', error)
+          setFavorites(new Set())
+        }
+      }
+    }
+    
+    loadFavorites()
+  }, [user])
+
   useEffect(() => {
     let filtered = cars.filter(car => {
       return (
@@ -752,6 +784,41 @@ function SearchContent() {
         ? prev.seats.filter(s => s !== seats)
         : [...prev.seats, seats]
     }))
+  }
+
+  // Favorite functions
+  const toggleFavorite = async (carId) => {
+    if (!user) {
+      // Redirect to login if not authenticated
+      router.push('/login')
+      return
+    }
+
+    setFavoritesLoading(true)
+    try {
+      if (favorites.has(carId)) {
+        // Remove from favorites
+        await favoritesAPI.removeFavorite(carId)
+        setFavorites(prev => {
+          const newFavorites = new Set(prev)
+          newFavorites.delete(carId)
+          return newFavorites
+        })
+      } else {
+        // Add to favorites
+        await favoritesAPI.addFavorite(carId)
+        setFavorites(prev => new Set([...prev, carId]))
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error)
+      // You could add a toast notification here
+    } finally {
+      setFavoritesLoading(false)
+    }
+  }
+
+  const isFavorite = (carId) => {
+    return favorites.has(carId)
   }
 
   const clearFilters = () => {
@@ -1486,17 +1553,98 @@ function SearchContent() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      {/* Search Summary */}
+      {/* Enhanced Search Header */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="bg-gray-50 rounded-xl p-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Location Search */}
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Where are you going?"
+                      value={filters.location}
+                      onChange={(e) => {
+                        setFilters(prev => ({ ...prev, location: e.target.value }))
+                        setShowSuggestions(e.target.value.length > 0)
+                      }}
+                      className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    />
+                    <svg className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {showSuggestions && (
+                      <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 mt-1">
+                        {['Casablanca', 'Rabat', 'Marrakech', 'Fez', 'Tangier', 'Agadir'].map(city => (
+                          <button
+                            key={city}
+                            onClick={() => {
+                              setFilters(prev => ({ ...prev, location: city }))
+                              setShowSuggestions(false)
+                            }}
+                            className="w-full px-4 py-2 text-left hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
+                          >
+                            {city}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Pickup Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Date</label>
+                  <input
+                    type="date"
+                    value={filters.pickupDate}
+                    onChange={(e) => setFilters(prev => ({ ...prev, pickupDate: e.target.value }))}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  />
+                </div>
+
+                {/* Return Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Return Date</label>
+                  <input
+                    type="date"
+                    value={filters.returnDate}
+                    onChange={(e) => setFilters(prev => ({ ...prev, returnDate: e.target.value }))}
+                    min={filters.pickupDate || new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  />
+                </div>
+
+                {/* Search Button */}
+                <div className="flex items-end">
+                  <button className="w-full bg-orange-500 text-white py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors font-medium flex items-center justify-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    Search Cars
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Results Summary and Controls */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Search Results</h1>
               <p className="text-gray-700 mt-1">
-                Showing {filteredCars.length} cars available in Morocco
+                Showing {filteredCars.length} cars available{filters.location && ` in ${filters.location}`}
               </p>
             </div>
             <div className="mt-4 md:mt-0 flex items-center space-x-4">
+
+              {/* Sort Dropdown */}
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
@@ -1506,7 +1654,9 @@ function SearchContent() {
                 <option value="price_low">Price: Low to High</option>
                 <option value="price_high">Price: High to Low</option>
                 <option value="rating">Rating</option>
+                <option value="newest">Newest First</option>
               </select>
+              {/* Filters Button */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="md:hidden bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors"
@@ -1848,6 +1998,19 @@ function SearchContent() {
                   <span className="ml-2 text-sm text-gray-700">Verified agencies only</span>
                 </label>
               </div>
+
+              {/* Instant Booking */}
+              <div className="mb-6">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={filters.instantBooking}
+                    onChange={(e) => handleFilterChange('instantBooking', e.target.checked)}
+                    className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Instant booking available</span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -1899,9 +2062,21 @@ function SearchContent() {
                           </span>
                         </div>
                       )}
-                      <div className="absolute top-3 right-3">
-                        <button className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors">
-                          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="absolute top-3 right-3 flex flex-col space-y-2">
+                        {/* Favorite Button */}
+                        <button 
+                          onClick={() => toggleFavorite(car.id)}
+                          disabled={favoritesLoading}
+                          className={`bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors ${
+                            isFavorite(car.id) ? 'text-red-500' : 'text-gray-700'
+                          } ${favoritesLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <svg 
+                            className="w-5 h-5" 
+                            fill={isFavorite(car.id) ? "currentColor" : "none"} 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                           </svg>
                         </button>
@@ -1980,8 +2155,21 @@ function SearchContent() {
                         >
                           View Details
                         </button>
-                        <button className="px-4 py-3 border border-gray-300 rounded-lg hover:border-orange-500 hover:text-orange-500 transition-colors">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button 
+                          onClick={() => toggleFavorite(car.id)}
+                          disabled={favoritesLoading}
+                          className={`px-4 py-3 border rounded-lg transition-colors ${
+                            isFavorite(car.id) 
+                              ? 'border-red-500 text-red-500 bg-red-50' 
+                              : 'border-gray-300 hover:border-orange-500 hover:text-orange-500'
+                          } ${favoritesLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <svg 
+                            className="w-5 h-5" 
+                            fill={isFavorite(car.id) ? "currentColor" : "none"} 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                           </svg>
                         </button>
@@ -3116,6 +3304,99 @@ function SearchContent() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Comparison Modal */}
+      {showComparison && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-900">Compare Cars</h2>
+              <button
+                onClick={() => setShowComparison(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {comparisonCars.map((car) => (
+                  <div key={car.id} className="border rounded-lg p-4">
+                    <div className="aspect-w-16 aspect-h-9 mb-4">
+                      <img
+                        src={car.images?.[0] || '/carsymbol.jpg'}
+                        alt={car.name}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                    </div>
+                    
+                    <h3 className="font-semibold text-lg mb-2">{car.name}</h3>
+                    <p className="text-gray-600 mb-4">{car.brand} {car.model}</p>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Price:</span>
+                        <span className="font-medium">{car.price_per_day} MAD/day</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Transmission:</span>
+                        <span>{car.transmission}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Fuel:</span>
+                        <span>{car.fuelType || car.fuel}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Seats:</span>
+                        <span>{car.seats}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Year:</span>
+                        <span>{car.modelYear || car.year}</span>
+                      </div>
+                      {car.availableFeatures && (
+                        <div>
+                          <span className="text-gray-600">Features:</span>
+                          <div className="mt-1">
+                            {car.availableFeatures.slice(0, 3).map((feature, index) => (
+                              <span key={index} className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded mr-1 mb-1">
+                                {feature}
+                              </span>
+                            ))}
+                            {car.availableFeatures.length > 3 && (
+                              <span className="text-xs text-gray-500">+{car.availableFeatures.length - 3} more</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="mt-4 flex space-x-2">
+                      <button
+                        onClick={() => handleViewDetails(car)}
+                        className="flex-1 bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors text-sm"
+                      >
+                        View Details
+                      </button>
+                      <button
+                        onClick={() => setComparisonCars(prev => prev.filter(c => c.id !== car.id))}
+                        className="bg-gray-200 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-300 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
