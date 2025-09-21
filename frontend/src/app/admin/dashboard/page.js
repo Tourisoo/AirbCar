@@ -252,6 +252,20 @@ export default function AdminDashboard() {
                 </svg>
                 <span>Dashboard</span>
               </a>
+                            <a
+                href="#"
+                className="flex items-center space-x-3 text-gray-300 hover:text-white px-3 py-2 rounded-md"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                  <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+                </svg>
+                <span>Analytics</span>
+              </a>
               <a
                 href="#"
                 className="flex items-center space-x-3 text-gray-300 hover:text-white px-3 py-2 rounded-md"
@@ -331,20 +345,6 @@ export default function AdminDashboard() {
                   <path d="M6 8a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2V8zm4 5a2 2 0 100-4 2 2 0 000 4z" />
                 </svg>
                 <span>Earnings</span>
-              </a>
-              <a
-                href="#"
-                className="flex items-center space-x-3 text-gray-300 hover:text-white px-3 py-2 rounded-md"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
-                  <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
-                </svg>
-                <span>Analytics</span>
               </a>
             </nav>
           </div>
