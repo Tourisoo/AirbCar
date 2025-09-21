@@ -248,33 +248,6 @@ export default function FavoritesPage() {
             )}
           </div>
         )}
-
-        {/* Quick Actions */}
-        {!loading && favorites.length > 0 && (
-          <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => router.push('/search')}
-                className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
-              >
-                Browse More Cars
-              </button>
-              <button
-                onClick={() => router.push('/price-alerts')}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
-              >
-                Set Price Alerts
-              </button>
-              <button
-                onClick={() => router.push('/your-bookings')}
-                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
-              >
-                View Bookings
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       <Footer />
