@@ -50,7 +50,7 @@ export default function BookingsPage() {
 
     try {
       setCancelLoading(true)
-      await bookingAPI.cancelBooking(bookingId)
+      await bookingsAPI.cancelBooking(bookingId)
       // Update the booking status in the local state
       setBookings(prev => prev.map(booking => 
         booking.id === bookingId 
