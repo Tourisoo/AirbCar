@@ -17,7 +17,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Force username field to accept email
         self.username_field = 'email'
     
     @classmethod
@@ -29,10 +28,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
     def validate(self, attrs):
-        # Rename email to username for Django's authentication
         if 'email' in attrs:
             attrs['username'] = attrs['email']
-            
         return super().validate(attrs)
 
 class UserSerializer(serializers.ModelSerializer):
@@ -88,9 +85,8 @@ class ListingSerializer(serializers.ModelSerializer):
         read_only_fields = ['partner', 'created_at', 'rating']
 
     def to_internal_value(self, data):
-        # Remove 'pictures' from validation since we'll handle it in the view
         if 'pictures' in data:
-            data = data.copy()  # Make a copy to avoid modifying the original
+            data = data.copy()
             data.pop('pictures')
         return super().to_internal_value(data)
 

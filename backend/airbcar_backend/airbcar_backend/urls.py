@@ -30,8 +30,6 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/verify-token/', UserStatusView.as_view(), name='user_status'),
     path('api/verify-admin/', AdminStatusView.as_view(), name='admin_status'),
-    # path('api/verify-token/', TokenVerifyView.as_view(), name='token_verify'),
-    # path('api/verify-admin/', AdminVerificationView.as_view(), name='admin_verify'),
   
     path('api/verify-email/', UserVerificationView.as_view(), name='user_verify_email'),
     path("verify-email/", verify_email, name="verify_email"),
