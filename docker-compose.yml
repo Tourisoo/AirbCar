@@ -17,7 +17,6 @@ services:
       DJANGO_SUPERUSER_PASSWORD: amineamine
       LOAD_INITIAL_FIXTURE: "1"
       
-    # depends_on removed, no local db
     restart: unless-stopped
 
   app:

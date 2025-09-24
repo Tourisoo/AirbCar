@@ -5,15 +5,12 @@ from rest_framework import viewsets, generics, status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-# from rest_framework.views import APIView
-# from rest_framework_simplejwt.tokens import RefreshToken
 import uuid
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
-from django.contrib.auth import get_user_model#, authenticate
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-# from django.contrib.auth.tokens import default_token_generator
 from rest_framework import status
 from rest_framework.response import Response
 from .utils import upload_file_to_supabase
@@ -28,13 +25,6 @@ User = get_user_model()
 class UserVerificationView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    # def get(self, request):
-    #     user = request.user
-    #     return Response({
-    #         'is_verified': user.is_verified,
-    #         'email_verified': user.email_verified
-    #     })
-
     def post(self, request):
         user = request.user
         token = request.data.get('token')
@@ -46,87 +36,6 @@ class UserVerificationView(generics.GenericAPIView):
             return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
-# class AdminVerificationView(APIView):
-#     permission_classes = [IsAuthenticated]
-    
-#     def get(self, request):
-#         if request.user.is_staff:
-#             return Response({'is_admin': True}, status=status.HTTP_200_OK)
-#         else:
-#             return Response({'is_admin': False}, status=status.HTTP_403_FORBIDDEN)
-
-
-# class TokenVerifyView(generics.GenericAPIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def get(self, request):
-#         user = request.user
-#         return Response({
-#             'id': user.id,
-#             'username': user.username,
-#             'email': user.email,
-#             'is_partner': user.is_partner,
-#             'is_verified': user.is_verified,
-#             'email_verified': user.email_verified,
-#             'is_staff': user.is_staff,
-#             # 'is_superuser': user.is_superuser
-#         })
-
-# class CustomLoginView(APIView):
-#     def post(self, request):
-#         email = request.data.get('email')
-#         username = request.data.get('username')
-#         password = request.data.get('password')
-        
-#         if not password:
-#             return Response({'error': 'Password is required'}, status=status.HTTP_400_BAD_REQUEST)
-        
-#         user_email = None
-        
-#         # Handle email login  
-#         if email and not username:
-#             user_email = email
-#         elif username and not email:
-#             # If username provided, find the user's email
-#             try:
-#                 user = User.objects.get(username=username)
-#                 user_email = user.email
-#             except User.DoesNotExist:
-#                 return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-#         elif email and username:
-#             # If both provided, use email
-#             user_email = email
-#         else:
-#             return Response({'error': 'Username or email is required'}, status=status.HTTP_400_BAD_REQUEST)
-        
-#         # Authenticate user using email as username (since USERNAME_FIELD = 'email')
-#         user = authenticate(username=user_email, password=password)
-#         if user:
-#             refresh = RefreshToken.for_user(user)
-#             access_token = refresh.access_token
-            
-#             # Add custom claims
-#             access_token['username'] = user.username
-#             access_token['email'] = user.email
-#             access_token['is_partner'] = user.is_partner
-#             access_token['is_verified'] = user.is_verified
-            
-#             return Response({
-#                 'access': str(access_token),
-#                 'refresh': str(refresh),
-#                 'user': {
-#                     'id': user.id,
-#                     'username': user.username,
-#                     'email': user.email,
-#                     'is_partner': user.is_partner,
-#                     'is_verified': user.is_verified
-#                 }
-#             })
-#         else:
-#             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-
-
-# 1. REMOVE CustomLoginView - Use built-in JWT view instead
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
