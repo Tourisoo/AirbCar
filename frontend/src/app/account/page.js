@@ -64,18 +64,15 @@ export default function AccountPage() {
       }
   }, [user, loading, router])
 
-  // Load user's favorites
+  // Load user's favorites - DISABLED (Backend not implemented)
   const loadFavorites = async () => {
     if (!user) return
     
     setFavoritesLoading(true)
     try {
-      const userFavorites = await favoritesAPI.getFavorites()
-      if (Array.isArray(userFavorites)) {
-        setFavorites(userFavorites)
-        } else {
-        setFavorites([])
-      }
+      // Favorites feature disabled - return empty array
+      setFavorites([])
+      console.warn('Favorites feature is disabled - backend not implemented')
     } catch (error) {
       console.error('Error loading favorites:', error)
       setFavorites([])
@@ -106,17 +103,10 @@ export default function AccountPage() {
     return Math.round((completedFields / fields.length) * 100)
   }
 
-  // Remove from favorites
+  // Remove from favorites - DISABLED (Backend not implemented)
   const removeFavorite = async (carId) => {
-    setFavoritesLoading(true)
-    try {
-      await favoritesAPI.removeFavorite(carId)
-      setFavorites(prev => prev.filter(fav => fav.car_id !== carId && fav.id !== carId))
-    } catch (error) {
-      console.error('Error removing favorite:', error)
-    } finally {
-      setFavoritesLoading(false)
-    }
+    console.warn('Favorites feature is disabled - backend not implemented')
+    // No-op - favorites feature disabled
   }
 
   // Load favorites when user is available

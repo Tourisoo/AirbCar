@@ -798,7 +798,7 @@ function SearchContent() {
     try {
       if (favorites.has(carId)) {
         // Remove from favorites
-        await favoritesAPI.removeFavorite(carId)
+        await favoritesAPI.removeFavoriteByCarId(carId)
         setFavorites(prev => {
           const newFavorites = new Set(prev)
           newFavorites.delete(carId)
