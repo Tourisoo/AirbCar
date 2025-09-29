@@ -31,7 +31,7 @@ export default function RentalPolicies() {
           subtitle: 'Rental Agreement',
           items: [
             'All rentals are subject to vehicle availability',
-            'Rental period begins and ends at specified times',
+            'Rental period begins and ends on specified dates',
             'Late returns may incur additional charges',
             'All drivers must be listed on the rental agreement'
           ]
@@ -47,7 +47,7 @@ export default function RentalPolicies() {
             'Reservations can be made online or through our mobile app',
             'Confirmation email will be sent within 24 hours',
             'Full payment or deposit required at time of booking',
-            'Vehicle pickup location and time must be confirmed'
+            'Vehicle pickup location must be confirmed'
           ]
         },
         {

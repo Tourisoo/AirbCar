@@ -100,9 +100,7 @@ function SearchContent() {
   // Booking-specific state
   const [bookingDetails, setBookingDetails] = useState({
     pickupDate: '',
-    dropoffDate: '',
-    pickupTime: '09:00',
-    dropoffTime: '18:00'
+    dropoffDate: ''
   })
 
   // Mock data - replace with actual API call
@@ -608,6 +606,29 @@ function SearchContent() {
     fetchCars()
   }, []) // Empty dependency array is correct here
 
+  // Capture search parameters from URL and update filters
+  useEffect(() => {
+    const location = searchParams.get('location')
+    const pickupDate = searchParams.get('pickupDate')
+    const dropoffDate = searchParams.get('dropoffDate')
+    
+    if (location || pickupDate || dropoffDate) {
+      setFilters(prev => ({
+        ...prev,
+        location: location || '',
+        pickupDate: pickupDate || '',
+        returnDate: dropoffDate || ''
+      }))
+      
+      // Update booking details for checkout process
+      setBookingDetails(prev => ({
+        ...prev,
+        pickupDate: pickupDate || '',
+        dropoffDate: dropoffDate || ''
+      }))
+    }
+  }, [searchParams])
+
   // Check if user is authenticated and skip auth step
   useEffect(() => {
     const initializeUserProfile = async () => {
@@ -693,7 +714,14 @@ function SearchContent() {
 
   useEffect(() => {
     let filtered = cars.filter(car => {
+      // Location filter
+      const locationMatch = !filters.location || 
+        car.location?.toLowerCase().includes(filters.location.toLowerCase()) ||
+        car.name?.toLowerCase().includes(filters.location.toLowerCase()) ||
+        car.brand?.toLowerCase().includes(filters.location.toLowerCase())
+      
       return (
+        locationMatch &&
         (car.price_per_day || 0) >= filters.priceRange[0] &&
         (car.price_per_day || 0) <= filters.priceRange[1] &&
         (filters.transmission.length === 0 || filters.transmission.includes(car.transmission)) &&
@@ -706,13 +734,34 @@ function SearchContent() {
       )
     })
 
+    // Calculate rental duration and total price for each car
+    if (filters.pickupDate && filters.returnDate) {
+      const startDate = new Date(filters.pickupDate)
+      const endDate = new Date(filters.returnDate)
+      const duration = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)))
+      
+      filtered = filtered.map(car => ({
+        ...car,
+        rentalDuration: duration,
+        totalPrice: (car.price_per_day || 0) * duration
+      }))
+    }
+
     // Apply sorting
     switch (sortBy) {
       case 'price_low':
-        filtered.sort((a, b) => (a.price_per_day || 0) - (b.price_per_day || 0))
+        if (filtered.length > 0 && filtered[0].totalPrice) {
+          filtered.sort((a, b) => (a.totalPrice || 0) - (b.totalPrice || 0))
+        } else {
+          filtered.sort((a, b) => (a.price_per_day || 0) - (b.price_per_day || 0))
+        }
         break
       case 'price_high':
-        filtered.sort((a, b) => (b.price_per_day || 0) - (a.price_per_day || 0))
+        if (filtered.length > 0 && filtered[0].totalPrice) {
+          filtered.sort((a, b) => (b.totalPrice || 0) - (a.totalPrice || 0))
+        } else {
+          filtered.sort((a, b) => (b.price_per_day || 0) - (a.price_per_day || 0))
+        }
         break
       case 'rating':
         filtered.sort((a, b) => b.rating - a.rating)
@@ -830,11 +879,22 @@ function SearchContent() {
       style: [],
       brand: [],
       features: [],
-      verified: false
+      verified: false,
+      location: '',
+      pickupDate: '',
+      returnDate: '',
+      instantBooking: false
+    })
+    setBookingDetails({
+      pickupDate: '',
+      dropoffDate: ''
     })
     setShowAllFeatures(false)
     setShowAllBrands(false)
     setShowAllStyles(false)
+    
+    // Also clear URL parameters
+    router.push('/search')
   }
 
  const handleViewDetails = (car) => {
@@ -879,6 +939,17 @@ function SearchContent() {
       cardholderName: ''
     })
     document.body.style.overflow = 'unset'
+  }
+
+  const calculateDuration = (pickupDate, returnDate) => {
+    if (!pickupDate || !returnDate) return 1
+    
+    const pickup = new Date(pickupDate)
+    const returnD = new Date(returnDate)
+    const diffInMs = Math.abs(returnD - pickup)
+    const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24))
+    
+    return diffInDays || 1
   }
 
   const nextImage = () => {
@@ -1444,14 +1515,12 @@ function SearchContent() {
       }
 
       // Use booking details from state, with fallback to URL params
-      let { pickupDate, dropoffDate, pickupTime, dropoffTime } = bookingDetails
+      let { pickupDate, dropoffDate } = bookingDetails
       
       // Fallback to URL params if state is empty
       if (!pickupDate || !dropoffDate) {
         pickupDate = searchParams.get('pickupDate')
         dropoffDate = searchParams.get('dropoffDate')
-        pickupTime = searchParams.get('pickupTime') || '09:00'
-        dropoffTime = searchParams.get('dropoffTime') || '18:00'
       }
       
       if (!pickupDate || !dropoffDate) {
@@ -1483,9 +1552,9 @@ function SearchContent() {
         throw new Error('Invalid price calculation. Please check the car pricing information.')
       }
 
-      // Create booking data with proper datetime formatting
-      const startDateTime = new Date(`${pickupDate}T${pickupTime}:00`).toISOString()
-      const endDateTime = new Date(`${dropoffDate}T${dropoffTime}:00`).toISOString()
+      // Create booking data with proper datetime formatting (using default times)
+      const startDateTime = new Date(`${pickupDate}T09:00:00`).toISOString()
+      const endDateTime = new Date(`${dropoffDate}T18:00:00`).toISOString()
 
       const bookingData = {
         listing: selectedCar.id,
@@ -1640,6 +1709,14 @@ function SearchContent() {
               <h1 className="text-2xl font-bold text-gray-900">Search Results</h1>
               <p className="text-gray-700 mt-1">
                 Showing {filteredCars.length} cars available{filters.location && ` in ${filters.location}`}
+                {filters.pickupDate && filters.returnDate && (
+                  <span className="block text-sm text-gray-600 mt-1">
+                    📅 {new Date(filters.pickupDate).toLocaleDateString()} to {new Date(filters.returnDate).toLocaleDateString()}
+                    {filteredCars.length > 0 && filteredCars[0].rentalDuration && (
+                      <span> • {filteredCars[0].rentalDuration} day{filteredCars[0].rentalDuration > 1 ? 's' : ''}</span>
+                    )}
+                  </span>
+                )}
               </p>
             </div>
             <div className="mt-4 md:mt-0 flex items-center space-x-4">
@@ -1651,8 +1728,12 @@ function SearchContent() {
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
               >
                 <option value="relevance">Sort by Relevance</option>
-                <option value="price_low">Price: Low to High</option>
-                <option value="price_high">Price: High to Low</option>
+                <option value="price_low">
+                  {filters.pickupDate && filters.returnDate ? 'Total Price: Low to High' : 'Price: Low to High'}
+                </option>
+                <option value="price_high">
+                  {filters.pickupDate && filters.returnDate ? 'Total Price: High to Low' : 'Price: High to Low'}
+                </option>
                 <option value="rating">Rating</option>
                 <option value="newest">Newest First</option>
               </select>
@@ -1665,6 +1746,89 @@ function SearchContent() {
               </button>
             </div>
           </div>
+
+          {/* Active Filters Display */}
+          {(filters.location || filters.pickupDate || filters.returnDate || filters.priceRange || filters.category || filters.fuelType) && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-gray-900">Active Filters:</h3>
+                <button
+                  onClick={clearFilters}
+                  className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {filters.location && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-100 text-orange-800">
+                    📍 {filters.location}
+                    <button
+                      onClick={() => setFilters(prev => ({ ...prev, location: '' }))}
+                      className="ml-2 text-orange-600 hover:text-orange-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {filters.pickupDate && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                    📅 From: {new Date(filters.pickupDate).toLocaleDateString()}
+                    <button
+                      onClick={() => setFilters(prev => ({ ...prev, pickupDate: '' }))}
+                      className="ml-2 text-blue-600 hover:text-blue-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {filters.returnDate && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                    📅 To: {new Date(filters.returnDate).toLocaleDateString()}
+                    <button
+                      onClick={() => setFilters(prev => ({ ...prev, returnDate: '' }))}
+                      className="ml-2 text-blue-600 hover:text-blue-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {filters.priceRange && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                    💰 ${filters.priceRange[0]} - ${filters.priceRange[1]}
+                    <button
+                      onClick={() => setFilters(prev => ({ ...prev, priceRange: null }))}
+                      className="ml-2 text-green-600 hover:text-green-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {filters.category && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
+                    🚗 {filters.category}
+                    <button
+                      onClick={() => setFilters(prev => ({ ...prev, category: '' }))}
+                      className="ml-2 text-purple-600 hover:text-purple-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {filters.fuelType && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
+                    ⛽ {filters.fuelType}
+                    <button
+                      onClick={() => setFilters(prev => ({ ...prev, fuelType: '' }))}
+                      className="ml-2 text-yellow-600 hover:text-yellow-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -2097,12 +2261,28 @@ function SearchContent() {
                           </p>
                         </div>
                         <div className="text-right">
-                          <div className="text-2xl font-bold text-orange-500">
-                            {formatPrice(car.price_per_day)}
-                          </div>
-                          <div className="text-sm text-gray-700 font-medium">
-                            {showPricePerDay(car.price_per_day)}
-                          </div>
+                          {car.totalPrice ? (
+                            <>
+                              <div className="text-2xl font-bold text-orange-500">
+                                {car.totalPrice} MAD
+                              </div>
+                              <div className="text-sm text-gray-700 font-medium">
+                                for {car.rentalDuration} day{car.rentalDuration > 1 ? 's' : ''}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                ({formatPrice(car.price_per_day)} per day)
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="text-2xl font-bold text-orange-500">
+                                {formatPrice(car.price_per_day)}
+                              </div>
+                              <div className="text-sm text-gray-700 font-medium">
+                                {showPricePerDay(car.price_per_day)}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
 
@@ -2221,6 +2401,38 @@ function SearchContent() {
                 </svg>
               </button>
             </div>
+
+            {/* Search Summary */}
+            {(filters.location || filters.pickupDate) && (
+              <div className="bg-blue-50 border-b border-blue-200 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4 text-sm">
+                    {filters.location && (
+                      <div className="flex items-center">
+                        <svg className="w-4 h-4 text-blue-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        </svg>
+                        <span className="text-blue-800">{filters.location}</span>
+                      </div>
+                    )}
+                    {filters.pickupDate && (
+                      <>
+                        <span className="text-blue-400">•</span>
+                        <span className="text-blue-800">
+                          {new Date(filters.pickupDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {' '}
+                          {filters.returnDate ? new Date(filters.returnDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Return date'}
+                        </span>
+                        <span className="text-blue-400">•</span>
+                        <span className="text-blue-800 font-medium">
+                          {calculateDuration(filters.pickupDate, filters.returnDate)} {calculateDuration(filters.pickupDate, filters.returnDate) === 1 ? 'day' : 'days'}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <span className="text-blue-600 text-xs font-medium">Search details</span>
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-col lg:flex-row">
               {/* Left Side - Car Details */}
@@ -2449,15 +2661,35 @@ function SearchContent() {
                       <div className="space-y-3">
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-gray-700">Pickup:</span>
-                          <span className="font-medium text-gray-900">Wed, Aug 20 - 01:30 PM</span>
+                          <span className="font-medium text-gray-900">
+                            {filters.pickupDate ? 
+                              new Date(filters.pickupDate).toLocaleDateString('en-US', { 
+                                weekday: 'short', 
+                                month: 'short', 
+                                day: 'numeric' 
+                              }) : 
+                              'Not selected'
+                            }
+                          </span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-gray-700">Return:</span>
-                          <span className="font-medium text-gray-900">Thu, Aug 21 - 01:30 PM</span>
+                          <span className="font-medium text-gray-900">
+                            {filters.returnDate ? 
+                              new Date(filters.returnDate).toLocaleDateString('en-US', { 
+                                weekday: 'short', 
+                                month: 'short', 
+                                day: 'numeric' 
+                              }) : 
+                              'Not selected'
+                            }
+                          </span>
                         </div>
                         <div className="border-t pt-2 flex justify-between items-center">
                           <span className="font-medium text-gray-900">Total Duration:</span>
-                          <span className="font-bold text-gray-900">1 day</span>
+                          <span className="font-bold text-gray-900">
+                            {calculateDuration(filters.pickupDate, filters.returnDate)} {calculateDuration(filters.pickupDate, filters.returnDate) === 1 ? 'day' : 'days'}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -2466,8 +2698,12 @@ function SearchContent() {
                       <h5 className="font-semibold text-gray-900 mb-3">Total Price</h5>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-700">{selectedCar.price_per_day} MAD × 1 day</span>
-                          <span className="text-gray-900">{selectedCar.price_per_day} MAD</span>
+                          <span className="text-gray-700">
+                            {selectedCar.price_per_day} MAD × {calculateDuration(filters.pickupDate, filters.returnDate)} {calculateDuration(filters.pickupDate, filters.returnDate) === 1 ? 'day' : 'days'}
+                          </span>
+                          <span className="text-gray-900">
+                            {(selectedCar.price_per_day * calculateDuration(filters.pickupDate, filters.returnDate)).toLocaleString()} MAD
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-700">Service fee</span>
@@ -2475,7 +2711,9 @@ function SearchContent() {
                         </div>
                         <div className="border-t pt-2 flex justify-between font-semibold">
                           <span className="text-gray-900">Total</span>
-                          <span className="text-gray-900">{selectedCar.price_per_day + 50} MAD</span>
+                          <span className="text-gray-900">
+                            {((selectedCar.price_per_day * calculateDuration(filters.pickupDate, filters.returnDate)) + 50).toLocaleString()} MAD
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -3266,11 +3504,11 @@ function SearchContent() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Pickup:</span>
-                        <span className="font-medium">Wed, Aug 20 - 01:30 PM</span>
+                        <span className="font-medium">Wed, Aug 20</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Return:</span>
-                        <span className="font-medium">Thu, Aug 21 - 01:30 PM</span>
+                        <span className="font-medium">Thu, Aug 21</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Location:</span>

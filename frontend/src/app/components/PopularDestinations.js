@@ -16,7 +16,6 @@ export default function PopularDestinations() {
     const searchParams = new URLSearchParams({
       location: destination,
       pickupDate: new Date().toISOString().split('T')[0], // Today's date
-      pickupTime: '10:00',
       dropoffDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0] // Tomorrow's date
     });
     

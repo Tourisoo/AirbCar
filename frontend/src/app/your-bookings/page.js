@@ -106,9 +106,7 @@ export default function YourBookingsPage() {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      day: 'numeric'
     })
   }
 
@@ -234,7 +232,7 @@ export default function YourBookingsPage() {
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-3">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            {booking.listing?.make} {booking.listing?.model} ({booking.listing?.year})
+                            {booking.listing?.name || `${booking.listing?.make} ${booking.listing?.model}`} {booking.listing?.year ? `(${booking.listing?.year})` : ''}
                           </h3>
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
                             {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
@@ -254,8 +252,8 @@ export default function YourBookingsPage() {
                           </div>
                           <div>
                             <p className="font-medium text-gray-900">Duration</p>
-                            <p>{calculateDuration(booking.start_time, booking.end_time)} day(s)</p>
-                            <p className="font-semibold text-orange-600">${booking.price}</p>
+                            <p>{calculateDuration(booking.start_time, booking.end_time)} {calculateDuration(booking.start_time, booking.end_time) === 1 ? 'day' : 'days'}</p>
+                            <p className="font-semibold text-orange-600">{booking.price.toLocaleString()} MAD</p>
                           </div>
                         </div>
                       </div>
@@ -264,7 +262,7 @@ export default function YourBookingsPage() {
                         {booking.listing?.picture_url ? (
                           <img
                             src={booking.listing.picture_url}
-                            alt={`${booking.listing.make} ${booking.listing.model}`}
+                            alt={booking.listing?.name || `${booking.listing.make} ${booking.listing.model}`}
                             className="w-24 h-16 object-cover rounded-lg"
                           />
                         ) : (
@@ -314,7 +312,7 @@ export default function YourBookingsPage() {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-10 mx-auto p-5 border w-full max-w-2xl bg-white rounded-lg shadow-lg">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">Booking Details</h3>
+              <h3 className="text-xl font-semibold text-gray-900">Booking Detailshhhh</h3>
               <button
                 onClick={closeBookingDetails}
                 className="text-gray-400 hover:text-gray-600"
@@ -333,7 +331,7 @@ export default function YourBookingsPage() {
                   {selectedBooking.listing?.picture_url ? (
                     <img
                       src={selectedBooking.listing.picture_url}
-                      alt={`${selectedBooking.listing.make} ${selectedBooking.listing.model}`}
+                      alt={selectedBooking.listing?.name || `${selectedBooking.listing.make} ${selectedBooking.listing.model}`}
                       className="w-32 h-24 object-cover rounded-lg"
                     />
                   ) : (
@@ -345,12 +343,12 @@ export default function YourBookingsPage() {
                   )}
                   <div className="flex-1">
                     <h5 className="text-lg font-semibold text-gray-900">
-                      {selectedBooking.listing?.make} {selectedBooking.listing?.model} ({selectedBooking.listing?.year})
+                      {selectedBooking.listing?.name || `${selectedBooking.listing?.make} ${selectedBooking.listing?.model}`} {selectedBooking.listing?.year ? `(${selectedBooking.listing?.year})` : ''}
                     </h5>
                     <div className="mt-2 space-y-1 text-sm text-gray-600">
                       <p><span className="font-medium">Transmission:</span> {selectedBooking.listing?.transmission}</p>
-                      <p><span className="font-medium">Fuel Type:</span> {selectedBooking.listing?.fuel_type}</p>
-                      <p><span className="font-medium">Seats:</span> {selectedBooking.listing?.seating_capacity}</p>
+                      <p><span className="font-medium">Fuel Type:</span> {selectedBooking.listing?.fuel_type || selectedBooking.listing?.fuel || selectedBooking.listing?.fuelType}</p>
+                      <p><span className="font-medium">Seats:</span> {selectedBooking.listing?.seating_capacity || selectedBooking.listing?.seats}</p>
                       <p><span className="font-medium">Location:</span> {selectedBooking.listing?.location}</p>
                     </div>
                   </div>
@@ -372,11 +370,11 @@ export default function YourBookingsPage() {
                     </span>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Pick-up Date & Time</p>
+                    <p className="font-medium text-gray-900">Pick-up Date</p>
                     <p className="text-gray-600">{formatDate(selectedBooking.start_time)}</p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Drop-off Date & Time</p>
+                    <p className="font-medium text-gray-900">Drop-off Date</p>
                     <p className="text-gray-600">{formatDate(selectedBooking.end_time)}</p>
                   </div>
                   <div>
@@ -385,7 +383,7 @@ export default function YourBookingsPage() {
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">Total Price</p>
-                    <p className="text-lg font-semibold text-orange-600">${selectedBooking.price}</p>
+                    <p className="text-lg font-semibold text-orange-600">{selectedBooking.price.toLocaleString()} MAD</p>
                   </div>
                 </div>
               </div>

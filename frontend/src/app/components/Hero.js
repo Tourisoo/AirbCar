@@ -6,7 +6,6 @@ export default function Hero() {
   const [searchForm, setSearchForm] = useState({
     location: '',
     pickupDate: '',
-    pickupTime: '',
     dropoffDate: ''
   });
   const router = useRouter();
@@ -24,7 +23,6 @@ export default function Hero() {
     const searchParams = new URLSearchParams({
       location: searchForm.location,
       pickupDate: searchForm.pickupDate,
-      pickupTime: searchForm.pickupTime,
       dropoffDate: searchForm.dropoffDate
     });
     
@@ -48,7 +46,7 @@ export default function Hero() {
         
         {/* Search Form */}
         <form onSubmit={handleSearch} className="bg-white/95 backdrop-blur-sm rounded-2xl p-8 max-w-6xl w-full mx-auto shadow-2xl border border-white/20">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* Pickup Location */}
             <div className="md:col-span-1">
               <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -74,21 +72,6 @@ export default function Hero() {
                 type="date"
                 name="pickupDate"
                 value={searchForm.pickupDate}
-                onChange={handleInputChange}
-                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-orange-500/50 focus:border-orange-500 transition-all duration-200 text-gray-700"
-                required
-              />
-            </div>
-            
-            {/* Pickup Time */}
-            <div className="md:col-span-1">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Time
-              </label>
-              <input
-                type="time"
-                name="pickupTime"
-                value={searchForm.pickupTime}
                 onChange={handleInputChange}
                 className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-orange-500/50 focus:border-orange-500 transition-all duration-200 text-gray-700"
                 required
