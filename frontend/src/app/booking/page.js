@@ -11,11 +11,16 @@ function BookingContent() {
   const [car, setCar] = useState(null)
   const [loading, setLoading] = useState(true)
   const [bookingStep, setBookingStep] = useState(1)
+  const [bookingDetails, setBookingDetails] = useState({
+    location: '',
+    pickupDate: '',
+    returnDate: '',
+    duration: 1,
+    totalPrice: 0
+  })
   const [formData, setFormData] = useState({
     pickupDate: 'Wed, Aug 20, 2024',
-    pickupTime: '01:30 PM',
     returnDate: 'Thu, Aug 21, 2024',
-    returnTime: '01:30 PM',
     firstName: '',
     lastName: '',
     email: '',
@@ -37,6 +42,48 @@ function BookingContent() {
     rating: 4.8,
     reviewCount: 124
   }
+
+  // Capture search parameters
+  useEffect(() => {
+    const location = searchParams.get('location') || ''
+    const pickupDate = searchParams.get('pickupDate') || ''
+    const returnDate = searchParams.get('returnDate') || ''
+    const duration = parseInt(searchParams.get('duration')) || 1
+    const totalPrice = parseFloat(searchParams.get('totalPrice')) || 0
+    
+    setBookingDetails({
+      location,
+      pickupDate,
+      returnDate,
+      duration,
+      totalPrice
+    })
+    
+    // Format dates for display
+    if (pickupDate && returnDate) {
+      const pickup = new Date(pickupDate)
+      const returnD = new Date(returnDate)
+      
+      const formattedPickup = pickup.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric'
+      })
+      const formattedReturn = returnD.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric'
+      })
+      
+      setFormData(prev => ({
+        ...prev,
+        pickupDate: formattedPickup,
+        returnDate: formattedReturn
+      }))
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (carId) {
@@ -134,6 +181,46 @@ function BookingContent() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Search Summary */}
+        {bookingDetails.location && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4 text-sm">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 text-blue-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  </svg>
+                  <span className="text-blue-800">{bookingDetails.location}</span>
+                </div>
+                {bookingDetails.pickupDate && (
+                  <>
+                    <span className="text-blue-400">•</span>
+                    <span className="text-blue-800">{formData.pickupDate} - {formData.returnDate}</span>
+                    <span className="text-blue-400">•</span>
+                    <span className="text-blue-800">{bookingDetails.duration} {bookingDetails.duration === 1 ? 'day' : 'days'}</span>
+                    <span className="text-blue-400">•</span>
+                    <span className="text-blue-800 font-medium">
+                      {bookingDetails.totalPrice > 0 ? bookingDetails.totalPrice.toLocaleString() : (car.price + 25).toLocaleString()} MAD
+                    </span>
+                  </>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams()
+                  if (bookingDetails.location) params.set('location', bookingDetails.location)
+                  if (bookingDetails.pickupDate) params.set('pickupDate', bookingDetails.pickupDate)
+                  if (bookingDetails.returnDate) params.set('returnDate', bookingDetails.returnDate)
+                  router.push(`/search?${params.toString()}`)
+                }}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                Modify search
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Progress Steps */}
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-8">
@@ -185,34 +272,12 @@ function BookingContent() {
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Pickup Time
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.pickupTime}
-                            onChange={(e) => handleInputChange('pickupTime', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
                             Return Date
                           </label>
                           <input
                             type="text"
                             value={formData.returnDate}
                             onChange={(e) => handleInputChange('returnDate', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Return Time
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.returnTime}
-                            onChange={(e) => handleInputChange('returnTime', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                           />
                         </div>
@@ -306,11 +371,11 @@ function BookingContent() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-600">Pickup:</span>
-                          <span>{formData.pickupDate} at {formData.pickupTime}</span>
+                          <span>{formData.pickupDate}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Return:</span>
-                          <span>{formData.returnDate} at {formData.returnTime}</span>
+                          <span>{formData.returnDate}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Guest:</span>
@@ -399,8 +464,14 @@ function BookingContent() {
 
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">1 day rental</span>
-                    <span className="font-medium">{car.price} MAD</span>
+                    <span className="text-gray-600">
+                      {bookingDetails.duration} {bookingDetails.duration === 1 ? 'day' : 'days'} rental
+                    </span>
+                    <span className="font-medium">
+                      {bookingDetails.totalPrice > 0 
+                        ? (bookingDetails.totalPrice - 25).toLocaleString() 
+                        : car.price.toLocaleString()} MAD
+                    </span>
                   </div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-600">Service fee</span>
@@ -408,7 +479,11 @@ function BookingContent() {
                   </div>
                   <div className="flex justify-between items-center font-semibold text-lg border-t border-gray-200 pt-2">
                     <span>Total</span>
-                    <span>{car.price + 25} MAD</span>
+                    <span>
+                      {bookingDetails.totalPrice > 0 
+                        ? bookingDetails.totalPrice.toLocaleString() 
+                        : (car.price + 25).toLocaleString()} MAD
+                    </span>
                   </div>
                 </div>
 

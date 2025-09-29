@@ -1,22 +1,27 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Header from '../../components/Header'
 import Footer from '../../components/Footer'
 
 function CarDetailsContent() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [car, setCar] = useState(null)
   const [loading, setLoading] = useState(true)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [showFullGallery, setShowFullGallery] = useState(false)
+  const [searchDetails, setSearchDetails] = useState({
+    location: '',
+    pickupDate: '',
+    returnDate: '',
+    duration: 1
+  })
   const [selectedDates, setSelectedDates] = useState({
     pickup: 'Wed, Aug 20',
-    pickupTime: '01:30 PM',
-    return: 'Thu, Aug 21',
-    returnTime: '01:30 PM'
+    return: 'Thu, Aug 21'
   })
 
   // Mock car data - replace with actual API call
@@ -105,6 +110,48 @@ function CarDetailsContent() {
     ]
   }
 
+  // Capture search parameters from URL
+  useEffect(() => {
+    const location = searchParams.get('location') || ''
+    const pickupDate = searchParams.get('pickupDate') || ''
+    const returnDate = searchParams.get('returnDate') || ''
+    
+    let duration = 1
+    let formattedPickup = 'Wed, Aug 20'
+    let formattedReturn = 'Thu, Aug 21'
+    
+    // Calculate duration and format dates if provided
+    if (pickupDate && returnDate) {
+      const pickup = new Date(pickupDate)
+      const returnD = new Date(returnDate)
+      const diffTime = Math.abs(returnD - pickup)
+      duration = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1
+      
+      formattedPickup = pickup.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      })
+      formattedReturn = returnD.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      })
+    }
+    
+    setSearchDetails({
+      location,
+      pickupDate,
+      returnDate,
+      duration
+    })
+    
+    setSelectedDates({
+      pickup: formattedPickup,
+      return: formattedReturn
+    })
+  }, [searchParams])
+
   useEffect(() => {
     // Simulate API call
     setLoading(true)
@@ -127,7 +174,18 @@ function CarDetailsContent() {
   }
 
   const handleBooking = () => {
-    router.push(`/booking?carId=${car.id}`)
+    // Build URL with all search parameters for booking page
+    const params = new URLSearchParams()
+    params.set('carId', car.id)
+    
+    // Pass through search parameters
+    if (searchDetails.location) params.set('location', searchDetails.location)
+    if (searchDetails.pickupDate) params.set('pickupDate', searchDetails.pickupDate)
+    if (searchDetails.returnDate) params.set('returnDate', searchDetails.returnDate)
+    params.set('duration', searchDetails.duration.toString())
+    params.set('totalPrice', ((car.price * searchDetails.duration) + 25).toString())
+    
+    router.push(`/booking?${params.toString()}`)
   }
 
   if (loading) {
@@ -195,6 +253,42 @@ function CarDetailsContent() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2">
+            {/* Search Summary */}
+            {searchDetails.location && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4 text-sm">
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 text-blue-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      </svg>
+                      <span className="text-blue-800">{searchDetails.location}</span>
+                    </div>
+                    {searchDetails.pickupDate && (
+                      <>
+                        <span className="text-blue-400">•</span>
+                        <span className="text-blue-800">{selectedDates.pickup} - {selectedDates.return}</span>
+                        <span className="text-blue-400">•</span>
+                        <span className="text-blue-800">{searchDetails.duration} {searchDetails.duration === 1 ? 'day' : 'days'}</span>
+                      </>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => {
+                      const params = new URLSearchParams()
+                      if (searchDetails.location) params.set('location', searchDetails.location)
+                      if (searchDetails.pickupDate) params.set('pickupDate', searchDetails.pickupDate)
+                      if (searchDetails.returnDate) params.set('returnDate', searchDetails.returnDate)
+                      router.push(`/search?${params.toString()}`)
+                    }}
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    Modify search
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Car Title & Quick Info */}
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{car.name}</h1>
@@ -464,15 +558,22 @@ function CarDetailsContent() {
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">Pickup</label>
                       <div className="text-sm font-medium">{selectedDates.pickup}</div>
-                      <div className="text-xs text-gray-500">{selectedDates.pickupTime}</div>
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">Return</label>
                       <div className="text-sm font-medium">{selectedDates.return}</div>
-                      <div className="text-xs text-gray-500">{selectedDates.returnTime}</div>
                     </div>
                   </div>
-                  <button className="w-full mt-3 py-2 text-sm text-orange-600 font-medium border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors">
+                  <button 
+                    onClick={() => {
+                      const params = new URLSearchParams()
+                      if (searchDetails.location) params.set('location', searchDetails.location)
+                      if (searchDetails.pickupDate) params.set('pickupDate', searchDetails.pickupDate)
+                      if (searchDetails.returnDate) params.set('returnDate', searchDetails.returnDate)
+                      router.push(`/search?${params.toString()}`)
+                    }}
+                    className="w-full mt-3 py-2 text-sm text-orange-600 font-medium border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                  >
                     Change dates
                   </button>
                 </div>
@@ -480,8 +581,8 @@ function CarDetailsContent() {
                 {/* Trip Summary */}
                 <div className="border-t border-b border-gray-200 py-4 mb-6">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">1 day rental</span>
-                    <span className="font-medium">{car.price} MAD</span>
+                    <span className="text-gray-600">{searchDetails.duration} {searchDetails.duration === 1 ? 'day' : 'days'} rental</span>
+                    <span className="font-medium">{(car.price * searchDetails.duration).toLocaleString()} MAD</span>
                   </div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-600">Service fee</span>
@@ -489,7 +590,7 @@ function CarDetailsContent() {
                   </div>
                   <div className="flex justify-between items-center font-semibold text-lg">
                     <span>Total</span>
-                    <span>{car.price + 25} MAD</span>
+                    <span>{((car.price * searchDetails.duration) + 25).toLocaleString()} MAD</span>
                   </div>
                 </div>
 

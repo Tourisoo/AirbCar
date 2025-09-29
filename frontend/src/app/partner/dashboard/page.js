@@ -1727,7 +1727,7 @@ export default function PartnerDashboard() {
             subtitle: 'Rental Agreement',
             items: [
               'All rentals are subject to vehicle availability',
-              'Rental period begins and ends at specified times',
+              'Rental period begins and ends on specified dates',
               'Late returns may incur additional charges',
               'All drivers must be listed on the rental agreement'
             ]
@@ -1743,7 +1743,7 @@ export default function PartnerDashboard() {
               'Reservations can be made online or through our mobile app',
               'Confirmation email will be sent within 24 hours',
               'Full payment or deposit required at time of booking',
-              'Vehicle pickup location and time must be confirmed'
+              'Vehicle pickup location must be confirmed'
             ]
           },
           {
@@ -2704,7 +2704,7 @@ export default function PartnerDashboard() {
                       <div className="ml-3 flex-1">
                         <p className="text-sm font-medium text-gray-900">New Booking: Royal Enfield Classic 350</p>
                         <p className="text-sm text-gray-600">Customer: John Doe - 3 days rental</p>
-                        <p className="text-xs text-gray-500">10:00 AM - Check-in</p>
+                        <p className="text-xs text-gray-500">Check-in scheduled</p>
                       </div>
                     </div>
                   </div>
@@ -2717,7 +2717,7 @@ export default function PartnerDashboard() {
                       <div className="ml-3 flex-1">
                         <p className="text-sm font-medium text-gray-900">Check-out: Royal Enfield Classic 350</p>
                         <p className="text-sm text-gray-600">Customer: John Doe</p>
-                        <p className="text-xs text-gray-500">11:00 AM - Vehicle return</p>
+                        <p className="text-xs text-gray-500">Vehicle return scheduled</p>
                       </div>
                     </div>
                   </div>
@@ -2730,7 +2730,7 @@ export default function PartnerDashboard() {
                       <div className="ml-3 flex-1">
                         <p className="text-sm font-medium text-gray-900">Maintenance: Yamaha FZ-S</p>
                         <p className="text-sm text-gray-600">Scheduled service and inspection</p>
-                        <p className="text-xs text-gray-500">9:00 AM - Service Center</p>
+                        <p className="text-xs text-gray-500">Service Center appointment</p>
                       </div>
                     </div>
                   </div>
@@ -2793,7 +2793,7 @@ export default function PartnerDashboard() {
                       <div className="bg-gray-50 p-3 rounded">
                         <p className="text-sm font-medium">Royal Enfield Classic 350</p>
                         <p className="text-sm text-gray-600">John Doe • 3-day rental ending</p>
-                        <p className="text-xs text-gray-500">Expected return: 11:00 AM</p>
+                        <p className="text-xs text-gray-500">Expected return today</p>
                       </div>
                     ) : (
                       <p className="text-sm text-gray-500">No check-outs scheduled</p>
@@ -2841,7 +2841,7 @@ export default function PartnerDashboard() {
                     {selectedDate.getDate() === 15 ? (
                       <div className="bg-gray-50 p-3 rounded">
                         <p className="text-sm font-medium">Royal Enfield Classic 350</p>
-                        <p className="text-sm text-gray-600">John Doe • Check-in at 10:00 AM</p>
+                        <p className="text-sm text-gray-600">John Doe • Check-in today</p>
                         <p className="text-xs text-gray-500">Contact: +91 98765 43210</p>
                       </div>
                     ) : (

@@ -1,8 +1,9 @@
 // Car search API endpoints and data structures
 
 // GET /api/cars/search
-// Parameters: location, pickupDate, dropoffDate, pickupTime
+// Parameters: location, pickupDate, dropoffDate
 // Response format:
+/*
 {
   "results": [
     {
@@ -108,7 +109,7 @@
   "car_id": 1,
   "pickup_date": "2025-08-15",
   "dropoff_date": "2025-08-20",
-  "pickup_time": "10:00",
+
   "pickup_location": "Agadir Airport",
   "dropoff_location": "Agadir Airport",
   "extras": [2, 3], // IDs of selected extras
@@ -125,3 +126,4 @@
     "card_token": "tok_xxxxxxxxxxxx"
   }
 }
+*/
