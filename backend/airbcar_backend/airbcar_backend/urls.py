@@ -6,7 +6,7 @@ from core.views import (
     home_view, UserViewSet, PartnerViewSet, ListingViewSet,
     BookingViewSet, PasswordResetRequestView, PasswordResetConfirmView, 
     verify_email, CustomTokenObtainPairView, UserStatusView, AdminStatusView,
-    UserVerificationView)#, TokenVerifyView, AdminVerificationView, CustomLoginView)
+    UserVerificationView)
     
 # from django.conf import settings
 # from django.conf.urls.static import static
@@ -36,4 +36,5 @@ urlpatterns = [
    
     path('api/password-reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
     path('api/reset-password/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+]
 ]
