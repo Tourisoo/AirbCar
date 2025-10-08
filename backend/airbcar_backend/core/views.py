@@ -77,12 +77,26 @@ class AdminStatusView(generics.GenericAPIView):
     def get(self, request):
         return Response({'is_admin': request.user.is_staff})
 
-class UserViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
+# class UserViewSet(viewsets.ModelViewSet):
+#     serializer_class = UserSerializer
+#     permission_classes = [IsAuthenticated, IsAdminUser]
     
+#     def get_queryset(self):
+#         return User.objects.all().order_by('-date_joined')
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
     def get_queryset(self):
-        return User.objects.all().order_by('-date_joined')
+        print("get_queryset called")
+        user = self.request.user
+        if not user.is_authenticated:
+            raise ValidationError({"detail": "You are not loged in."})
+        if user.is_staff or user.is_superuser:
+            return User.objects.all().order_by('-date_joined')
+        return User.objects.filter(id=user.id).order_by('-date_joined')
 
     def perform_create(self, serializer):
         print("perform_create called")
@@ -184,15 +198,30 @@ class ListingViewSet(viewsets.ModelViewSet):
                 listing.pictures.append(url)
             listing.save(update_fields=["pictures"])
 
+# class PartnerViewSet(viewsets.ModelViewSet):
+#     serializer_class = UserSerializer
+#     permission_classes = [IsAuthenticated, IsAdminUser]
+    
+#     def get_queryset(self):
+#         # For now, return users who are staff or have created listings
+#         return User.objects.filter(
+#             Q(is_staff=True) | Q(is_superuser=True)
+#         ).distinct().order_by('-date_joined')
+
 class PartnerViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = Partner.objects.all().prefetch_related('listings')
+    serializer_class = PartnerSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
     
     def get_queryset(self):
-        # For now, return users who are staff or have created listings
-        return User.objects.filter(
-            Q(is_staff=True) | Q(is_superuser=True)
-        ).distinct().order_by('-date_joined')
+        user = self.request.user
+        if not user.is_authenticated:
+            raise ValidationError({"detail": "You are not loged in."})
+        if user.is_staff or user.is_superuser:
+            return Partner.objects.all().prefetch_related('listings').order_by('-date_joined')
+        if not user.is_partner and user.is_authenticated:
+            raise ValidationError({"detail": "You are not loged in."})
+        return Partner.objects.filter(user=user).prefetch_related('listings').order_by('-date_joined')
 
     def perform_create(self, serializer):
         if self.request.user.is_partner:
