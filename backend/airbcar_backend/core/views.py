@@ -350,28 +350,82 @@ class DashboardStatsView(APIView):
                 {'error': f'Dashboard error: {str(e)}'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-# Working partners stats view
-class PartnerStatsView(APIView):
+        
+class DashboardStatsView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     
     def get(self, request):
         try:
-            partners_qs = User.objects.filter(
-                Q(is_staff=True) | Q(is_superuser=True)
-            ).order_by('-date_joined')
+            total_users = User.objects.count()
+            total_partners = Partner.objects.count()
+            total_listings = Listing.objects.count()
+            total_bookings = Booking.objects.count()
+            total_earnings = Booking.objects.aggregate(
+                total=Sum('price')
+            )['total'] or 0.0
+            
+            recent_users = User.objects.order_by('-date_joined')[:6].values(
+                'id', 'username', 'first_name', 'last_name', 'email', 'is_active'
+            )
+            
+            partners_qs = Partner.objects.select_related('user').annotate(
+                listings_count=Count('listings')
+            ).order_by('-created_at')[:6]
             
             partners = []
             for partner in partners_qs:
                 partners.append({
                     'id': partner.id,
-                    'username': partner.username,
-                    'first_name': partner.first_name,
-                    'last_name': partner.last_name,
-                    'email': partner.email,
-                    'date_joined': partner.date_joined.isoformat() if partner.date_joined else None,
-                    'listings_count': 0,  # Mock data for now
-                    'is_active': partner.is_active
+                    'username': partner.user.username,
+                    'first_name': partner.user.first_name,
+                    'last_name': partner.user.last_name,
+                    'email': partner.user.email,
+                    'company_name': partner.company_name,
+                    'date_joined': partner.created_at.isoformat(),
+                    'listings_count': partner.listings_count,
+                    'is_active': partner.user.is_active
+                })
+            
+            return Response({
+                'stats': {
+                    'total_users': total_users,
+                    'total_partners': total_partners,
+                    'total_listings': total_listings,
+                    'total_bookings': total_bookings,
+                    'total_earnings': float(total_earnings),
+                },
+                'recent_users': list(recent_users),
+                'partners': partners
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Dashboard error: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class PartnerStatsView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    
+    def get(self, request):
+        try:
+            partners_qs = Partner.objects.select_related('user').annotate(
+                listings_count=Count('listings')
+            ).order_by('-created_at')
+            
+            partners = []
+            for partner in partners_qs:
+                partners.append({
+                    'id': partner.id,
+                    'username': partner.user.username,
+                    'first_name': partner.user.first_name,
+                    'last_name': partner.user.last_name,
+                    'email': partner.user.email,
+                    'company_name': partner.company_name,
+                    'verification_status': partner.verification_status,
+                    'date_joined': partner.created_at.isoformat(),
+                    'listings_count': partner.listings_count,
+                    'is_active': partner.user.is_active
                 })
             
             return Response(partners, status=status.HTTP_200_OK)
