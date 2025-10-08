@@ -96,13 +96,16 @@ export default function AdminDashboard() {
       }
 
       const response = await fetch(`${apiUrl}/api/verify-token/`, {
+        method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        timeout: 10000, // 10 second timeout
       });
 
       console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
 
       if (response.ok) {
         const userData = await response.json();
@@ -113,14 +116,24 @@ export default function AdminDashboard() {
           loadDashboardData();
         } else {
           console.log("User is not admin, redirecting");
+          alert("Access denied: You don't have admin privileges");
           router.push("/admin/signin");
         }
       } else {
+        const errorText = await response.text();
+        console.log("Response error:", errorText);
         console.log("Response not ok, redirecting");
+        alert(`Authentication failed: ${response.status} - ${errorText}`);
+        localStorage.removeItem("access_token"); // Clear invalid token
         router.push("/admin/signin");
       }
     } catch (error) {
       console.error("Error checking admin status:", error);
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        alert("Cannot connect to server. Please check if the backend is running on http://localhost:8000");
+      } else {
+        alert(`Connection error: ${error.message}`);
+      }
       router.push("/admin/signin");
     }
   };
@@ -162,6 +175,12 @@ export default function AdminDashboard() {
       const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || "http://localhost:8000";
       const token = localStorage.getItem("access_token");
 
+      if (!token) {
+        console.error("No token found when loading dashboard data");
+        router.push("/admin/signin");
+        return;
+      }
+
       // Initialize variables to track data
       let usersList = [];
       let partnersList = [];
@@ -169,103 +188,106 @@ export default function AdminDashboard() {
       let bookingsList = [];
       let totalEarnings = 0;
 
-      // Load users
-      console.log("Fetching users from:", `${apiUrl}/users/`);
-      const usersResponse = await fetch(`${apiUrl}/users/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // Load users with error handling
+      try {
+        console.log("Fetching users from:", `${apiUrl}/users/`);
+        const usersResponse = await fetch(`${apiUrl}/users/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-      // Load partners
-      console.log("Fetching partners from:", `${apiUrl}/partners/`);
-      const partnersResponse = await fetch(`${apiUrl}/partners/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      // Load listings (cars)
-      console.log("Fetching listings from:", `${apiUrl}/listings/`);
-      const listingsResponse = await fetch(`${apiUrl}/listings/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      // Load bookings
-      console.log("Fetching bookings from:", `${apiUrl}/bookings/`);
-      const bookingsResponse = await fetch(`${apiUrl}/bookings/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      // Process users data
-      if (usersResponse.ok) {
-        const usersData = await usersResponse.json();
-        console.log("Users data:", usersData);
-        usersList = usersData.results || usersData || [];
-        setUsers(usersList);
-        setStats((prev) => ({
-          ...prev,
-          totalUsers: usersList.length,
-        }));
-      } else {
-        console.error("Users response error:", usersResponse.status);
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json();
+          console.log("Users data:", usersData);
+          usersList = usersData.results || usersData || [];
+          setUsers(usersList);
+          setStats((prev) => ({ ...prev, totalUsers: usersList.length }));
+        } else {
+          console.error("Users response error:", usersResponse.status, await usersResponse.text());
+        }
+      } catch (error) {
+        console.error("Error loading users:", error);
       }
 
-      // Process partners data
-      if (partnersResponse.ok) {
-        const partnersData = await partnersResponse.json();
-        console.log("Partners data:", partnersData);
-        partnersList = partnersData.results || partnersData || [];
-        setPartners(partnersList);
-        setStats((prev) => ({
-          ...prev,
-          totalPartners: partnersList.length,
-        }));
-      } else {
-        console.error("Partners response error:", partnersResponse.status);
+      // Load partners with error handling
+      try {
+        console.log("Fetching partners from:", `${apiUrl}/partners/`);
+        const partnersResponse = await fetch(`${apiUrl}/partners/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (partnersResponse.ok) {
+          const partnersData = await partnersResponse.json();
+          console.log("Partners data:", partnersData);
+          partnersList = partnersData.results || partnersData || [];
+          setPartners(partnersList);
+          setStats((prev) => ({ ...prev, totalPartners: partnersList.length }));
+        } else {
+          console.error("Partners response error:", partnersResponse.status, await partnersResponse.text());
+        }
+      } catch (error) {
+        console.error("Error loading partners:", error);
       }
 
-      // Process listings data
-      if (listingsResponse.ok) {
-        const listingsData = await listingsResponse.json();
-        console.log("Listings data:", listingsData);
-        listingsList = listingsData.results || listingsData || [];
-        setListings(listingsList);
-        setStats((prev) => ({
-          ...prev,
-          totalListings: listingsList.length,
-        }));
-      } else {
-        console.error("Listings response error:", listingsResponse.status);
+      // Load listings with error handling
+      try {
+        console.log("Fetching listings from:", `${apiUrl}/listings/`);
+        const listingsResponse = await fetch(`${apiUrl}/listings/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (listingsResponse.ok) {
+          const listingsData = await listingsResponse.json();
+          console.log("Listings data:", listingsData);
+          listingsList = listingsData.results || listingsData || [];
+          setListings(listingsList);
+          setStats((prev) => ({ ...prev, totalListings: listingsList.length }));
+        } else {
+          console.error("Listings response error:", listingsResponse.status, await listingsResponse.text());
+        }
+      } catch (error) {
+        console.error("Error loading listings:", error);
       }
 
-      // Process bookings data
-      if (bookingsResponse.ok) {
-        const bookingsData = await bookingsResponse.json();
-        console.log("Bookings data:", bookingsData);
-        bookingsList = bookingsData.results || bookingsData || [];
-        setBookings(bookingsList);
-        
-        // Calculate total earnings
-        totalEarnings = bookingsList.reduce((sum, booking) => {
-          return sum + (parseFloat(booking.price) || parseFloat(booking.total_price) || 0);
-        }, 0);
-        
-        setStats((prev) => ({
-          ...prev,
-          totalBookings: bookingsList.length,
-          totalEarnings: totalEarnings,
-        }));
-      } else {
-        console.error("Bookings response error:", bookingsResponse.status);
+      // Load bookings with error handling
+      try {
+        console.log("Fetching bookings from:", `${apiUrl}/bookings/`);
+        const bookingsResponse = await fetch(`${apiUrl}/bookings/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (bookingsResponse.ok) {
+          const bookingsData = await bookingsResponse.json();
+          console.log("Bookings data:", bookingsData);
+          bookingsList = bookingsData.results || bookingsData || [];
+          setBookings(bookingsList);
+          
+          // Calculate total earnings
+          totalEarnings = bookingsList.reduce((sum, booking) => {
+            return sum + (parseFloat(booking.price) || parseFloat(booking.total_price) || 0);
+          }, 0);
+          
+          setStats((prev) => ({
+            ...prev,
+            totalBookings: bookingsList.length,
+            totalEarnings: totalEarnings,
+          }));
+        } else {
+          console.error("Bookings response error:", bookingsResponse.status, await bookingsResponse.text());
+        }
+      } catch (error) {
+        console.error("Error loading bookings:", error);
       }
 
       // Generate chart data with all processed data
@@ -273,6 +295,7 @@ export default function AdminDashboard() {
 
     } catch (error) {
       console.error("Error loading dashboard data:", error);
+      alert(`Failed to load dashboard data: ${error.message}`);
     } finally {
       setLoadingData(false);
     }

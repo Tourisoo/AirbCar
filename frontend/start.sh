@@ -47,7 +47,7 @@ while [ $RETRIES -gt 0 ]; do
     break
   else
     echo "⏳ Waiting for Django backend to be ready... ($RETRIES retries left)"
-    sleep 2
+    sleep 5
     RETRIES=$((RETRIES - 1))
   fi
 done
