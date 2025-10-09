@@ -1,24 +1,33 @@
-# from django.shortcuts import render, redirect
-from django.http import HttpResponse#, JsonResponse
+from django.http import HttpResponse
 from .models import User, Booking, Partner, Listing
 from rest_framework import viewsets, generics, status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
+<<<<<<< HEAD
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+=======
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
+>>>>>>> 127caf9616539f0f12233058c39aab4d852fdbce
 import uuid
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+<<<<<<< HEAD
 from rest_framework import status
 from rest_framework.response import Response
+=======
+>>>>>>> 127caf9616539f0f12233058c39aab4d852fdbce
 from .utils import upload_file_to_supabase
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import (UserSerializer, BookingSerializer, PartnerSerializer, 
     ListingSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer,
     CustomTokenObtainPairSerializer)
+from rest_framework.decorators import api_view, permission_classes
+from django.db.models import Count, Q, Sum
+from rest_framework.views import APIView
 
 User = get_user_model()
 
@@ -77,6 +86,13 @@ class AdminStatusView(generics.GenericAPIView):
     def get(self, request):
         return Response({'is_admin': request.user.is_staff})
 
+# class UserViewSet(viewsets.ModelViewSet):
+#     serializer_class = UserSerializer
+#     permission_classes = [IsAuthenticated, IsAdminUser]
+    
+#     def get_queryset(self):
+#         return User.objects.all().order_by('-date_joined')
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -87,9 +103,9 @@ class UserViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user.is_authenticated:
             raise ValidationError({"detail": "You are not loged in."})
-        if user.is_staff:
-            return User.objects.all()
-        return User.objects.filter(id=user.id)
+        if user.is_staff or user.is_superuser:
+            return User.objects.all().order_by('-date_joined')
+        return User.objects.filter(id=user.id).order_by('-date_joined')
 
     def perform_create(self, serializer):
         print("perform_create called")
@@ -191,6 +207,16 @@ class ListingViewSet(viewsets.ModelViewSet):
                 listing.pictures.append(url)
             listing.save(update_fields=["pictures"])
 
+# class PartnerViewSet(viewsets.ModelViewSet):
+#     serializer_class = UserSerializer
+#     permission_classes = [IsAuthenticated, IsAdminUser]
+    
+#     def get_queryset(self):
+#         # For now, return users who are staff or have created listings
+#         return User.objects.filter(
+#             Q(is_staff=True) | Q(is_superuser=True)
+#         ).distinct().order_by('-date_joined')
+
 class PartnerViewSet(viewsets.ModelViewSet):
     queryset = Partner.objects.all().prefetch_related('listings')
     serializer_class = PartnerSerializer
@@ -198,13 +224,13 @@ class PartnerViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff:
-            return Partner.objects.all().prefetch_related('listings')
         if not user.is_authenticated:
             raise ValidationError({"detail": "You are not loged in."})
+        if user.is_staff or user.is_superuser:
+            return Partner.objects.all().prefetch_related('listings').order_by('-date_joined')
         if not user.is_partner and user.is_authenticated:
-            raise ValidationError({"detail": "You are not a partner."})
-        return Partner.objects.filter(user=user).prefetch_related('listings')
+            raise ValidationError({"detail": "You are not loged in."})
+        return Partner.objects.filter(user=user).prefetch_related('listings').order_by('-date_joined')
 
     def perform_create(self, serializer):
         if self.request.user.is_partner:
@@ -281,6 +307,142 @@ class PasswordResetConfirmView(generics.GenericAPIView):
             user.save()
             return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)
+
+class DashboardStatsView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    
+    def get(self, request):
+        try:
+            # Get basic user stats
+            total_users = User.objects.count()
+            total_partners = User.objects.filter(
+                Q(is_staff=True) | Q(is_superuser=True)
+            ).count()
+            
+            # Get recent users
+            recent_users = User.objects.order_by('-date_joined')[:6].values(
+                'id', 'username', 'first_name', 'last_name', 'email', 'is_active'
+            )
+            
+            # Get partners with mock listings count
+            partners_qs = User.objects.filter(
+                Q(is_staff=True) | Q(is_superuser=True)
+            ).order_by('-date_joined')[:6]
+            
+            partners = []
+            for partner in partners_qs:
+                partners.append({
+                    'id': partner.id,
+                    'username': partner.username,
+                    'first_name': partner.first_name,
+                    'last_name': partner.last_name,
+                    'email': partner.email,
+                    'date_joined': partner.date_joined.isoformat() if partner.date_joined else None,
+                    'listings_count': 0,  # Mock data for now
+                    'is_active': partner.is_active
+                })
+            
+            return Response({
+                'stats': {
+                    'total_users': total_users,
+                    'total_partners': total_partners,
+                    'total_listings': 0,  # Mock data
+                    'total_bookings': 0,  # Mock data
+                    'total_earnings': 0.0,  # Mock data
+                },
+                'recent_users': list(recent_users),
+                'partners': partners
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Dashboard error: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+class DashboardStatsView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    
+    def get(self, request):
+        try:
+            total_users = User.objects.count()
+            total_partners = Partner.objects.count()
+            total_listings = Listing.objects.count()
+            total_bookings = Booking.objects.count()
+            total_earnings = Booking.objects.aggregate(
+                total=Sum('price')
+            )['total'] or 0.0
+            
+            recent_users = User.objects.order_by('-date_joined')[:6].values(
+                'id', 'username', 'first_name', 'last_name', 'email', 'is_active'
+            )
+            
+            partners_qs = Partner.objects.select_related('user').annotate(
+                listings_count=Count('listings')
+            ).order_by('-created_at')[:6]
+            
+            partners = []
+            for partner in partners_qs:
+                partners.append({
+                    'id': partner.id,
+                    'username': partner.user.username,
+                    'first_name': partner.user.first_name,
+                    'last_name': partner.user.last_name,
+                    'email': partner.user.email,
+                    'company_name': partner.company_name,
+                    'date_joined': partner.created_at.isoformat(),
+                    'listings_count': partner.listings_count,
+                    'is_active': partner.user.is_active
+                })
+            
+            return Response({
+                'stats': {
+                    'total_users': total_users,
+                    'total_partners': total_partners,
+                    'total_listings': total_listings,
+                    'total_bookings': total_bookings,
+                    'total_earnings': float(total_earnings),
+                },
+                'recent_users': list(recent_users),
+                'partners': partners
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Dashboard error: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class PartnerStatsView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    
+    def get(self, request):
+        try:
+            partners_qs = Partner.objects.select_related('user').annotate(
+                listings_count=Count('listings')
+            ).order_by('-created_at')
+            
+            partners = []
+            for partner in partners_qs:
+                partners.append({
+                    'id': partner.id,
+                    'username': partner.user.username,
+                    'first_name': partner.user.first_name,
+                    'last_name': partner.user.last_name,
+                    'email': partner.user.email,
+                    'company_name': partner.company_name,
+                    'verification_status': partner.verification_status,
+                    'date_joined': partner.created_at.isoformat(),
+                    'listings_count': partner.listings_count,
+                    'is_active': partner.user.is_active
+                })
+            
+            return Response(partners, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {'error': f'Partners error: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 def verify_email(request):
     token = request.GET.get("token")

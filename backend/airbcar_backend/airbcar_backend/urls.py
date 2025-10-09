@@ -6,10 +6,7 @@ from core.views import (
     home_view, UserViewSet, PartnerViewSet, ListingViewSet,
     BookingViewSet, PasswordResetRequestView, PasswordResetConfirmView, 
     verify_email, CustomTokenObtainPairView, UserStatusView, AdminStatusView,
-    UserVerificationView)#, TokenVerifyView, AdminVerificationView, CustomLoginView)
-    
-# from django.conf import settings
-# from django.conf.urls.static import static
+    UserVerificationView)
 
 
 router = DefaultRouter()

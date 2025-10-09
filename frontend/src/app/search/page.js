@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { userAPI, authAPI, bookingAPI, favoritesAPI } from '@/lib/api'
+// import { userAPI, authAPI, bookingAPI, favoritesAPI } from '@/lib/api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
