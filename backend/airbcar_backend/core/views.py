@@ -3,7 +3,7 @@ from .models import User, Booking, Partner, Listing
 from rest_framework import viewsets, generics, status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, AllowAny
 import uuid
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -568,3 +568,33 @@ def home_view(request):
     </html>
     """
     return HttpResponse(html_content)
+
+class RegisterView(generics.CreateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        # Frontend sends `username` (full name). Our serializer does not accept it.
+        # Drop it so the serializer will set username=email internally.
+        data.pop('username', None)
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        # Generate email verification token and send verification email
+        user.email_verification_token = str(uuid.uuid4())
+        user.save(update_fields=["email_verification_token"])
+
+        verification_url = f"{request.build_absolute_uri('/verify-email/')}?token={user.email_verification_token}"
+        send_mail(
+            subject='Verify your email',
+            message=f'Click the link to verify your email: {verification_url}',
+            from_email='no-reply@airbcar.com',
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+
+        headers = {}
+        return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED, headers=headers)
