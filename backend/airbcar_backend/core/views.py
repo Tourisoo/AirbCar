@@ -208,7 +208,7 @@ class ListingViewSet(viewsets.ModelViewSet):
 #         ).distinct().order_by('-date_joined')
 
 class PartnerViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
+    serializer_class = PartnerSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
     
     def get_queryset(self):
@@ -216,10 +216,10 @@ class PartnerViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated:
             raise ValidationError({"detail": "You are not loged in."})
         if user.is_staff or user.is_superuser:
-            return Partner.objects.all().prefetch_related('listings').order_by('-date_joined')
+            return Partner.objects.all().select_related('user').prefetch_related('listings').order_by('-created_at')
         if not user.is_partner and user.is_authenticated:
             raise ValidationError({"detail": "You are not loged in."})
-        return Partner.objects.filter(user=user).prefetch_related('listings').order_by('-date_joined')
+        return Partner.objects.filter(user=user).select_related('user').prefetch_related('listings').order_by('-created_at')
 
     def perform_create(self, serializer):
         if self.request.user.is_partner:
