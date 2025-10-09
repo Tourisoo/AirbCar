@@ -7,9 +7,6 @@ from core.views import (
     BookingViewSet, PasswordResetRequestView, PasswordResetConfirmView, 
     verify_email, CustomTokenObtainPairView, UserStatusView, AdminStatusView,
     UserVerificationView)
-    
-# from django.conf import settings
-# from django.conf.urls.static import static
 
 
 router = DefaultRouter()
