@@ -13,35 +13,51 @@ class ApiClient {
 
   getAuthToken() {
     if (typeof window === 'undefined') return null
-    return localStorage.getItem('accessToken')
+    return localStorage.getItem('access_token')
   }
 
   getHeaders() {
     const headers = { ...this.defaultHeaders }
     const token = this.getAuthToken()
     
+    console.log('🔑 Getting auth token:', token ? 'Found token (length: ' + token.length + ')' : 'No token found')
+    
     if (token) {
       headers.Authorization = `Bearer ${token}`
+      console.log('🔒 Added Authorization header')
+    } else {
+      console.log('❌ No Authorization header added')
     }
     
+    console.log('📤 Final headers:', headers)
     return headers
   }
 
   async handleResponse(response) {
+    console.log('📥 Response status:', response.status, response.url)
+    
     if (!response.ok) {
       if (response.status === 401) {
+        console.log('🚫 Unauthorized response - clearing tokens')
         // Handle unauthorized - redirect to login
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
-          window.location.href = '/auth/login'
+          localStorage.removeItem('access_token')
+          localStorage.removeItem('refresh_token')
+          window.location.href = '/auth/signin'
         }
       }
       
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+      console.error('❌ API Error Response:', {
+        status: response.status,
+        url: response.url,
+        errorData: errorData,
+        headers: response.headers
+      })
+      throw new Error(errorData.message || errorData.detail || JSON.stringify(errorData) || `HTTP error! status: ${response.status}`)
     }
     
+    console.log('✅ Successful response')
     return response.json()
   }
 
@@ -130,8 +146,8 @@ export const authService = {
     })
     
     if (response.access && response.refresh) {
-      localStorage.setItem('accessToken', response.access)
-      localStorage.setItem('refreshToken', response.refresh)
+      localStorage.setItem('access_token', response.access)
+      localStorage.setItem('refresh_token', response.refresh)
     }
     
     return response
@@ -156,7 +172,7 @@ export const authService = {
   },
 
   async refreshToken() {
-    const refreshToken = localStorage.getItem('refreshToken')
+    const refreshToken = localStorage.getItem('refresh_token')
     if (!refreshToken) throw new Error('No refresh token')
 
     const response = await apiClient.post(API_ENDPOINTS.AUTH.REFRESH, {
@@ -164,16 +180,16 @@ export const authService = {
     })
 
     if (response.access) {
-      localStorage.setItem('accessToken', response.access)
+      localStorage.setItem('access_token', response.access)
     }
 
     return response
   },
 
   logout() {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    window.location.href = '/auth/login'
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+    window.location.href = '/auth/signin'
   },
 }
 
@@ -194,17 +210,21 @@ export const listingsService = {
   },
 
   async getFavorites() {
-    return apiClient.get(API_ENDPOINTS.LISTINGS.FAVORITES)
+    // Favorites not implemented in backend yet - return empty array
+    console.warn('Favorites feature not implemented in backend yet')
+    return []
   },
 
   async addToFavorites(listingId) {
-    return apiClient.post(API_ENDPOINTS.LISTINGS.FAVORITES, {
-      listing_id: listingId,
-    })
+    // Favorites not implemented in backend yet - return success
+    console.warn('Favorites feature not implemented in backend yet')
+    return { success: true, message: 'Favorites feature coming soon' }
   },
 
   async removeFromFavorites(listingId) {
-    return apiClient.delete(`${API_ENDPOINTS.LISTINGS.FAVORITES}${listingId}/`)
+    // Favorites not implemented in backend yet - return success  
+    console.warn('Favorites feature not implemented in backend yet')
+    return { success: true, message: 'Favorites feature coming soon' }
   },
 }
 
@@ -217,14 +237,28 @@ export const bookingsService = {
   },
 
   async createBooking(bookingData) {
-    return apiClient.post(API_ENDPOINTS.BOOKINGS.CREATE, {
-      listing_id: bookingData.listingId,
-      pickup_date: bookingData.pickupDate,
-      dropoff_date: bookingData.dropoffDate,
-      pickup_location: bookingData.pickupLocation,
-      dropoff_location: bookingData.dropoffLocation,
-      notes: bookingData.notes,
-    })
+    console.log('Creating booking with data:', bookingData);
+    
+    // Debug auth token
+    const token = localStorage.getItem('access_token');
+    console.log('Auth token available:', !!token, token ? 'Token length: ' + token.length : 'No token');
+    
+    // Ensure we're sending the listing ID, not the object
+    const listingId = typeof bookingData.listing === 'object' 
+      ? bookingData.listing.id 
+      : bookingData.listing;
+    
+    const requestData = {
+      listing: listingId,
+      start_time: bookingData.start_time,
+      end_time: bookingData.end_time,
+      price: parseFloat(bookingData.price),
+      status: bookingData.status || 'pending',
+    };
+    
+    console.log('Sending booking data to backend:', requestData);
+    console.log('API Headers will include:', apiClient.getHeaders());
+    return apiClient.post(API_ENDPOINTS.BOOKINGS.CREATE, requestData)
   },
 
   async getBooking(id) {

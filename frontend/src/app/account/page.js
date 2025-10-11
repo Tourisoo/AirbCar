@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { favoritesAPI, userAPI } from '@/lib/api'
-import Header from '../../components/Header'
-import Footer from '../../components/Footer'
+import { listingsService, authService } from '@/services/api'
+import Header from '../components/Header'
+import Footer from '../components/Footer'
 
 export default function AccountPage() {
   const { user, loading, logout } = useAuth()
@@ -128,7 +128,7 @@ export default function AccountPage() {
     const loadUserData = async () => {
       if (user) {
         try {
-          const userData = await userAPI.getCurrentUser()
+          const userData = await authService.getCurrentUser()
           setAccountData(prev => ({
         ...prev,
             firstName: userData.first_name || prev.firstName,
@@ -196,28 +196,20 @@ export default function AccountPage() {
     setSaveMessage('')
 
     try {
-      // Update personal information
-      await userAPI.updatePersonalInfo({
-        firstName: accountData.firstName,
-        lastName: accountData.lastName,
-        dateOfBirth: accountData.dateOfBirth,
-        nationality: accountData.placeOfBirth
-      })
-
-      // Update contact information
-      await userAPI.updateContactInfo({
-        phoneNumber: accountData.phoneNumber,
+      // Update all profile information
+      await authService.updateProfile({
+        first_name: accountData.firstName,
+        last_name: accountData.lastName,
+        phone_number: accountData.phoneNumber,
+        date_of_birth: accountData.dateOfBirth,
+        place_of_birth: accountData.placeOfBirth,
         address: accountData.address,
         city: accountData.city,
-        postalCode: accountData.postalCode,
-        country: accountData.country
-      })
-
-      // Update license information
-      await userAPI.updateLicenseInfo({
-        licenseCountry: accountData.licenseCountry,
-        licenseNumber: accountData.licenseNumber,
-        licenseIssueDate: accountData.licenseIssueDate
+        postal_code: accountData.postalCode,
+        country: accountData.country,
+        license_country: accountData.licenseCountry,
+        license_number: accountData.licenseNumber,
+        license_issue_date: accountData.licenseIssueDate
       })
       
       setSaveMessage('Account information saved successfully!')

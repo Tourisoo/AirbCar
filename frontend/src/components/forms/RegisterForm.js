@@ -85,7 +85,7 @@ export default function RegisterForm({ onSuccess }) {
       if (onSuccess) {
         onSuccess(response)
       } else {
-        router.push('/auth/login?registered=true')
+        router.push('/auth/signin?registered=true')
       }
     } catch (error) {
       setGeneralError(error.message || 'Registration failed. Please try again.')
@@ -217,7 +217,7 @@ export default function RegisterForm({ onSuccess }) {
       <div className="text-center">
         <p className="text-sm text-gray-600">
           Already have an account?{' '}
-          <a href="/auth/login" className="text-orange-600 hover:text-orange-500 font-medium">
+          <a href="/auth/signin" className="text-orange-600 hover:text-orange-500 font-medium">
             Sign in
           </a>
         </p>

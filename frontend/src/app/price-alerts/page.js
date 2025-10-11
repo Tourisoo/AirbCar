@@ -3,9 +3,17 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { priceAlertsAPI, listingsAPI } from '@/lib/api'
+import { listingsService } from '@/services/api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+
+// Temporary stub for price alerts API - not yet implemented
+const priceAlertsAPI = {
+  getPriceAlerts: async () => [],
+  createPriceAlert: async () => ({ success: true }),
+  deletePriceAlert: async () => ({ success: true }),
+  updatePriceAlert: async () => ({ success: true })
+}
 
 export default function PriceAlertsPage() {
   const router = useRouter()
@@ -92,7 +100,7 @@ export default function PriceAlertsPage() {
 
     try {
       setSearchLoading(true)
-      const data = await listingsAPI.getListings({ search: query })
+      const data = await listingsService.getListings({ search: query })
       setSearchResults(data.slice(0, 5)) // Limit to 5 results
     } catch (err) {
       console.error('Error searching cars:', err)
