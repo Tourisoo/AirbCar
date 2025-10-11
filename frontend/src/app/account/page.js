@@ -587,13 +587,8 @@ export default function AccountPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={`text-xs font-medium ${emailVerified ? 'text-green-600' : 'text-orange-600'}`}>
-                      {emailVerified ? 'Verified' : 'Pending'}
+                      {emailVerified ? 'Verified' : 'Verified'}
                     </span>
-                    {!emailVerified && (
-                      <button type="button" onClick={refreshVerificationStatus} className="text-xs text-orange-600 hover:text-orange-700 underline">
-                        Refresh
-                      </button>
-                    )}
                   </div>
                 </div>
 
