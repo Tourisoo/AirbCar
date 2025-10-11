@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { userAPI, authAPI, bookingAPI, favoritesAPI } from '@/lib/api'
+import { authService, listingsService, bookingsService } from '@/services/api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
@@ -696,7 +696,7 @@ function SearchContent() {
     const loadFavorites = async () => {
       if (user) {
         try {
-          const userFavorites = await favoritesAPI.getFavorites()
+          const userFavorites = await listingsService.getFavorites()
           if (Array.isArray(userFavorites)) {
             setFavorites(new Set(userFavorites.map(fav => fav.car_id || fav.id)))
           } else {
@@ -847,7 +847,7 @@ function SearchContent() {
     try {
       if (favorites.has(carId)) {
         // Remove from favorites
-        await favoritesAPI.removeFavoriteByCarId(carId)
+        await listingsService.removeFromFavorites(carId)
         setFavorites(prev => {
           const newFavorites = new Set(prev)
           newFavorites.delete(carId)
@@ -855,7 +855,7 @@ function SearchContent() {
         })
       } else {
         // Add to favorites
-        await favoritesAPI.addFavorite(carId)
+        await listingsService.addToFavorites(carId)
         setFavorites(prev => new Set([...prev, carId]))
       }
     } catch (error) {
@@ -1279,12 +1279,11 @@ function SearchContent() {
       }
       else if (bookingStep === 'payment') {
         // Additional validation before processing payment
-        if (!isLoggedIn) {
+        if (!user) {
           throw new Error('Session expired. Please log in again to complete your booking.')
         }
         
         if (!localStorage.getItem('access_token')) {
-          setIsLoggedIn(false)
           throw new Error('Authentication token missing. Please log in again.')
         }
         
@@ -1507,7 +1506,7 @@ function SearchContent() {
       }
 
       // Double-check the user is actually logged in according to our state
-      if (!isLoggedIn) {
+      if (!user) {
         console.error('❌ User state shows not logged in - resetting booking flow')
         setShowBookingFlow(false)
         setBookingStep('auth')
@@ -1581,7 +1580,7 @@ function SearchContent() {
       }
 
       // Create the booking
-      const booking = await bookingAPI.createBooking(bookingData)
+      const booking = await bookingsService.createBooking(bookingData)
       
       console.log('✅ Booking created successfully:', booking)
       
@@ -1594,7 +1593,6 @@ function SearchContent() {
       
       // If it's an authentication error, reset the flow
       if (error.message.includes('Authentication') || error.message.includes('Session expired')) {
-        setIsLoggedIn(false)
         setShowBookingFlow(false)
         setBookingStep('auth')
       }

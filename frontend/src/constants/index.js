@@ -1,33 +1,33 @@
 // API Constants
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+export const API_BASE_URL = process.env.NEXT_PUBLIC_DJANGO_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: '/api/auth/login/',
-    REGISTER: '/api/auth/register/',
-    REFRESH: '/api/auth/token/refresh/',
-    LOGOUT: '/api/auth/logout/',
-    PROFILE: '/api/auth/user/',
+    LOGIN: '/api/login/',
+    REGISTER: '/api/register/',
+    REFRESH: '/api/token/refresh/',
+    LOGOUT: '/api/logout/',
+    PROFILE: '/api/verify-token/',
   },
   LISTINGS: {
-    LIST: '/api/listings/',
-    DETAIL: (id) => `/api/listings/${id}/`,
-    SEARCH: '/api/listings/search/',
-    FAVORITES: '/api/favorites/',
+    LIST: '/listings/',
+    DETAIL: (id) => `/listings/${id}/`,
+    SEARCH: '/listings/search/',
+    FAVORITES: '/favorites/',
   },
   BOOKINGS: {
-    LIST: '/api/bookings/',
-    CREATE: '/api/bookings/',
-    DETAIL: (id) => `/api/bookings/${id}/`,
-    CANCEL: (id) => `/api/bookings/${id}/cancel/`,
+    LIST: '/bookings/',
+    CREATE: '/bookings/',
+    DETAIL: (id) => `/bookings/${id}/`,
+    CANCEL: (id) => `/bookings/${id}/cancel/`,
   },
   PARTNERS: {
-    LIST: '/api/partners/',
-    REGISTER: '/api/partners/register/',
-    DASHBOARD: '/api/partners/dashboard/',
+    LIST: '/partners/',
+    REGISTER: '/partners/register/',
+    DASHBOARD: '/partners/dashboard/',
   },
   ADMIN: {
-    USERS: '/api/admin/users/',
-    STATS: '/api/admin/stats/',
+    USERS: '/admin/users/',
+    STATS: '/admin/stats/',
   }
 }
 

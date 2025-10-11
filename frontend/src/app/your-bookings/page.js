@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { bookingsAPI } from '@/lib/api'
+import { bookingsService } from '@/services/api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
@@ -33,7 +33,7 @@ export default function YourBookingsPage() {
     try {
       setLoading(true)
       setError('')
-      const data = await bookingsAPI.getBookings()
+      const data = await bookingsService.getBookings()
       setBookings(data)
     } catch (err) {
       console.error('Error fetching bookings:', err)
@@ -50,7 +50,7 @@ export default function YourBookingsPage() {
 
     try {
       setCancelLoading(true)
-      await bookingsAPI.cancelBooking(bookingId)
+      await bookingsService.cancelBooking(bookingId)
       // Update the booking status in the local state
       setBookings(prev => prev.map(booking => 
         booking.id === bookingId 

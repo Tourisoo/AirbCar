@@ -158,7 +158,7 @@ export default function AccountPage() {
     const loadUserData = async () => {
       if (user) {
         try {
-          const userData = await userAPI.getCurrentUser()
+          const userData = await authService.getCurrentUser()
           setAccountData(prev => ({
             ...prev,
             firstName: userData.first_name || prev.firstName,

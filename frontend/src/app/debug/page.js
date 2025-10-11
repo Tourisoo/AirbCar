@@ -1,5 +1,5 @@
 'use client'
-import { getAPIConfig } from '@/lib/api'
+import { API_BASE_URL, API_ENDPOINTS } from '@/constants'
 import { useEffect, useState } from 'react'
 
 export default function DebugPage() {
@@ -8,14 +8,14 @@ export default function DebugPage() {
 
   useEffect(() => {
     // Get API configuration
-    const config = getAPIConfig()
+    const config = { API_BASE_URL, API_ENDPOINTS }
     setApiConfig(config)
 
     // Test backend connection
     const testBackend = async () => {
       try {
-        console.log('Testing backend at:', config.API_BASE_URL)
-        const response = await fetch(`${config.API_BASE_URL}/listings/`)
+        console.log('Testing backend at:', API_BASE_URL)
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LISTINGS.LIST}`)
         if (response.ok) {
           const data = await response.json()
           setBackendTest({ 
