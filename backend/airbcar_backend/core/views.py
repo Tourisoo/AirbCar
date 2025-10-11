@@ -1,29 +1,39 @@
-from django.http import HttpResponse
+# from django.shortcuts import render, redirect
+from django.http import HttpResponse#, JsonResponse
 from .models import User, Booking, Partner, Listing
 from rest_framework import viewsets, generics, status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, AllowAny
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+# from rest_framework.views import APIView
+# from rest_framework_simplejwt.tokens import RefreshToken
 import uuid
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model#, authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+# from django.contrib.auth.tokens import default_token_generator
+from rest_framework import status
+from rest_framework.response import Response
 from .utils import upload_file_to_supabase
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import (UserSerializer, BookingSerializer, PartnerSerializer, 
     ListingSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer,
     CustomTokenObtainPairSerializer)
-from rest_framework.decorators import api_view, permission_classes
-from django.db.models import Count, Q, Sum
-from rest_framework.views import APIView
 
 User = get_user_model()
 
 class UserVerificationView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
+
+    # def get(self, request):
+    #     user = request.user
+    #     return Response({
+    #         'is_verified': user.is_verified,
+    #         'email_verified': user.email_verified
+    #     })
 
     def post(self, request):
         user = request.user
@@ -36,6 +46,87 @@ class UserVerificationView(generics.GenericAPIView):
             return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
+# class AdminVerificationView(APIView):
+#     permission_classes = [IsAuthenticated]
+    
+#     def get(self, request):
+#         if request.user.is_staff:
+#             return Response({'is_admin': True}, status=status.HTTP_200_OK)
+#         else:
+#             return Response({'is_admin': False}, status=status.HTTP_403_FORBIDDEN)
+
+
+# class TokenVerifyView(generics.GenericAPIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def get(self, request):
+#         user = request.user
+#         return Response({
+#             'id': user.id,
+#             'username': user.username,
+#             'email': user.email,
+#             'is_partner': user.is_partner,
+#             'is_verified': user.is_verified,
+#             'email_verified': user.email_verified,
+#             'is_staff': user.is_staff,
+#             # 'is_superuser': user.is_superuser
+#         })
+
+# class CustomLoginView(APIView):
+#     def post(self, request):
+#         email = request.data.get('email')
+#         username = request.data.get('username')
+#         password = request.data.get('password')
+        
+#         if not password:
+#             return Response({'error': 'Password is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+#         user_email = None
+        
+#         # Handle email login  
+#         if email and not username:
+#             user_email = email
+#         elif username and not email:
+#             # If username provided, find the user's email
+#             try:
+#                 user = User.objects.get(username=username)
+#                 user_email = user.email
+#             except User.DoesNotExist:
+#                 return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+#         elif email and username:
+#             # If both provided, use email
+#             user_email = email
+#         else:
+#             return Response({'error': 'Username or email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+#         # Authenticate user using email as username (since USERNAME_FIELD = 'email')
+#         user = authenticate(username=user_email, password=password)
+#         if user:
+#             refresh = RefreshToken.for_user(user)
+#             access_token = refresh.access_token
+            
+#             # Add custom claims
+#             access_token['username'] = user.username
+#             access_token['email'] = user.email
+#             access_token['is_partner'] = user.is_partner
+#             access_token['is_verified'] = user.is_verified
+            
+#             return Response({
+#                 'access': str(access_token),
+#                 'refresh': str(refresh),
+#                 'user': {
+#                     'id': user.id,
+#                     'username': user.username,
+#                     'email': user.email,
+#                     'is_partner': user.is_partner,
+#                     'is_verified': user.is_verified
+#                 }
+#             })
+#         else:
+#             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+# 1. REMOVE CustomLoginView - Use built-in JWT view instead
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
@@ -77,25 +168,19 @@ class AdminStatusView(generics.GenericAPIView):
     def get(self, request):
         return Response({'is_admin': request.user.is_staff})
 
-# class UserViewSet(viewsets.ModelViewSet):
-#     serializer_class = UserSerializer
-#     permission_classes = [IsAuthenticated, IsAdminUser]
-    
-#     def get_queryset(self):
-#         return User.objects.all().order_by('-date_joined')
-
 class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
     def get_queryset(self):
         print("get_queryset called")
         user = self.request.user
         if not user.is_authenticated:
             raise ValidationError({"detail": "You are not loged in."})
-        if user.is_staff or user.is_superuser:
-            return User.objects.all().order_by('-date_joined')
-        return User.objects.filter(id=user.id).order_by('-date_joined')
+        if user.is_staff:
+            return User.objects.all()
+        return User.objects.filter(id=user.id)
 
     def perform_create(self, serializer):
         print("perform_create called")
@@ -197,29 +282,20 @@ class ListingViewSet(viewsets.ModelViewSet):
                 listing.pictures.append(url)
             listing.save(update_fields=["pictures"])
 
-# class PartnerViewSet(viewsets.ModelViewSet):
-#     serializer_class = UserSerializer
-#     permission_classes = [IsAuthenticated, IsAdminUser]
-    
-#     def get_queryset(self):
-#         # For now, return users who are staff or have created listings
-#         return User.objects.filter(
-#             Q(is_staff=True) | Q(is_superuser=True)
-#         ).distinct().order_by('-date_joined')
-
 class PartnerViewSet(viewsets.ModelViewSet):
+    queryset = Partner.objects.all().prefetch_related('listings')
     serializer_class = PartnerSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     
     def get_queryset(self):
         user = self.request.user
+        if user.is_staff:
+            return Partner.objects.all().prefetch_related('listings')
         if not user.is_authenticated:
             raise ValidationError({"detail": "You are not loged in."})
-        if user.is_staff or user.is_superuser:
-            return Partner.objects.all().select_related('user').prefetch_related('listings').order_by('-created_at')
         if not user.is_partner and user.is_authenticated:
-            raise ValidationError({"detail": "You are not loged in."})
-        return Partner.objects.filter(user=user).select_related('user').prefetch_related('listings').order_by('-created_at')
+            raise ValidationError({"detail": "You are not a partner."})
+        return Partner.objects.filter(user=user).prefetch_related('listings')
 
     def perform_create(self, serializer):
         if self.request.user.is_partner:
@@ -296,142 +372,6 @@ class PasswordResetConfirmView(generics.GenericAPIView):
             user.save()
             return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
         return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)
-
-class DashboardStatsView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    
-    def get(self, request):
-        try:
-            # Get basic user stats
-            total_users = User.objects.count()
-            total_partners = User.objects.filter(
-                Q(is_staff=True) | Q(is_superuser=True)
-            ).count()
-            
-            # Get recent users
-            recent_users = User.objects.order_by('-date_joined')[:6].values(
-                'id', 'username', 'first_name', 'last_name', 'email', 'is_active'
-            )
-            
-            # Get partners with mock listings count
-            partners_qs = User.objects.filter(
-                Q(is_staff=True) | Q(is_superuser=True)
-            ).order_by('-date_joined')[:6]
-            
-            partners = []
-            for partner in partners_qs:
-                partners.append({
-                    'id': partner.id,
-                    'username': partner.username,
-                    'first_name': partner.first_name,
-                    'last_name': partner.last_name,
-                    'email': partner.email,
-                    'date_joined': partner.date_joined.isoformat() if partner.date_joined else None,
-                    'listings_count': 0,  # Mock data for now
-                    'is_active': partner.is_active
-                })
-            
-            return Response({
-                'stats': {
-                    'total_users': total_users,
-                    'total_partners': total_partners,
-                    'total_listings': 0,  # Mock data
-                    'total_bookings': 0,  # Mock data
-                    'total_earnings': 0.0,  # Mock data
-                },
-                'recent_users': list(recent_users),
-                'partners': partners
-            }, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Dashboard error: {str(e)}'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
-class DashboardStatsView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    
-    def get(self, request):
-        try:
-            total_users = User.objects.count()
-            total_partners = Partner.objects.count()
-            total_listings = Listing.objects.count()
-            total_bookings = Booking.objects.count()
-            total_earnings = Booking.objects.aggregate(
-                total=Sum('price')
-            )['total'] or 0.0
-            
-            recent_users = User.objects.order_by('-date_joined')[:6].values(
-                'id', 'username', 'first_name', 'last_name', 'email', 'is_active'
-            )
-            
-            partners_qs = Partner.objects.select_related('user').annotate(
-                listings_count=Count('listings')
-            ).order_by('-created_at')[:6]
-            
-            partners = []
-            for partner in partners_qs:
-                partners.append({
-                    'id': partner.id,
-                    'username': partner.user.username,
-                    'first_name': partner.user.first_name,
-                    'last_name': partner.user.last_name,
-                    'email': partner.user.email,
-                    'company_name': partner.company_name,
-                    'date_joined': partner.created_at.isoformat(),
-                    'listings_count': partner.listings_count,
-                    'is_active': partner.user.is_active
-                })
-            
-            return Response({
-                'stats': {
-                    'total_users': total_users,
-                    'total_partners': total_partners,
-                    'total_listings': total_listings,
-                    'total_bookings': total_bookings,
-                    'total_earnings': float(total_earnings),
-                },
-                'recent_users': list(recent_users),
-                'partners': partners
-            }, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Dashboard error: {str(e)}'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-class PartnerStatsView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    
-    def get(self, request):
-        try:
-            partners_qs = Partner.objects.select_related('user').annotate(
-                listings_count=Count('listings')
-            ).order_by('-created_at')
-            
-            partners = []
-            for partner in partners_qs:
-                partners.append({
-                    'id': partner.id,
-                    'username': partner.user.username,
-                    'first_name': partner.user.first_name,
-                    'last_name': partner.user.last_name,
-                    'email': partner.user.email,
-                    'company_name': partner.company_name,
-                    'verification_status': partner.verification_status,
-                    'date_joined': partner.created_at.isoformat(),
-                    'listings_count': partner.listings_count,
-                    'is_active': partner.user.is_active
-                })
-            
-            return Response(partners, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response(
-                {'error': f'Partners error: {str(e)}'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 
 def verify_email(request):
     token = request.GET.get("token")
@@ -568,33 +508,3 @@ def home_view(request):
     </html>
     """
     return HttpResponse(html_content)
-
-class RegisterView(generics.CreateAPIView):
-    serializer_class = UserSerializer
-    permission_classes = [AllowAny]
-
-    def create(self, request, *args, **kwargs):
-        data = request.data.copy()
-        # Frontend sends `username` (full name). Our serializer does not accept it.
-        # Drop it so the serializer will set username=email internally.
-        data.pop('username', None)
-
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-
-        # Generate email verification token and send verification email
-        user.email_verification_token = str(uuid.uuid4())
-        user.save(update_fields=["email_verification_token"])
-
-        verification_url = f"{request.build_absolute_uri('/verify-email/')}?token={user.email_verification_token}"
-        send_mail(
-            subject='Verify your email',
-            message=f'Click the link to verify your email: {verification_url}',
-            from_email='no-reply@airbcar.com',
-            recipient_list=[user.email],
-            fail_silently=False,
-        )
-
-        headers = {}
-        return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED, headers=headers)
