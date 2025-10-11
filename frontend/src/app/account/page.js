@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { authService, listingsService } from '@/services/api'
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
+import { userAPI } from '@/lib/api'
+import Header from '@/app/components/Header'
+import Footer from '@/app/components/Footer'
+
 
 export default function AccountPage() {
   const { user, loading, logout } = useAuth()
@@ -158,7 +159,7 @@ export default function AccountPage() {
     const loadUserData = async () => {
       if (user) {
         try {
-          const userData = await authService.getCurrentUser()
+          const userData = await userAPI.getCurrentUser()
           setAccountData(prev => ({
             ...prev,
             ...prev,
@@ -263,10 +264,10 @@ export default function AccountPage() {
         issue_date: accountData.licenseIssueDate,
       }
 
-      const updated = await authService.updateProfile(payload)
+      const updated = await userAPI.updateProfile(payload)
 
       // If backend is blocked, updateProfile returns merged local object
-      const userData = updated || (await authService.getCurrentUser())
+      const userData = updated || (await userAPI.getCurrentUser())
       setAccountData(prev => ({
         ...prev,
         firstName: userData.first_name || userData.firstName || prev.firstName,
@@ -461,7 +462,7 @@ export default function AccountPage() {
                   className="w-full text-left p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors group"
                   >
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-gray-200 transition-colors">
+                    <div className={`p-2 rounded-lg group-hover:bg-gray-200 transition-colors`}>
                     <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>

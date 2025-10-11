@@ -97,10 +97,14 @@ export default function Header() {
     }
   }, [user])
 
-  const handleSignOut = () => {
-    logout()
-    setIsDropdownOpen(false)
-    localStorage.removeItem('isPartnerUser')
+  const handleSignOut = async () => {
+    try {
+      await Promise.resolve(logout())
+    } finally {
+      setIsDropdownOpen(false)
+      localStorage.removeItem('isPartnerUser')
+      router.replace('/')
+    }
   }
 
   const handleBecomePartnerClick = () => {

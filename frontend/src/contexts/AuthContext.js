@@ -165,11 +165,21 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     if (typeof window !== 'undefined') {
+      // Remove all possible auth keys
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+      // Clear cached user data used by fallbacks
+      localStorage.removeItem('userProfile')
+      localStorage.removeItem('favorites')
+      localStorage.removeItem('bookings')
+      localStorage.removeItem('accountForm')
+      localStorage.removeItem('isPartnerUser')
     }
     setUser(null)
-    router.push('/')
+    // Use replace to prevent going back to an authed page
+    router.replace('/')
   }
 
   const value = {
