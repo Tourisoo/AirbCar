@@ -266,7 +266,10 @@ export const bookingsService = {
   },
 
   async cancelBooking(id) {
-    return apiClient.post(API_ENDPOINTS.BOOKINGS.CANCEL(id))
+    console.log('Cancelling booking with ID:', id);
+    return apiClient.patch(API_ENDPOINTS.BOOKINGS.DETAIL(id), {
+      status: 'cancelled'
+    })
   },
 }
 

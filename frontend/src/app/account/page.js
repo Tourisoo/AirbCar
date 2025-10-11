@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { favoritesAPI, userAPI } from '@/lib/api'
+import { authService, listingsService } from '@/services/api'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 
@@ -154,7 +154,7 @@ export default function AccountPage() {
         try {
           const userData = await authService.getCurrentUser()
           setAccountData(prev => ({
-        ...prev,
+            ...prev,
             firstName: userData.first_name || prev.firstName,
             lastName: userData.last_name || prev.lastName,
             email: userData.email || prev.email,
@@ -237,10 +237,10 @@ export default function AccountPage() {
         issue_date: accountData.licenseIssueDate,
       }
 
-      const updated = await userAPI.updateProfile(payload)
+      const updated = await authService.updateProfile(payload)
 
       // If backend is blocked, updateProfile returns merged local object
-      const userData = updated || (await userAPI.getCurrentUser())
+      const userData = updated || (await authService.getCurrentUser())
       setAccountData(prev => ({
         ...prev,
         firstName: userData.first_name || userData.firstName || prev.firstName,
