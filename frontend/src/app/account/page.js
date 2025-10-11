@@ -20,7 +20,7 @@ export default function AccountPage() {
     phoneNumber: user?.phone_number || '',
     dateOfBirth: user?.date_of_birth || '',
     placeOfBirth: user?.place_of_birth || '',
-    profileImage: user?.profile_image || '/default-avatar.png',
+    profileImage: user?.profile_picture || '/default-avatar.png',
     // Contact Information
     address: user?.address || '',
     city: user?.city || '',
@@ -37,6 +37,14 @@ export default function AccountPage() {
   const [favorites, setFavorites] = useState([])
   const [favoritesLoading, setFavoritesLoading] = useState(false)
   const [hasLocalDraft, setHasLocalDraft] = useState(false)
+  const [emailVerified, setEmailVerified] = useState(!!(user?.is_verified || user?.email_verified))
+
+  const refreshVerificationStatus = async () => {
+    try {
+      const data = await userAPI.getCurrentUser()
+      setEmailVerified(!!(data?.email_verified || data?.is_verified))
+    } catch (_) {}
+  }
 
   // Load draft from localStorage (keeps form values even if backend is down/reload happens)
   useEffect(() => {
@@ -149,28 +157,28 @@ export default function AccountPage() {
   useEffect(() => {
     const loadUserData = async () => {
       if (user) {
-        // If we have a local draft, keep it and skip overriding with backend
-        if (hasLocalDraft) return
         try {
           const userData = await authService.getCurrentUser()
           setAccountData(prev => ({
+            ...prev,
             ...prev,
             firstName: userData.first_name || prev.firstName,
             lastName: userData.last_name || prev.lastName,
             email: userData.email || prev.email,
             phoneNumber: userData.phone_number || prev.phoneNumber,
             dateOfBirth: userData.date_of_birth || prev.dateOfBirth,
-            placeOfBirth: userData.place_of_birth || prev.placeOfBirth,
+            placeOfBirth: userData.nationality || prev.placeOfBirth,
             address: userData.address || prev.address,
             city: userData.city || prev.city,
-            country: userData.country || prev.country,
+            country: userData.country_of_residence || prev.country,
             postalCode: userData.postal_code || prev.postalCode,
             licenseNumber: userData.license_number || prev.licenseNumber,
-            licenseCountry: userData.license_country || prev.licenseCountry,
-            licenseIssueDate: userData.license_issue_date || prev.licenseIssueDate,
-            licenseExpiryDate: userData.license_expiry_date || prev.licenseExpiryDate,
-            profileImage: userData.profile_image || prev.profileImage
+            licenseCountry: userData.license_origin_country || prev.licenseCountry,
+            licenseIssueDate: userData.issue_date || prev.licenseIssueDate,
+            licenseExpiryDate: prev.licenseExpiryDate,
+            profileImage: userData.profile_picture || prev.profileImage
           }))
+          setEmailVerified(!!(userData?.email_verified || userData?.is_verified))
         } catch (error) {
           console.error('Error loading user data:', error)
           // Continue with existing data if backend fails
@@ -179,7 +187,7 @@ export default function AccountPage() {
     }
 
     loadUserData()
-  }, [user, hasLocalDraft])
+  }, [user])
 
   // Handle account data changes
   const handleAccountDataChange = (e) => {
@@ -191,17 +199,35 @@ export default function AccountPage() {
   }
 
   // Handle photo change
-  const handlePhotoChange = (e) => {
+  const handlePhotoChange = async (e) => {
     const file = e.target.files[0]
-    if (file) {
+    if (!file) return
+
+    // Optimistic preview
+    try {
       const reader = new FileReader()
-      reader.onload = (e) => {
+      reader.onload = (ev) => {
         setAccountData(prev => ({
           ...prev,
-          profileImage: e.target.result
+          profileImage: ev.target.result
         }))
       }
       reader.readAsDataURL(file)
+    } catch (_) {}
+
+    // Upload to backend
+    try {
+      const updated = await userAPI.uploadProfilePicture(file)
+      const newUrl = updated.profile_picture || updated.profileImage || updated.profile || null
+      if (newUrl) {
+        setAccountData(prev => ({ ...prev, profileImage: newUrl }))
+      }
+      setSaveMessage('Profile photo updated')
+      setTimeout(() => setSaveMessage(''), 2500)
+    } catch (err) {
+      console.error('Error uploading profile photo:', err)
+      setSaveMessage('Error uploading photo. Please try again.')
+      setTimeout(() => setSaveMessage(''), 3000)
     }
   }
 
@@ -248,16 +274,16 @@ export default function AccountPage() {
         email: userData.email || prev.email,
         phoneNumber: userData.phone_number || userData.phoneNumber || prev.phoneNumber,
         dateOfBirth: userData.date_of_birth || userData.dateOfBirth || prev.dateOfBirth,
-        placeOfBirth: userData.place_of_birth || userData.nationality || prev.placeOfBirth,
+        placeOfBirth: userData.nationality || userData.place_of_birth || prev.placeOfBirth,
         address: userData.address || prev.address,
         city: userData.city || prev.city,
-        country: userData.country || userData.country_of_residence || prev.country,
+        country: userData.country_of_residence || userData.country || prev.country,
         postalCode: userData.postal_code || userData.postalCode || prev.postalCode,
         licenseNumber: userData.license_number || userData.licenseNumber || prev.licenseNumber,
-        licenseCountry: userData.license_country || userData.license_origin_country || userData.licenseCountry || prev.licenseCountry,
-        licenseIssueDate: userData.license_issue_date || userData.issue_date || userData.licenseIssueDate || prev.licenseIssueDate,
+        licenseCountry: userData.license_origin_country || userData.licenseCountry || prev.licenseCountry,
+        licenseIssueDate: userData.issue_date || userData.licenseIssueDate || prev.licenseIssueDate,
         licenseExpiryDate: userData.license_expiry_date || userData.licenseExpiryDate || prev.licenseExpiryDate,
-        profileImage: userData.profile_image || userData.profileImage || prev.profileImage,
+        profileImage: userData.profile_picture || userData.profileImage || prev.profileImage,
       }))
 
       setSaveMessage('Account information saved successfully!')
@@ -292,7 +318,7 @@ export default function AccountPage() {
   const displayEmail = accountData.email || user.email || ''
   const displayProfileImage = accountData.profileImage && accountData.profileImage !== '/default-avatar.png'
     ? accountData.profileImage
-    : (user.profile_image || '')
+    : (user.profile_picture || '')
 
     return (
       <div className="min-h-screen bg-gray-50">
@@ -522,30 +548,57 @@ export default function AccountPage() {
               </div>
 
                 <div className="space-y-3">
+                {/* Basic Information */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                </div>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                      (accountData.firstName && accountData.lastName && accountData.dateOfBirth) ? 'bg-green-500' : 
+                      (accountData.firstName || accountData.lastName || accountData.dateOfBirth) ? 'bg-orange-500' : 'bg-gray-300'
+                    }`}>
+                      {(accountData.firstName && accountData.lastName && accountData.dateOfBirth) && (
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
                     <span className="text-sm text-gray-700">Basic Information</span>
-              </div>
-                  <span className="text-xs text-green-600 font-medium">Complete</span>
-            </div>
+                  </div>
+                  <span className={`text-xs font-medium ${
+                    (accountData.firstName && accountData.lastName && accountData.dateOfBirth) ? 'text-green-600' : 
+                    (accountData.firstName || accountData.lastName || accountData.dateOfBirth) ? 'text-orange-600' : 'text-gray-500'
+                  }`}>
+                    {(accountData.firstName && accountData.lastName && accountData.dateOfBirth) ? 'Complete' : 
+                     (accountData.firstName || accountData.lastName || accountData.dateOfBirth) ? 'Incomplete' : 'Not Started'}
+                  </span>
+                </div>
                 
+                {/* Email Verification */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                      emailVerified ? 'bg-green-500' : 'bg-orange-500'
+                    }`}>
+                      {emailVerified && (
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
                     </div>
                     <span className="text-sm text-gray-700">Email Verification</span>
                   </div>
-                  <span className="text-xs text-green-600 font-medium">Complete</span>
-            </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-xs font-medium ${emailVerified ? 'text-green-600' : 'text-orange-600'}`}>
+                      {emailVerified ? 'Verified' : 'Pending'}
+                    </span>
+                    {!emailVerified && (
+                      <button type="button" onClick={refreshVerificationStatus} className="text-xs text-orange-600 hover:text-orange-700 underline">
+                        Refresh
+                      </button>
+                    )}
+                  </div>
+                </div>
 
+                {/* Phone Number */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
@@ -564,6 +617,7 @@ export default function AccountPage() {
                       </span>
                     </div>
                 
+                {/* Contact Information */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
@@ -587,6 +641,7 @@ export default function AccountPage() {
                   </span>
                     </div>
                 
+                {/* Driver's License */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
