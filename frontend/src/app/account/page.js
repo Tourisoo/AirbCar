@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { listingsService, authService } from '@/services/api'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import { favoritesAPI, userAPI } from '@/lib/api'
+import Header from '@/components/layout/Header'
+import Footer from '@/components/layout/Footer'
 
 export default function AccountPage() {
   const { user, loading, logout } = useAuth()
@@ -36,6 +36,28 @@ export default function AccountPage() {
   const [saveMessage, setSaveMessage] = useState('')
   const [favorites, setFavorites] = useState([])
   const [favoritesLoading, setFavoritesLoading] = useState(false)
+  const [hasLocalDraft, setHasLocalDraft] = useState(false)
+
+  // Load draft from localStorage (keeps form values even if backend is down/reload happens)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const saved = localStorage.getItem('accountForm')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        setAccountData(prev => ({ ...prev, ...parsed }))
+        setHasLocalDraft(true)
+      } catch (_) {}
+    }
+  }, [])
+
+  // Auto-save form to localStorage on change
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem('accountForm', JSON.stringify(accountData))
+    } catch (_) {}
+  }, [accountData])
 
   // Handle URL parameters
   useEffect(() => {
@@ -127,6 +149,8 @@ export default function AccountPage() {
   useEffect(() => {
     const loadUserData = async () => {
       if (user) {
+        // If we have a local draft, keep it and skip overriding with backend
+        if (hasLocalDraft) return
         try {
           const userData = await authService.getCurrentUser()
           setAccountData(prev => ({
@@ -155,7 +179,7 @@ export default function AccountPage() {
     }
 
     loadUserData()
-  }, [user])
+  }, [user, hasLocalDraft])
 
   // Handle account data changes
   const handleAccountDataChange = (e) => {
@@ -187,6 +211,7 @@ export default function AccountPage() {
       ...prev,
       profileImage: '/default-avatar.png'
     }))
+    // No need to manually write; auto-save effect persists this change
   }
 
   // Handle account form submission
@@ -196,27 +221,50 @@ export default function AccountPage() {
     setSaveMessage('')
 
     try {
-      // Update all profile information
-      await authService.updateProfile({
+      // Build a single payload and update in one request
+      const payload = {
         first_name: accountData.firstName,
         last_name: accountData.lastName,
-        phone_number: accountData.phoneNumber,
         date_of_birth: accountData.dateOfBirth,
-        place_of_birth: accountData.placeOfBirth,
+        nationality: accountData.placeOfBirth,
+        phone_number: accountData.phoneNumber,
         address: accountData.address,
         city: accountData.city,
         postal_code: accountData.postalCode,
-        country: accountData.country,
-        license_country: accountData.licenseCountry,
+        country_of_residence: accountData.country,
+        license_origin_country: accountData.licenseCountry,
         license_number: accountData.licenseNumber,
-        license_issue_date: accountData.licenseIssueDate
-      })
-      
+        issue_date: accountData.licenseIssueDate,
+      }
+
+      const updated = await userAPI.updateProfile(payload)
+
+      // If backend is blocked, updateProfile returns merged local object
+      const userData = updated || (await userAPI.getCurrentUser())
+      setAccountData(prev => ({
+        ...prev,
+        firstName: userData.first_name || userData.firstName || prev.firstName,
+        lastName: userData.last_name || userData.lastName || prev.lastName,
+        email: userData.email || prev.email,
+        phoneNumber: userData.phone_number || userData.phoneNumber || prev.phoneNumber,
+        dateOfBirth: userData.date_of_birth || userData.dateOfBirth || prev.dateOfBirth,
+        placeOfBirth: userData.place_of_birth || userData.nationality || prev.placeOfBirth,
+        address: userData.address || prev.address,
+        city: userData.city || prev.city,
+        country: userData.country || userData.country_of_residence || prev.country,
+        postalCode: userData.postal_code || userData.postalCode || prev.postalCode,
+        licenseNumber: userData.license_number || userData.licenseNumber || prev.licenseNumber,
+        licenseCountry: userData.license_country || userData.license_origin_country || userData.licenseCountry || prev.licenseCountry,
+        licenseIssueDate: userData.license_issue_date || userData.issue_date || userData.licenseIssueDate || prev.licenseIssueDate,
+        licenseExpiryDate: userData.license_expiry_date || userData.licenseExpiryDate || prev.licenseExpiryDate,
+        profileImage: userData.profile_image || userData.profileImage || prev.profileImage,
+      }))
+
       setSaveMessage('Account information saved successfully!')
       setTimeout(() => setSaveMessage(''), 3000)
     } catch (error) {
       console.error('Error saving account information:', error)
-      setSaveMessage('Error saving account information. Please try again.')
+      setSaveMessage(error?.message || 'Error saving account information. Please try again.')
       setTimeout(() => setSaveMessage(''), 3000)
     } finally {
       setSaving(false)
@@ -238,6 +286,14 @@ export default function AccountPage() {
     return null
   }
 
+  // Use edited values preferentially for immediate UI feedback after Save
+  const displayFirstName = accountData.firstName || user.first_name || ''
+  const displayLastName = accountData.lastName || user.last_name || ''
+  const displayEmail = accountData.email || user.email || ''
+  const displayProfileImage = accountData.profileImage && accountData.profileImage !== '/default-avatar.png'
+    ? accountData.profileImage
+    : (user.profile_image || '')
+
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
@@ -248,37 +304,37 @@ export default function AccountPage() {
           <div className="flex items-center space-x-6">
             {/* Profile Avatar */}
             <div className="relative">
-              {user.profile_image ? (
+              {displayProfileImage ? (
                 <img
-                  src={user.profile_image}
-                  alt={user.first_name || 'User'}
+                  src={displayProfileImage}
+                  alt={displayFirstName || 'User'}
                   className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
                 />
               ) : (
                 <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center border-4 border-white shadow-lg">
                   <span className="text-3xl font-bold text-orange-600">
-                    {user.first_name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
+                    {(displayFirstName || displayEmail)?.charAt(0)?.toUpperCase()}
                   </span>
-                    </div>
+                </div>
               )}
               <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                  </div>
+                </svg>
+              </div>
             </div>
             
             {/* Profile Info */}
             <div className="flex-1 text-white">
               <h1 className="text-3xl font-bold">
-                {user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Welcome!'}
+                {displayFirstName ? `${displayFirstName} ${displayLastName}`.trim() : 'Welcome!'}
               </h1>
-              <p className="text-orange-100 text-lg">{user.email}</p>
+              <p className="text-orange-100 text-lg">{displayEmail}</p>
               <div className="flex items-center space-x-4 mt-2">
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-400 text-white">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
+                  </svg>
                   Verified User
                   </span>
                 <span className="text-orange-100">Member since {new Date().getFullYear()}</span>
