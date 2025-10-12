@@ -2,15 +2,19 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import { bookingsService } from '@/services/api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
 function BookingContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { user, isAuthenticated } = useAuth()
   const [car, setCar] = useState(null)
   const [loading, setLoading] = useState(true)
   const [bookingStep, setBookingStep] = useState(1)
+  const [submitting, setSubmitting] = useState(false)
   const [bookingDetails, setBookingDetails] = useState({
     location: '',
     pickupDate: '',
@@ -102,14 +106,39 @@ function BookingContent() {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (!isAuthenticated) {
+      router.push('/auth/signin?redirect=/booking')
+      return
+    }
+    
     if (bookingStep === 1) {
       setBookingStep(2)
     } else {
       // Handle final booking submission
-      alert('Booking request submitted successfully!')
-      router.push('/search')
+      setSubmitting(true)
+      try {
+        const bookingData = {
+          listing: car.id,
+          start_time: new Date(formData.pickupDate).toISOString(),
+          end_time: new Date(formData.returnDate).toISOString(),
+          price: car.price * bookingDetails.duration,
+          request_message: formData.message,
+        }
+
+        await bookingsService.createBooking(bookingData)
+        
+        // Show success message and redirect
+        alert('Booking request submitted successfully! The car owner will review your request.')
+        router.push('/your-bookings')
+      } catch (error) {
+        console.error('Error submitting booking:', error)
+        alert('Failed to submit booking request. Please try again.')
+      } finally {
+        setSubmitting(false)
+      }
     }
   }
 
@@ -421,9 +450,17 @@ function BookingContent() {
                   )}
                   <button
                     type="submit"
-                    className="ml-auto bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors"
+                    disabled={submitting}
+                    className="ml-auto bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-8 rounded-lg transition-colors"
                   >
-                    {bookingStep === 1 ? 'Continue' : 'Submit Request'}
+                    {submitting ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Submitting...</span>
+                      </div>
+                    ) : (
+                      bookingStep === 1 ? 'Continue' : 'Submit Request'
+                    )}
                   </button>
                 </div>
               </form>

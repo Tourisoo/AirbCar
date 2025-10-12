@@ -19,6 +19,10 @@ export const API_ENDPOINTS = {
     CREATE: '/bookings/',
     DETAIL: (id) => `/bookings/${id}/`,
     CANCEL: (id) => `/bookings/${id}/cancel/`,
+    ACCEPT: (id) => `/bookings/${id}/accept/`,
+    REJECT: (id) => `/bookings/${id}/reject/`,
+    PENDING_REQUESTS: '/bookings/pending-requests/',
+    UPCOMING: '/bookings/upcoming/',
   },
   PARTNERS: {
     LIST: '/partners/',

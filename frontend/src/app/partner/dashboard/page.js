@@ -3286,6 +3286,9 @@ export default function PartnerDashboard() {
 
         {activeTab === 'bookings' && (
           <div className="space-y-6">
+            {/* Pending Requests Section */}
+            <PendingBookingRequests />
+            
             {/* Bookings Header */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex justify-between items-center mb-6">
@@ -4162,6 +4165,212 @@ export default function PartnerDashboard() {
       )}
 
       <Footer />
+    </div>
+  )
+}
+
+// Pending Booking Requests Component
+function PendingBookingRequests() {
+  const [pendingRequests, setPendingRequests] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [processingBooking, setProcessingBooking] = useState(null)
+
+  useEffect(() => {
+    fetchPendingRequests()
+  }, [])
+
+  const fetchPendingRequests = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('http://localhost:8000/bookings/pending-requests/', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setPendingRequests(data)
+      } else {
+        console.error('Failed to fetch pending requests')
+      }
+    } catch (error) {
+      console.error('Error fetching pending requests:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAcceptBooking = async (bookingId) => {
+    try {
+      setProcessingBooking(bookingId)
+      const response = await fetch(`http://localhost:8000/bookings/${bookingId}/accept/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        alert('Booking accepted successfully!')
+        fetchPendingRequests() // Refresh the list
+      } else {
+        const errorData = await response.json()
+        alert('Failed to accept booking: ' + (errorData.error || 'Unknown error'))
+      }
+    } catch (error) {
+      console.error('Error accepting booking:', error)
+      alert('Error accepting booking. Please try again.')
+    } finally {
+      setProcessingBooking(null)
+    }
+  }
+
+  const handleRejectBooking = async (bookingId) => {
+    const rejectionReason = prompt('Please provide a reason for rejection (optional):')
+    if (rejectionReason === null) return // User cancelled
+
+    try {
+      setProcessingBooking(bookingId)
+      const response = await fetch(`http://localhost:8000/bookings/${bookingId}/reject/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          rejection_reason: rejectionReason
+        })
+      })
+
+      if (response.ok) {
+        alert('Booking rejected successfully!')
+        fetchPendingRequests() // Refresh the list
+      } else {
+        const errorData = await response.json()
+        alert('Failed to reject booking: ' + (errorData.error || 'Unknown error'))
+      }
+    } catch (error) {
+      console.error('Error rejecting booking:', error)
+      alert('Error rejecting booking. Please try again.')
+    } finally {
+      setProcessingBooking(null)
+    }
+  }
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold text-gray-900">Pending Booking Requests</h2>
+        <button
+          onClick={fetchPendingRequests}
+          className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center space-x-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading pending requests...</p>
+        </div>
+      ) : pendingRequests.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-gray-400 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Pending Requests</h3>
+          <p className="text-gray-500">You don't have any pending booking requests at the moment.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {pendingRequests.map((request) => (
+            <div key={request.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-4 mb-3">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {request.user?.first_name} {request.user?.last_name}
+                      </h3>
+                      <p className="text-sm text-gray-500">{request.user?.email}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Vehicle</p>
+                      <p className="text-sm text-gray-600">
+                        {request.listing?.make} {request.listing?.model} ({request.listing?.year})
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Rental Period</p>
+                      <p className="text-sm text-gray-600">
+                        {formatDate(request.start_time)} - {formatDate(request.end_time)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Total Price</p>
+                      <p className="text-sm text-gray-600 font-semibold">
+                        {request.price} MAD
+                      </p>
+                    </div>
+                  </div>
+
+                  {request.request_message && (
+                    <div className="mb-4">
+                      <p className="text-sm font-medium text-gray-900">Message from Guest</p>
+                      <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
+                        {request.request_message}
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500">
+                    Requested on {formatDate(request.requested_at)}
+                  </p>
+                </div>
+
+                <div className="flex space-x-2 ml-4">
+                  <button
+                    onClick={() => handleAcceptBooking(request.id)}
+                    disabled={processingBooking === request.id}
+                    className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    {processingBooking === request.id ? 'Processing...' : 'Accept'}
+                  </button>
+                  <button
+                    onClick={() => handleRejectBooking(request.id)}
+                    disabled={processingBooking === request.id}
+                    className="bg-red-500 hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    {processingBooking === request.id ? 'Processing...' : 'Reject'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

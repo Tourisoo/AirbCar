@@ -93,10 +93,16 @@ class ListingSerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     listing = ListingSerializer(read_only=True)
+    car_owner = UserSerializer(read_only=True)
+    
     class Meta:
         model = Booking
-        fields = ['id', 'user', 'listing', 'start_time', 'end_time', 'price', 'status', 'date']
-        read_only_fields = ['user', 'date']
+        fields = [
+            'id', 'user', 'listing', 'start_time', 'end_time', 'price', 'status', 'date',
+            'requested_at', 'accepted_at', 'rejected_at', 'cancelled_at',
+            'request_message', 'rejection_reason', 'car_owner'
+        ]
+        read_only_fields = ['user', 'date', 'requested_at', 'accepted_at', 'rejected_at', 'cancelled_at', 'car_owner']
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     password = serializers.CharField(min_length=6, required=True)

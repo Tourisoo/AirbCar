@@ -253,7 +253,8 @@ export const bookingsService = {
       start_time: bookingData.start_time,
       end_time: bookingData.end_time,
       price: parseFloat(bookingData.price),
-      status: bookingData.status || 'pending',
+      status: 'pending',
+      request_message: bookingData.request_message || '',
     };
     
     console.log('Sending booking data to backend:', requestData);
@@ -267,9 +268,27 @@ export const bookingsService = {
 
   async cancelBooking(id) {
     console.log('Cancelling booking with ID:', id);
-    return apiClient.patch(API_ENDPOINTS.BOOKINGS.DETAIL(id), {
-      status: 'cancelled'
+    return apiClient.post(API_ENDPOINTS.BOOKINGS.CANCEL(id))
+  },
+
+  async acceptBooking(id) {
+    console.log('Accepting booking with ID:', id);
+    return apiClient.post(API_ENDPOINTS.BOOKINGS.ACCEPT(id))
+  },
+
+  async rejectBooking(id, rejectionReason = '') {
+    console.log('Rejecting booking with ID:', id);
+    return apiClient.post(API_ENDPOINTS.BOOKINGS.REJECT(id), {
+      rejection_reason: rejectionReason
     })
+  },
+
+  async getPendingRequests() {
+    return apiClient.get(API_ENDPOINTS.BOOKINGS.PENDING_REQUESTS)
+  },
+
+  async getUpcomingBookings() {
+    return apiClient.get(API_ENDPOINTS.BOOKINGS.UPCOMING)
   },
 }
 
