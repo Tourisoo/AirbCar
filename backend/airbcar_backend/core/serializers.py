@@ -56,8 +56,8 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create(**validated_data)
         user.set_password(password)
         user.save()
-        return Response({'user': user, 'message': 'Account created'}, status=status.HTTP_201_CREATED)
-        # return user
+        # return Response({'user': user, 'message': 'Account created'}, status=status.HTTP_201_CREATED)
+        return user
 
 class PartnerSerializer(serializers.ModelSerializer):
     
