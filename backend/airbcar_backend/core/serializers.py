@@ -56,7 +56,8 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create(**validated_data)
         user.set_password(password)
         user.save()
-        return user
+        return Response({'user': user, 'message': 'Account created'}, status=status.HTTP_201_CREATED)
+        # return user
 
 class PartnerSerializer(serializers.ModelSerializer):
     
@@ -65,13 +66,8 @@ class PartnerSerializer(serializers.ModelSerializer):
             model = Listing
             fields = ['id', 'make', 'model', 'year', 'location', 'price_per_day', 'pictures']
 
-    class UserBriefSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = User
-            fields = ['id', 'email', 'first_name', 'last_name', 'profile_picture']
-    
     listings = ListingBriefSerializer(many=True, read_only=True)
-    user = UserBriefSerializer(read_only=True)
+    user = UserSerializer(read_only=True)
     class Meta:
         model = Partner
         fields = ['id', 'company_name', 'tax_id', 'user', 'verification_status', 'created_at', 
