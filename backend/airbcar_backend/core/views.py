@@ -1,7 +1,9 @@
 # from django.shortcuts import render, redirect
 from django.http import HttpResponse#, JsonResponse
 from .models import User, Booking, Partner, Listing
+from django.utils import timezone
 from rest_framework import viewsets, generics, status
+from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -311,13 +313,22 @@ class BookingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
+        from django.db.models import Q
+        
         user = self.request.user
         if user.is_staff:
             return Booking.objects.all()
         if not user.is_authenticated:
-            raise ValidationError({"detail": "You are not loged in."})
-        return Booking.objects.filter(user=user).order_by('-date')
-
+            raise ValidationError({"detail": "You are not logged in."})
+        
+        # Build the query conditions using Q objects to avoid union() issues
+        query = Q(user=user)
+        
+        # If user is a partner, also include bookings for their listings
+        if user.is_partner:
+            query |= Q(listing__partner__user=user)
+            
+        return Booking.objects.filter(query).distinct().order_by('-requested_at')
 
     def perform_create(self, serializer):
         listing_id = self.request.data.get('listing')
@@ -326,7 +337,142 @@ class BookingViewSet(viewsets.ModelViewSet):
         except Listing.DoesNotExist:
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'listing': 'Listing not found'})
-        serializer.save(user=self.request.user, listing=listing)
+        
+        # Save booking with request message
+        request_message = self.request.data.get('request_message', '')
+        serializer.save(
+            user=self.request.user, 
+            listing=listing,
+            request_message=request_message,
+            status='pending'
+        )
+
+    @action(detail=False, methods=['get'], url_path='pending-requests')
+    def pending_requests(self, request):
+        """Get pending booking requests for car owner's listings"""
+        user = request.user
+        if not user.is_partner:
+            return Response(
+                {'error': 'Only partners can view booking requests'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Get all pending bookings for this partner's listings
+        partner = user.partner
+        pending_bookings = Booking.objects.filter(
+            listing__partner=partner,
+            status='pending'
+        ).order_by('-requested_at')
+        
+        serializer = self.get_serializer(pending_bookings, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='accept')
+    def accept_booking(self, request, pk=None):
+        """Accept a pending booking request"""
+        booking = self.get_object()
+        
+        # Check if user is the car owner
+        if request.user != booking.listing.partner.user:
+            return Response(
+                {'error': 'You can only accept bookings for your own cars'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if booking.status != 'pending':
+            return Response(
+                {'error': 'Only pending bookings can be accepted'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check for conflicting bookings
+        conflicting_bookings = Booking.objects.filter(
+            listing=booking.listing,
+            status='accepted',
+            start_time__lt=booking.end_time,
+            end_time__gt=booking.start_time
+        ).exclude(id=booking.id)
+        
+        if conflicting_bookings.exists():
+            return Response(
+                {'error': 'This time slot conflicts with an existing booking'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Accept the booking
+        booking.status = 'accepted'
+        booking.accepted_at = timezone.now()
+        booking.save()
+        
+        serializer = self.get_serializer(booking)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='reject')
+    def reject_booking(self, request, pk=None):
+        """Reject a pending booking request"""
+        booking = self.get_object()
+        
+        # Check if user is the car owner
+        if request.user != booking.listing.partner.user:
+            return Response(
+                {'error': 'You can only reject bookings for your own cars'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if booking.status != 'pending':
+            return Response(
+                {'error': 'Only pending bookings can be rejected'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Reject the booking
+        rejection_reason = request.data.get('rejection_reason', '')
+        booking.status = 'rejected'
+        booking.rejected_at = timezone.now()
+        booking.rejection_reason = rejection_reason
+        booking.save()
+        
+        serializer = self.get_serializer(booking)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='cancel')
+    def cancel_booking(self, request, pk=None):
+        """Cancel an existing booking"""
+        booking = self.get_object()
+        
+        # Check if user is either the renter or car owner
+        if request.user not in [booking.user, booking.listing.partner.user]:
+            return Response(
+                {'error': 'You can only cancel your own bookings'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if not booking.can_be_cancelled:
+            return Response(
+                {'error': 'This booking cannot be cancelled'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Cancel the booking
+        booking.status = 'cancelled'
+        booking.cancelled_at = timezone.now()
+        booking.save()
+        
+        serializer = self.get_serializer(booking)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='upcoming')
+    def upcoming_bookings(self, request):
+        """Get user's upcoming accepted bookings"""
+        user = request.user
+        upcoming_bookings = Booking.objects.filter(
+            user=user,
+            status='accepted',
+            start_time__gt=timezone.now()
+        ).order_by('start_time')
+        
+        serializer = self.get_serializer(upcoming_bookings, many=True)
+        return Response(serializer.data)
 
 class PasswordResetRequestView(generics.GenericAPIView):
     serializer_class = PasswordResetRequestSerializer
