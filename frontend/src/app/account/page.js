@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { userAPI } from '@/lib/api'
+import { authService } from '@/services/api'
 import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
 
@@ -42,7 +42,7 @@ export default function AccountPage() {
 
   const refreshVerificationStatus = async () => {
     try {
-      const data = await userAPI.getCurrentUser()
+      const data = await authService.getCurrentUser()
       setEmailVerified(!!(data?.email_verified || data?.is_verified))
     } catch (_) {}
   }
@@ -159,7 +159,7 @@ export default function AccountPage() {
     const loadUserData = async () => {
       if (user) {
         try {
-          const userData = await userAPI.getCurrentUser()
+          const userData = await authService.getCurrentUser()
           setAccountData(prev => ({
             ...prev,
             ...prev,
@@ -218,7 +218,7 @@ export default function AccountPage() {
 
     // Upload to backend
     try {
-      const updated = await userAPI.uploadProfilePicture(file)
+      const updated = await authService.uploadProfilePicture(file)
       const newUrl = updated.profile_picture || updated.profileImage || updated.profile || null
       if (newUrl) {
         setAccountData(prev => ({ ...prev, profileImage: newUrl }))
@@ -264,10 +264,10 @@ export default function AccountPage() {
         issue_date: accountData.licenseIssueDate,
       }
 
-      const updated = await userAPI.updateProfile(payload)
+      const updated = await authService.updateProfile(payload)
 
       // If backend is blocked, updateProfile returns merged local object
-      const userData = updated || (await userAPI.getCurrentUser())
+      const userData = updated || (await authService.getCurrentUser())
       setAccountData(prev => ({
         ...prev,
         firstName: userData.first_name || userData.firstName || prev.firstName,

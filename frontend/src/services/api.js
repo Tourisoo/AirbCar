@@ -131,6 +131,19 @@ class ApiClient {
 
     return this.handleResponse(response)
   }
+
+  async uploadPatch(endpoint, formData) {
+    const headers = { ...this.getHeaders() }
+    delete headers['Content-Type'] // Let browser set it for FormData
+
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      method: 'PATCH',
+      headers,
+      body: formData,
+    })
+
+    return this.handleResponse(response)
+  }
 }
 
 export const apiClient = new ApiClient()
@@ -164,11 +177,19 @@ export const authService = {
   },
 
   async getCurrentUser() {
-    return apiClient.get(API_ENDPOINTS.AUTH.PROFILE)
+    return apiClient.get(`${API_ENDPOINTS.AUTH.PROFILE}me/`)
   },
 
   async updateProfile(userData) {
-    return apiClient.patch(API_ENDPOINTS.AUTH.PROFILE, userData)
+    return apiClient.patch(`${API_ENDPOINTS.AUTH.PROFILE}me/`, userData)
+  },
+
+  async uploadProfilePicture(file) {
+    const formData = new FormData()
+    formData.append('profile_picture', file)
+    
+    // Use uploadPatch for PATCH requests with file uploads
+    return apiClient.uploadPatch(`${API_ENDPOINTS.AUTH.PROFILE}me/`, formData)
   },
 
   async refreshToken() {

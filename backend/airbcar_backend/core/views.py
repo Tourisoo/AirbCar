@@ -238,6 +238,22 @@ class UserViewSet(viewsets.ModelViewSet):
             user.id_back_document_url = url
             user.save(update_fields=["id_back_document_url"])
 
+    @action(detail=False, methods=['get', 'patch'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        """Get or update the current user's profile"""
+        user = request.user
+        
+        if request.method == 'GET':
+            serializer = self.get_serializer(user)
+            return Response(serializer.data)
+        
+        elif request.method == 'PATCH':
+            serializer = self.get_serializer(user, data=request.data, partial=True)
+            if serializer.is_valid():
+                self.perform_update(serializer)
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class ListingViewSet(viewsets.ModelViewSet):
     queryset = Listing.objects.all()
     serializer_class = ListingSerializer
@@ -307,6 +323,31 @@ class PartnerViewSet(viewsets.ModelViewSet):
         if not self.request.user.is_partner:
             self.request.user.is_partner = True
             self.request.user.save(update_fields=['is_partner'])
+
+#  add for bug fix - get or create partner for current user
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        """Get or create the current user's partner record"""
+        user = request.user
+        
+        if not user.is_partner:
+            raise ValidationError({"detail": "You are not a partner."})
+        
+        # Get or create partner record for the current user
+        partner, created = Partner.objects.get_or_create(
+            user=user,
+            defaults={
+                'company_name': f"{user.first_name or user.username}'s Company",
+                'tax_id': 'PENDING',
+                'verification_status': 'pending',
+                'agree_on_terms': True
+            }
+        )
+        
+        serializer = self.get_serializer(partner)
+        return Response(serializer.data)
+
+# end add for bug fix
 
 class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializer

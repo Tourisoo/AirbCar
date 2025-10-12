@@ -235,9 +235,9 @@ export default function PartnerDashboard() {
     return Object.keys(errors).length === 0
   }
   // Fetch partner data from backend API
-  const fetchPartnerData = async (partnerId) => {
+  const fetchPartnerData = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/partners/${partnerId}/`, {
+      const response = await fetch(`http://127.0.0.1:8000/partners/me/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -255,7 +255,7 @@ export default function PartnerDashboard() {
       }
 
       const partnerData = await response.json()
-      console.log('Partner API URL used:', `http://127.0.0.1:8000/partners/${partnerId}/`)
+      console.log('Partner API URL used:', `http://127.0.0.1:8000/partners/me/`)
       console.log('Partner Response status:', response.status)
       console.log('Fetched partner data:', partnerData)
       
@@ -558,43 +558,8 @@ export default function PartnerDashboard() {
           return
         }
         
-        // Get partner ID - try multiple approaches
-        let partnerId = user.partner_id || user.id
-        console.log('Initial partner ID from user:', partnerId)
-        console.log('User object:', user)
-        
-        // If user doesn't have partner_id, try to find their partner record
-        if (!user.partner_id && user.is_partner) {
-          console.log('User is partner but no partner_id found, searching for partner record...')
-          try {
-            // First try to get all partners and find the one for this user
-            const partnersResponse = await fetch('http://127.0.0.1:8000/partners/', {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-              },
-            })
-            
-            if (partnersResponse.ok) {
-              const partnersData = await partnersResponse.json()
-              console.log('All partners data:', partnersData)
-              
-              // Find partner record for current user
-              const userPartner = partnersData.find(partner => partner.user?.id === user.id)
-              if (userPartner) {
-                partnerId = userPartner.id
-                console.log('Found partner record with ID:', partnerId)
-              }
-            }
-          } catch (error) {
-            console.error('Error finding partner record:', error)
-          }
-        }
-        
-        // Fetch partner data from the specific endpoint
-        const partnerInfo = await fetchPartnerData(partnerId)
+        // Fetch partner data using the new /me endpoint
+        const partnerInfo = await fetchPartnerData()
         if (partnerInfo) {
           console.log('Loaded partner data:', partnerInfo)
           console.log('Partner user data:', partnerInfo.user)
@@ -643,8 +608,8 @@ export default function PartnerDashboard() {
           if (partnerInfo.listings) {
             const transformedVehicles = partnerInfo.listings.map(listing => ({
               id: listing.id,
-              partner_id: partnerId,
-              owner_id: partnerId,
+              partner_id: partnerInfo.id,
+              owner_id: partnerInfo.id,
               brand: listing.make,
               model: listing.model,
               year: listing.year,
@@ -682,11 +647,8 @@ export default function PartnerDashboard() {
             setVehicles([])
           }
         } else {
-          console.log('No partner data found, fetching vehicles separately...')
-          // Fallback: fetch vehicles separately if partner data is not available
-          const partnerVehicles = await fetchVehicles(partnerId)
-          console.log('Loaded vehicles for partner ID', partnerId, ':', partnerVehicles)
-          setVehicles(partnerVehicles)
+          console.log('No partner data found, cannot fetch vehicles without partner ID')
+          setVehicles([])
         }
         
       } catch (error) {
@@ -777,11 +739,10 @@ export default function PartnerDashboard() {
       }
       
       // Use partner ID from authenticated user
-      const partnerId = user.partner_id || user.id
-      console.log('Refresh - Using partner ID from authenticated user:', partnerId)
+      console.log('Refreshing partner data for authenticated user')
       
-      // Fetch partner data from the specific endpoint
-      const partnerInfo = await fetchPartnerData(partnerId)
+      // Fetch partner data using the new /me endpoint
+      const partnerInfo = await fetchPartnerData()
       if (partnerInfo) {
         console.log('Refreshed partner data:', partnerInfo)
         setPartnerData(partnerInfo)
@@ -822,8 +783,8 @@ export default function PartnerDashboard() {
         if (partnerInfo.listings) {
           const transformedVehicles = partnerInfo.listings.map(listing => ({
             id: listing.id,
-            partner_id: partnerId,
-            owner_id: partnerId,
+            partner_id: partnerInfo.id,
+            owner_id: partnerInfo.id,
             brand: listing.make,
             model: listing.model,
             year: listing.year,
@@ -860,9 +821,13 @@ export default function PartnerDashboard() {
           setVehicles([])
         }
       } else {
-        // Fallback to separate vehicles fetch
-        const partnerVehicles = await fetchVehicles(partnerId)
-        setVehicles(partnerVehicles)
+        // Fallback to separate vehicles fetch using partner ID from partner data
+        if (partnerInfo && partnerInfo.id) {
+          const partnerVehicles = await fetchVehicles(partnerInfo.id)
+          setVehicles(partnerVehicles)
+        } else {
+          setVehicles([])
+        }
       }
     } catch (error) {
       console.error('Error refreshing data:', error)
@@ -910,7 +875,8 @@ export default function PartnerDashboard() {
         return
       }
 
-      console.log('Toggling availability for vehicle:', vehicle.id, 'to:', newAvailability)
+      console.log('🚗 Toggling availability for vehicle:', vehicle.id, 'from:', vehicle.availability, 'to:', newAvailability)
+      console.log('🔑 Using token:', token.substring(0, 20) + '...')
 
       // Show loading state by temporarily updating the UI
       setVehicles(prev => prev.map(v => 
@@ -924,9 +890,14 @@ export default function PartnerDashboard() {
         availability: newAvailability
       }
 
-      console.log('Sending update data:', updateData)
+      console.log('📤 Sending update data:', updateData)
 
-      const response = await fetch(`http://127.0.0.1:8000/listings/${vehicle.id}/`, {
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      console.log('🌐 API URL resolved to:', apiUrl)
+      console.log('🎯 Full request URL:', `${apiUrl}/listings/${vehicle.id}/`)
+      console.log('🔗 Environment variable NEXT_PUBLIC_DJANGO_API_URL:', process.env.NEXT_PUBLIC_DJANGO_API_URL)
+      
+      const requestOptions = {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -934,7 +905,11 @@ export default function PartnerDashboard() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(updateData)
-      })
+      }
+      
+      console.log('📋 Request options:', requestOptions)
+      
+      const response = await fetch(`${apiUrl}/listings/${vehicle.id}/`, requestOptions)
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -975,11 +950,32 @@ export default function PartnerDashboard() {
       const statusText = newAvailability ? 'available for booking' : 'unavailable for booking'
       const successMessage = `✅ ${vehicle.brand} ${vehicle.model} is now ${statusText}`
       
+      console.log('🎉 Success! Vehicle availability updated:', successMessage)
+      console.log('📊 Updated vehicle data:', result)
+      
       // You could replace this alert with a toast notification for better UX
       alert(successMessage)
       
     } catch (error) {
-      console.error('Error toggling availability:', error)
+      console.error('❌ Error toggling availability:', error)
+      console.error('🔍 Error details:', {
+        vehicleId: vehicle.id,
+        vehicleBrand: vehicle.brand,
+        vehicleModel: vehicle.model,
+        attemptedAvailability: !vehicle.availability,
+        errorMessage: error.message,
+        errorName: error.name,
+        errorStack: error.stack
+      })
+      
+      // Check for specific network errors
+      if (error.message === 'Failed to fetch') {
+        console.error('🌐 Network Error: Unable to connect to backend. Possible causes:')
+        console.error('  - Backend server is not running on', process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000')
+        console.error('  - CORS configuration issue')
+        console.error('  - Firewall blocking the connection')
+        console.error('  - Wrong URL in environment variables')
+      }
       
       // Revert the loading state
       setVehicles(prev => prev.map(v => 
@@ -988,12 +984,18 @@ export default function PartnerDashboard() {
           : v
       ))
       
-      // Show user-friendly error message
-      const errorMessage = error.message.includes('HTTP error') 
-        ? 'Failed to update vehicle availability. Please try again.'
-        : error.message
+      // Show user-friendly error message based on error type
+      let userMessage = 'Failed to update vehicle availability.'
       
-      alert(`❌ ${errorMessage}`)
+      if (error.message === 'Failed to fetch') {
+        userMessage = 'Cannot connect to server. Please check your internet connection and make sure the backend is running.'
+      } else if (error.message.includes('HTTP error')) {
+        userMessage = 'Server returned an error. Please try again.'
+      } else if (error.message.includes('Authentication')) {
+        userMessage = 'Authentication failed. Please log in again.'
+      }
+      
+      alert(`❌ ${userMessage}\n\nTechnical details: ${error.message}`)
     }
   }
 
@@ -1191,7 +1193,7 @@ export default function PartnerDashboard() {
         pictures: data.pictures || data.photos || [],
         dailyRate: parseFloat(data.price_per_day || data.dailyRate || 0),
         location: data.location,
-        status: data.availability ? 'available' : 'active',
+        status: data.availability ? 'available' : 'unavailable',
         availability: data.availability !== undefined ? data.availability : true,
         bookings: 0,
         rating: data.rating || 0,
@@ -1862,356 +1864,6 @@ export default function PartnerDashboard() {
           <p className="text-gray-600">Manage your vehicles and track your earnings</p>
         </div>
 
-        {/* Partner Information Card */}
-        {partnerData && (
-          <div className="bg-white rounded-lg shadow-sm border mb-8">
-            <div className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                    <span className="text-2xl font-bold text-white">
-                      {partnerData.company_name ? partnerData.company_name.charAt(0).toUpperCase() : 'P'}
-                    </span>
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      {partnerData.company_name || 'Partner Business'}
-                    </h2>
-                    <p className="text-gray-600">
-                      {partnerData.user?.first_name} {partnerData.user?.last_name}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Partner ID: #{partnerData.id}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={() => setShowTestModal(true)}
-                    className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 text-sm"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>Test DB</span>
-                  </button>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                    Active Partner
-                  </span>
-                </div>
-              </div>
-              
-              {/* Partner Details Grid */}
-              <div className="mt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-lg font-semibold text-gray-900">Partner Information</h4>
-                  <button
-                    onClick={() => setShowAccountSettings(true)}
-                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-orange-700 bg-orange-100 hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
-                  >
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Edit Profile
-                  </button>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Contact Information */}
-                  <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-2">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                        <span className="text-sm font-semibold text-gray-700">Email</span>
-                      </div>
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Verified
-                      </span>
-                    </div>
-                    <p className="text-gray-900 font-medium">{partnerData.user?.email || 'Not provided'}</p>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-2">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                          </svg>
-                        </div>
-                        <span className="text-sm font-semibold text-gray-700">Phone Number</span>
-                      </div>
-                      {!(partnerData.user?.phone_number || partnerData.user?.phone || partnerData.phone) && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          Missing
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-900 font-medium">
-                      {partnerData.user?.phone_number || partnerData.user?.phone || partnerData.phone || (
-                        <span className="text-gray-400 italic">Not provided</span>
-                      )}
-                    </p>
-                  </div>
-                  
-                  <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center space-x-2 mb-3">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-700">Tax ID</span>
-                    </div>
-                    <p className="text-gray-900 font-medium">{partnerData.tax_id || (
-                      <span className="text-gray-400 italic">Not provided</span>
-                    )}</p>
-                  </div>
-
-                  {/* Personal Information */}
-                  <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-2">
-                        <div className="p-2 bg-indigo-100 rounded-lg">
-                          <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                          </svg>
-                        </div>
-                        <span className="text-sm font-semibold text-gray-700">ID Number</span>
-                      </div>
-                      {!(partnerData.user?.id_number || partnerData.user?.license_number) && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          Missing
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-900 font-medium">
-                      {partnerData.user?.id_number || partnerData.user?.license_number || (
-                        <span className="text-gray-400 italic">Not provided</span>
-                      )}
-                    </p>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-2">
-                        <div className="p-2 bg-pink-100 rounded-lg">
-                          <svg className="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                        <span className="text-sm font-semibold text-gray-700">Date of Birth</span>
-                      </div>
-                      {!partnerData.user?.date_of_birth && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          Missing
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-900 font-medium">
-                      {partnerData.user?.date_of_birth 
-                        ? new Date(partnerData.user.date_of_birth).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })
-                        : <span className="text-gray-400 italic">Not provided</span>
-                      }
-                    </p>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-2">
-                        <div className="p-2 bg-red-100 rounded-lg">
-                          <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                        </div>
-                        <span className="text-sm font-semibold text-gray-700">Address</span>
-                      </div>
-                      {!(partnerData.user?.address || partnerData.location) && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          Missing
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-900 font-medium">
-                      {partnerData.user?.address || partnerData.location || (
-                        <span className="text-gray-400 italic">Not provided</span>
-                      )}
-                    </p>
-                  </div>
-
-                  {/* Status Information */}
-                  <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center space-x-2 mb-3">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-700">Verification Status</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                        partnerData.verification_status === 'verified' 
-                          ? 'bg-green-100 text-green-800' 
-                          : partnerData.verification_status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        <div className={`w-2 h-2 rounded-full mr-2 ${
-                          partnerData.verification_status === 'verified' 
-                            ? 'bg-green-400' 
-                            : partnerData.verification_status === 'pending'
-                            ? 'bg-yellow-400'
-                            : 'bg-red-400'
-                        }`}></div>
-                        {partnerData.verification_status === 'verified' ? 'Verified' :
-                         partnerData.verification_status === 'pending' ? 'Pending Review' : 'Unverified'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center space-x-2 mb-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-700">Partner Since</span>
-                    </div>
-                    <p className="text-gray-900 font-medium">
-                      {partnerData.created_at 
-                        ? new Date(partnerData.created_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })
-                        : 'Not available'
-                      }
-                    </p>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center space-x-2 mb-3">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-700">Terms Agreement</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                        partnerData.agree_on_terms 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        <div className={`w-2 h-2 rounded-full mr-2 ${
-                          partnerData.agree_on_terms ? 'bg-green-400' : 'bg-red-400'
-                        }`}></div>
-                        {partnerData.agree_on_terms ? 'Agreed' : 'Not Agreed'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center space-x-2 mb-3">
-                      <div className="p-2 bg-orange-100 rounded-lg">
-                        <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-700">Total Listings</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-2xl font-bold text-gray-900">
-                        {partnerData.listings ? partnerData.listings.length : 0}
-                      </p>
-                      <button
-                        onClick={() => setActiveTab('listings')}
-                        className="text-orange-600 hover:text-orange-700 text-sm font-medium"
-                      >
-                        View All →
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Missing Information Alert */}
-                {(!(partnerData.user?.phone_number || partnerData.user?.phone || partnerData.phone) || 
-                  !(partnerData.user?.id_number || partnerData.user?.license_number) || 
-                  !partnerData.user?.date_of_birth || 
-                  !(partnerData.user?.address || partnerData.location)) && (
-                  <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-yellow-800">
-                          Complete your profile
-                        </h3>
-                        <div className="mt-2 text-sm text-yellow-700">
-                          <p>
-                            Some information is missing from your profile. Complete your profile to improve your verification status and build trust with customers.
-                          </p>
-                        </div>
-                        <div className="mt-3">
-                          <button
-                            onClick={() => setShowAccountSettings(true)}
-                            className="bg-yellow-100 px-3 py-2 rounded-md text-sm font-medium text-yellow-800 hover:bg-yellow-200 transition-colors"
-                          >
-                            Complete Profile
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Additional Information Sections */}
-              <div className="mt-6 space-y-4">
-                {/* Verification Document Status */}
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <h3 className="text-sm font-medium text-blue-900">Verification Document</h3>
-                  </div>
-                  <p className="text-sm text-blue-800">
-                    {partnerData.verification_document 
-                      ? `Document uploaded: ${partnerData.verification_document}` 
-                      : 'No verification document uploaded yet'
-                    }
-                  </p>
-                </div>
-
-                {/* Business Description */}
-                {partnerData.description && (
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Business Description</h3>
-                    <p className="text-sm text-gray-700">{partnerData.description}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -2353,44 +2005,6 @@ export default function PartnerDashboard() {
               )}
             </div>
 
-            {/* Verification Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center mb-2">
-                      <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center mr-3">
-                        <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <span className="text-red-600 font-medium text-sm">Verify your identity</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-1">Required to publish</p>
-                    <p className="text-sm text-gray-900 font-medium">Cozy room in Tetouan</p>
-                    <button className="text-sm font-medium text-gray-900 underline mt-2">Get started</button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center mb-2">
-                      <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center mr-3">
-                        <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <span className="text-red-600 font-medium text-sm">Verify your identity</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-1">Required to publish</p>
-                    <p className="text-sm text-gray-900 font-medium">Cozy Room & Modern Amenities</p>
-                    <button className="text-sm font-medium text-gray-900 underline mt-2">Get started</button>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Your reservations section */}
             <div>
