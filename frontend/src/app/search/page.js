@@ -32,7 +32,8 @@ function SearchContent() {
     returnDate: '',
     instantBooking: false
   })
-  const [sortBy, setSortBy] = useState('relevance')
+  // const [sortBy, setSortBy] = useState('relevance')
+  const [sortBy, setSortBy] = useState('price_low');
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
   const [showAllFeatures, setShowAllFeatures] = useState(false)
