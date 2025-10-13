@@ -2,6 +2,20 @@
 
 import { useState, useRef, useEffect } from 'react'
 
+// Helper function to get full image URL
+const getImageUrl = (imageUrl) => {
+  if (!imageUrl) return null
+  
+  // If already a complete URL, return as is
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl
+  }
+  
+  // If it's a relative URL, prepend the API base URL
+  const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+  return `${apiUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`
+}
+
 export default function VehicleManageModal({ 
   showModal, 
   setShowModal, 
@@ -48,7 +62,8 @@ export default function VehicleManageModal({
         throw new Error('No access token found')
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/listings/${vehicleId}/`, {
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/listings/${vehicleId}/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -63,31 +78,33 @@ export default function VehicleManageModal({
 
       const data = await response.json()
       
+      console.log('🔍 Raw backend data:', data)
+      console.log('🔍 Pictures from backend:', data.pictures)
+      
       // Transform backend data to match frontend format
       const transformedData = {
         id: data.id,
-        brand: data.brand || '',
+        brand: data.make || '',
         model: data.model || '',
         year: data.year || new Date().getFullYear(),
-        dailyRate: data.daily_rate || 0,
-        weeklyRate: data.weekly_rate || 0,
-        monthlyRate: data.monthly_rate || 0,
-        status: data.status || 'available',
+        dailyRate: data.price_per_day || 0,
+        weeklyRate: data.weekly_rate || Math.round((data.price_per_day || 0) * 7 * 0.85),
+        monthlyRate: data.monthly_rate || Math.round((data.price_per_day || 0) * 30 * 0.70),
+        status: data.availability ? 'available' : 'unavailable',
         features: data.features || [],
         description: data.vehicle_description || '',
         photos: data.pictures || [],
         location: data.location || '',
-        mileage: data.mileage || 0,
         transmission: data.transmission || 'manual',
         fuelType: data.fuel_type || 'petrol',
-        seats: data.seats || 5,
-        doors: data.doors || 4,
+        seatingCapacity: data.seating_capacity || 5,
+        condition: data.vehicle_condition || '',
         rating: data.rating || 0,
-        reviewCount: data.review_count || 0,
-        bookings: data.bookings_count || 0,
-        totalEarnings: data.total_earnings || 0,
-        isAvailable: data.is_available || false
+        partnerId: data.partner
       }
+      
+      console.log('🔍 Transformed data:', transformedData)
+      console.log('🔍 Photos in transformed data:', transformedData.photos)
 
       setVehicleData(transformedData)
       setEditData({
@@ -113,7 +130,8 @@ export default function VehicleManageModal({
   const fetchBookingsData = async (vehicleId) => {
     try {
       const token = localStorage.getItem('access_token')
-      const response = await fetch(`http://127.0.0.1:8000/bookings/?vehicle=${vehicleId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/bookings/?listing=${vehicleId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +142,20 @@ export default function VehicleManageModal({
 
       if (response.ok) {
         const data = await response.json()
-        setBookings(data.results || data || [])
+        // Transform booking data to frontend format
+        const transformedBookings = (data.results || data || []).map(booking => ({
+          id: booking.id,
+          customer: booking.user?.first_name && booking.user?.last_name 
+            ? `${booking.user.first_name} ${booking.user.last_name}`
+            : booking.user?.username || 'Unknown Customer',
+          phone: booking.user?.phone_number || 'N/A',
+          email: booking.user?.email || 'N/A',
+          dates: `${new Date(booking.start_time).toLocaleDateString()} - ${new Date(booking.end_time).toLocaleDateString()}`,
+          amount: booking.price || 0,
+          status: booking.status || 'pending',
+          rating: 5 // Default rating since we don't have ratings in backend yet
+        }))
+        setBookings(transformedBookings)
       }
     } catch (error) {
       console.error('Error fetching bookings:', error)
@@ -137,7 +168,8 @@ export default function VehicleManageModal({
   const fetchMaintenanceData = async (vehicleId) => {
     try {
       const token = localStorage.getItem('access_token')
-      const response = await fetch(`http://127.0.0.1:8000/maintenance/?vehicle=${vehicleId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/maintenance/?listing=${vehicleId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +180,21 @@ export default function VehicleManageModal({
 
       if (response.ok) {
         const data = await response.json()
-        setMaintenanceHistory(data.results || data || [])
+        // Transform maintenance data to frontend format
+        const transformedMaintenance = (data.results || data || []).map(maintenance => ({
+          id: maintenance.id,
+          type: maintenance.maintenance_type,
+          date: new Date(maintenance.scheduled_date).toLocaleDateString(),
+          cost: maintenance.actual_cost || maintenance.estimated_cost || 0,
+          garage: maintenance.garage || 'Not specified',
+          description: maintenance.description,
+          nextService: maintenance.status === 'completed' && maintenance.completed_date
+            ? 'Based on maintenance schedule'
+            : maintenance.status === 'scheduled'
+            ? new Date(maintenance.scheduled_date).toLocaleDateString()
+            : '-'
+        }))
+        setMaintenanceHistory(transformedMaintenance)
       }
     } catch (error) {
       console.error('Error fetching maintenance data:', error)
@@ -236,7 +282,7 @@ export default function VehicleManageModal({
     try {
       // Prepare maintenance data for backend
       const maintenanceData = {
-        vehicle_id: currentVehicle.id,
+        listing_id: currentVehicle.id,
         maintenance_type: maintenanceForm.type,
         description: maintenanceForm.description,
         scheduled_date: maintenanceForm.scheduledDate,
@@ -247,7 +293,8 @@ export default function VehicleManageModal({
       }
 
       // Send maintenance schedule to backend
-      const response = await fetch(`http://127.0.0.1:8000/maintenance/`, {
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/maintenance/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -277,10 +324,14 @@ export default function VehicleManageModal({
         priority: 'medium'
       })
       
+      // Refresh maintenance data
+      await fetchMaintenanceData(currentVehicle.id)
+      
       setShowMaintenanceModal(false)
       alert('Maintenance scheduled successfully!')
       
     } catch (error) {
+      console.error('Error scheduling maintenance:', error)
       alert('Error scheduling maintenance. Please try again.')
     } finally {
       setIsSubmitting(false)
@@ -402,7 +453,8 @@ export default function VehicleManageModal({
       console.log('🔧 Access token available:', !!accessToken)
 
       // Update vehicle in backend
-      const response = await fetch(`http://127.0.0.1:8000/listings/${currentVehicle.id}/`, {
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/listings/${currentVehicle.id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -492,7 +544,8 @@ export default function VehicleManageModal({
     setIsSubmitting(true)
     try {
       // Delete individual vehicle from backend
-      const response = await fetch(`http://127.0.0.1:8000/listings/${currentVehicle.id}/`, {
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/listings/${currentVehicle.id}/`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -524,7 +577,7 @@ export default function VehicleManageModal({
     }
   }
 
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = async (e) => {
     const files = Array.from(e.target.files)
     const validFiles = files.filter(file => {
       const isValidType = file.type.startsWith('image/')
@@ -548,27 +601,61 @@ export default function VehicleManageModal({
         return
       }
       
-      setPhotoUploadProgress(0)
+      setPhotoUploadProgress(10)
       
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setPhotoUploadProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval)
-            return 100
+      try {
+        const token = localStorage.getItem('access_token')
+        const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+        const uploadedUrls = []
+        
+        // Upload each file individually
+        for (let i = 0; i < validFiles.length; i++) {
+          const file = validFiles[i]
+          setPhotoUploadProgress(10 + (i / validFiles.length) * 80)
+          
+          const formData = new FormData()
+          formData.append('pictures', file)
+          
+          const uploadResponse = await fetch(`${apiUrl}/listings/${currentVehicle.id}/`, {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            body: formData
+          })
+          
+          if (uploadResponse.ok) {
+            const result = await uploadResponse.json()
+            // Get the latest uploaded pictures from the response
+            if (result.pictures && result.pictures.length > 0) {
+              const newPhotoUrl = result.pictures[result.pictures.length - 1]
+              uploadedUrls.push(newPhotoUrl)
+            }
+          } else {
+            console.error('Failed to upload photo:', file.name)
+            alert(`Failed to upload ${file.name}`)
           }
-          return prev + 20
-        })
-      }, 200)
-      
-      setTimeout(() => {
-        const newPhotos = [...currentPhotos, ...validFiles]
-        setEditData({
-          ...editData,
-          photos: newPhotos
-        })
+        }
+        
+        setPhotoUploadProgress(100)
+        
+        // Update local state with uploaded photos
+        if (uploadedUrls.length > 0) {
+          const updatedPhotos = [...currentPhotos, ...uploadedUrls]
+          setEditData({
+            ...editData,
+            photos: updatedPhotos
+          })
+        }
+        
+        // Reset progress after a short delay
+        setTimeout(() => setPhotoUploadProgress(0), 1000)
+        
+      } catch (error) {
+        console.error('Error uploading photos:', error)
+        alert('Error uploading photos. Please try again.')
         setPhotoUploadProgress(0)
-      }, 1000)
+      }
     }
   }
 
@@ -798,6 +885,71 @@ export default function VehicleManageModal({
                   </div>
                 </div>
               </div>
+
+              {/* Debug Information for Images */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="bg-gray-100 rounded-2xl p-6 border border-gray-300">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">🔍 Debug: Image URLs</h4>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="font-medium">Backend Pictures:</span>
+                      <pre className="text-xs bg-white p-2 rounded mt-1 overflow-x-auto">
+                        {JSON.stringify(currentVehicle?.photos, null, 2)}
+                      </pre>
+                    </div>
+                    <div>
+                      <span className="font-medium">API Base URL:</span>
+                      <code className="text-xs bg-white p-1 rounded ml-2">
+                        {process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'}
+                      </code>
+                    </div>
+                    <div className="flex space-x-2 mt-4">
+                      <button
+                        onClick={() => fetchVehicleData(currentVehicle?.id)}
+                        className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                      >
+                        Refresh Data
+                      </button>
+                      <button
+                        onClick={() => {
+                          const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+                          console.log('🔍 Testing backend connection...')
+                          fetch(`${apiUrl}/listings/`)
+                            .then(res => res.json())
+                            .then(data => console.log('🔍 Backend listings:', data))
+                            .catch(err => console.error('🔍 Backend error:', err))
+                        }}
+                        className="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+                      >
+                        Test Backend
+                      </button>
+                    </div>
+                    {currentVehicle?.photos && currentVehicle.photos.length > 0 && (
+                      <div>
+                        <span className="font-medium">Processed URLs:</span>
+                        <ul className="text-xs space-y-1 mt-1">
+                          {currentVehicle.photos.map((photo, index) => (
+                            <li key={index} className="break-all bg-white p-1 rounded flex items-center justify-between">
+                              <span>{index + 1}: {getImageUrl(photo)}</span>
+                              <button
+                                onClick={() => {
+                                  const img = new Image()
+                                  img.onload = () => console.log(`✅ Image ${index + 1} loads successfully`)
+                                  img.onerror = () => console.error(`❌ Image ${index + 1} failed to load`)
+                                  img.src = getImageUrl(photo)
+                                }}
+                                className="ml-2 text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-100 rounded"
+                              >
+                                Test
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Vehicle Info Grid */}
               <div className="grid lg:grid-cols-2 gap-8">
@@ -1235,9 +1387,26 @@ export default function VehicleManageModal({
                       {(editData.photos || []).map((photo, index) => (
                         <div key={index} className="relative group">
                           <img
-                            src={typeof photo === 'string' ? photo : URL.createObjectURL(photo)}
+                            src={getImageUrl(photo)}
                             alt={`Vehicle ${index + 1}`}
                             className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                            onError={(e) => {
+                              console.error('❌ Failed to load image:', photo)
+                              console.error('❌ Processed URL:', getImageUrl(photo))
+                              e.target.style.backgroundColor = '#f3f4f6'
+                              e.target.style.display = 'flex'
+                              e.target.style.alignItems = 'center'
+                              e.target.style.justifyContent = 'center'
+                              e.target.innerHTML = `<div style="text-align: center; color: #6b7280; font-size: 12px;">
+                                <div>📷</div>
+                                <div>Image not found</div>
+                                <div style="font-size: 10px; margin-top: 4px;">${photo}</div>
+                              </div>`
+                            }}
+                            onLoad={() => {
+                              console.log('✅ Image loaded successfully:', photo)
+                              console.log('✅ Processed URL:', getImageUrl(photo))
+                            }}
                           />
                           
                           {/* Photo Controls */}
@@ -1339,14 +1508,31 @@ export default function VehicleManageModal({
                   </div>
                 ) : (
                   <div>
-                    {(vehicle.photos && vehicle.photos.length > 0) ? (
+                    {(currentVehicle?.photos && currentVehicle.photos.length > 0) ? (
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {vehicle.photos.map((photo, index) => (
+                        {currentVehicle.photos.map((photo, index) => (
                           <div key={index} className="relative">
                             <img
-                              src={typeof photo === 'string' ? photo : URL.createObjectURL(photo)}
+                              src={getImageUrl(photo)}
                               alt={`Vehicle ${index + 1}`}
                               className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                              onError={(e) => {
+                                console.error('❌ Failed to load image:', photo)
+                                console.error('❌ Processed URL:', getImageUrl(photo))
+                                e.target.style.backgroundColor = '#f3f4f6'
+                                e.target.style.display = 'flex'
+                                e.target.style.alignItems = 'center'
+                                e.target.style.justifyContent = 'center'
+                                e.target.innerHTML = `<div style="text-align: center; color: #6b7280; font-size: 12px;">
+                                  <div>📷</div>
+                                  <div>Image not found</div>
+                                  <div style="font-size: 10px; margin-top: 4px;">${photo}</div>
+                                </div>`
+                              }}
+                              onLoad={() => {
+                                console.log('✅ Image loaded successfully:', photo)
+                                console.log('✅ Processed URL:', getImageUrl(photo))
+                              }}
                             />
                             {index === 0 && (
                               <div className="absolute bottom-2 left-2 bg-orange-500 text-white text-xs px-2 py-1 rounded">
@@ -1362,6 +1548,12 @@ export default function VehicleManageModal({
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         <p className="text-gray-500">No photos uploaded yet. Add photos to attract more renters.</p>
+                        <button
+                          onClick={() => setIsEditing(true)}
+                          className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                        >
+                          Add Photos
+                        </button>
                       </div>
                     )}
                   </div>

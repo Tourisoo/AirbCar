@@ -6,7 +6,8 @@ export const API_ENDPOINTS = {
     REGISTER: '/api/register/',
     REFRESH: '/api/token/refresh/',
     LOGOUT: '/api/logout/',
-    PROFILE: '/api/verify-token/',
+    PROFILE: '/users/',
+    VERIFY_TOKEN: '/api/verify-token/',
   },
   LISTINGS: {
     LIST: '/listings/',
