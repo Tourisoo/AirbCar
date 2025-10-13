@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 
 export default function Header() {
@@ -11,6 +11,8 @@ export default function Header() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [isRegionalSettingsOpen, setIsRegionalSettingsOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const dropdownRef = useRef(null)
+  const mobileMenuRef = useRef(null)
   const [regionalSettings, setRegionalSettings] = useState({
     language: 'English',
     country: 'Belgium',
@@ -97,6 +99,25 @@ export default function Header() {
     }
   }, [user])
 
+  // Handle clicks outside dropdowns to close them
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false)
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setIsMobileMenuOpen(false)
+      }
+    }
+
+    if (isDropdownOpen || isMobileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [isDropdownOpen, isMobileMenuOpen])
+
   const handleSignOut = async () => {
     try {
       await Promise.resolve(logout())
@@ -140,24 +161,17 @@ export default function Header() {
           </div>
           
           {/* Navigation - Center */}
-          <nav className="hidden md:flex space-x-6">
+          <nav className="hidden md:flex items-center space-x-4">
             <button 
               onClick={handleBecomePartnerClick}
-              className="px-3 py-2 text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors duration-200 rounded-md">
+              className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
               Become a Partner
             </button>
             <button 
               onClick={() => router.push('/mission')} 
-              className="px-3 py-2 text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors duration-200 rounded-md">
-              Our mission
+              className="px-4 py-2 border-2 border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white font-semibold text-sm rounded-lg transition-all duration-200 transform hover:scale-105">
+              Our Mission
             </button>
-            {user && (
-              <button 
-                onClick={handleMyBookingsClick}
-                className="px-3 py-2 text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors duration-200 rounded-md">
-                My Bookings
-              </button>
-            )}
             {isAdmin && (
               <button 
                 onClick={handleAdminClick}
@@ -220,7 +234,7 @@ export default function Header() {
                 <div className="hidden md:block w-20 h-4 bg-gray-200 animate-pulse rounded-md"></div>
               </div>
             ) : user ? (
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-200 shadow-sm hover:shadow-md"
@@ -359,7 +373,7 @@ export default function Header() {
 
       {/* Mobile Navigation Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200 shadow-xl">
+        <div className="md:hidden bg-white border-t border-gray-200 shadow-xl" ref={mobileMenuRef}>
           <div className="max-w-sm mx-auto px-4 py-4">
             {/* User Profile Section for Mobile */}
             {user && (
@@ -393,13 +407,11 @@ export default function Header() {
                   handleBecomePartnerClick()
                   setIsMobileMenuOpen(false)
                 }}
-                className="flex items-center w-full px-4 py-3 text-gray-700 hover:text-orange-600 font-medium text-base transition-all duration-200 hover:bg-orange-50 rounded-xl group"
+                className="flex items-center justify-center w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold text-base transition-all duration-200 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105"
               >
-                <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center mr-3 group-hover:bg-orange-200 transition-colors duration-200">
-                  <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
                 <span>Become a Partner</span>
               </button>
 
