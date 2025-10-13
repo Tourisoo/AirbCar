@@ -2121,7 +2121,15 @@ export default function AdminDashboard() {
                             </div>
                             <div className="text-xs text-gray-500 mt-1">
                               {booking.start_time && booking.end_time 
-                                ? Math.ceil((new Date(booking.end_time) - new Date(booking.start_time)) / (1000 * 60 * 60 * 24)) + " days"
+                                ? (() => {
+                                    const start = new Date(booking.start_time)
+                                    const end = new Date(booking.end_time)
+                                    start.setHours(0, 0, 0, 0)
+                                    end.setHours(0, 0, 0, 0)
+                                    const diffInMs = end.getTime() - start.getTime()
+                                    const diffInDays = diffInMs / (1000 * 60 * 60 * 24)
+                                    return Math.max(1, Math.ceil(diffInDays)) + " days"
+                                  })()
                                 : "N/A"}
                             </div>
                           </td>
