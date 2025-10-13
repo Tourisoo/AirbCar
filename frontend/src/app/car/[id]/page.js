@@ -590,13 +590,9 @@ function CarDetailsContent() {
                     <span className="text-gray-600">{searchDetails.duration} {searchDetails.duration === 1 ? 'day' : 'days'} rental</span>
                     <span className="font-medium">{(car.price * searchDetails.duration).toLocaleString()} MAD</span>
                   </div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">Service fee</span>
-                    <span className="font-medium">25 MAD</span>
-                  </div>
                   <div className="flex justify-between items-center font-semibold text-lg">
                     <span>Total</span>
-                    <span>{((car.price * searchDetails.duration) + 25).toLocaleString()} MAD</span>
+                    <span>{(car.price * searchDetails.duration).toLocaleString()} MAD</span>
                   </div>
                 </div>
 

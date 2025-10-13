@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { authService, listingsService, bookingsService } from '@/services/api'
+import { MOROCCAN_CITIES } from '@/constants'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
@@ -13,10 +14,16 @@ function SearchContent() {
   const { user, loading: authLoading, login, register } = useAuth()
   const [cars, setCars] = useState([])
   const [filteredCars, setFilteredCars] = useState([])
+  
+  // Get current date and tomorrow's date for defaults
+  const today = new Date()
+  const tomorrow = new Date(today)
+  tomorrow.setDate(today.getDate() + 1)
+  
   const [searchForm, setSearchForm] = useState({
     location: '',
-    pickupDate: '',
-    returnDate: ''
+    pickupDate: today.toISOString().split('T')[0],
+    returnDate: tomorrow.toISOString().split('T')[0]
   })
   const [filters, setFilters] = useState({
     priceRange: [0, 5000],
@@ -28,8 +35,8 @@ function SearchContent() {
     features: [],
     verified: false,
     location: '',
-    pickupDate: '',
-    returnDate: '',
+    pickupDate: today.toISOString().split('T')[0],
+    returnDate: tomorrow.toISOString().split('T')[0],
     instantBooking: false
   })
   // const [sortBy, setSortBy] = useState('relevance')
@@ -58,8 +65,6 @@ function SearchContent() {
   const [userDataLoaded, setUserDataLoaded] = useState(false)
   const [favorites, setFavorites] = useState(new Set())
   const [favoritesLoading, setFavoritesLoading] = useState(false)
-  const [searchSuggestions, setSearchSuggestions] = useState([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
   const [comparisonCars, setComparisonCars] = useState([])
   const [showComparison, setShowComparison] = useState(false)
   const [viewMode, setViewMode] = useState('grid') // grid, list, map
@@ -105,8 +110,8 @@ function SearchContent() {
   
   // Booking-specific state
   const [bookingDetails, setBookingDetails] = useState({
-    pickupDate: '',
-    dropoffDate: ''
+    pickupDate: today.toISOString().split('T')[0],
+    dropoffDate: tomorrow.toISOString().split('T')[0]
   })
 
   // Mock data - replace with actual API call
@@ -930,8 +935,8 @@ function SearchContent() {
   const clearFilters = () => {
     setSearchForm({
       location: '',
-      pickupDate: '',
-      returnDate: ''
+      pickupDate: today.toISOString().split('T')[0],
+      returnDate: tomorrow.toISOString().split('T')[0]
     })
     setFilters({
       priceRange: [0, 5000],
@@ -943,13 +948,13 @@ function SearchContent() {
       features: [],
       verified: false,
       location: '',
-      pickupDate: '',
-      returnDate: '',
+      pickupDate: today.toISOString().split('T')[0],
+      returnDate: tomorrow.toISOString().split('T')[0],
       instantBooking: false
     })
     setBookingDetails({
-      pickupDate: '',
-      dropoffDate: ''
+      pickupDate: today.toISOString().split('T')[0],
+      dropoffDate: tomorrow.toISOString().split('T')[0]
     })
     setShowAllFeatures(false)
     setShowAllBrands(false)
@@ -1024,16 +1029,12 @@ function SearchContent() {
     const days = calculateDuration(pickupDate, dropoffDate)
     const dailyPrice = Number(car.price_per_day || 0)
     const rentalPrice = days * dailyPrice
-    const serviceFee = 50
-    const securityDeposit = 1000
     
     return {
       days,
       dailyPrice,
       rentalPrice,
-      serviceFee,
-      securityDeposit,
-      totalPrice: rentalPrice + serviceFee + securityDeposit
+      totalPrice: rentalPrice
     }
   }
 
@@ -1617,14 +1618,12 @@ function SearchContent() {
 
       // Calculate total price using the same logic as the booking summary
       const priceBreakdown = calculateTotalPrice(selectedCar, pickupDate, dropoffDate)
-      const { days, dailyPrice, rentalPrice, serviceFee, securityDeposit, totalPrice } = priceBreakdown
+      const { days, dailyPrice, rentalPrice, totalPrice } = priceBreakdown
       
       console.log('💰 Price calculation:', {
         days,
         dailyPrice,
         rentalPrice,
-        serviceFee,
-        securityDeposit,
         totalPrice,
         priceField: selectedCar.price_per_day,
         selectedCarKeys: Object.keys(selectedCar)
@@ -1715,36 +1714,27 @@ function SearchContent() {
                 <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
                   <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Where are you going?"
+                    <select
                       value={searchForm.location}
                       onChange={(e) => {
                         setSearchForm(prev => ({ ...prev, location: e.target.value }))
-                        setShowSuggestions(e.target.value.length > 0)
                       }}
-                      className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
-                    <svg className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 appearance-none"
+                    >
+                      <option value="">Select a city</option>
+                      {MOROCCAN_CITIES.map(city => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
+                    </select>
+                    <svg className="absolute left-3 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    {showSuggestions && (
-                      <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 mt-1">
-                        {['Casablanca', 'Rabat', 'Marrakech', 'Fez', 'Tangier', 'Agadir'].map(city => (
-                          <button
-                            key={city}
-                            onClick={() => {
-                              setSearchForm(prev => ({ ...prev, location: city }))
-                              setShowSuggestions(false)
-                            }}
-                            className="w-full px-4 py-2 text-left hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-                          >
-                            {city}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    <svg className="absolute right-3 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </div>
                 </div>
 
@@ -2694,14 +2684,10 @@ function SearchContent() {
                             {(selectedCar.price_per_day * calculateDuration(filters.pickupDate, filters.returnDate)).toLocaleString()} MAD
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-700">Service fee</span>
-                          <span className="text-gray-900">50 MAD</span>
-                        </div>
                         <div className="border-t pt-2 flex justify-between font-semibold">
                           <span className="text-gray-900">Total</span>
                           <span className="text-gray-900">
-                            {((selectedCar.price_per_day * calculateDuration(filters.pickupDate, filters.returnDate)) + 50).toLocaleString()} MAD
+                            {(selectedCar.price_per_day * calculateDuration(filters.pickupDate, filters.returnDate)).toLocaleString()} MAD
                           </span>
                         </div>
                       </div>
@@ -3396,20 +3382,12 @@ function SearchContent() {
                           </div>
                         </>
                       )}
-                      <div className="flex justify-between">
-                        <span className="text-gray-700">Service fee</span>
-                        <span className="text-gray-900">50 MAD</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-700">Security deposit (refundable)</span>
-                        <span className="text-gray-900">1000 MAD</span>
-                      </div>
                       <div className="border-t pt-2 flex justify-between font-semibold">
                         <span className="text-gray-900">Total</span>
                         <span className="text-gray-900">
                           {selectedCar && bookingDetails.pickupDate && bookingDetails.dropoffDate 
                             ? formatPrice(calculateTotalPrice(selectedCar, bookingDetails.pickupDate, bookingDetails.dropoffDate).totalPrice)
-                            : '1050 MAD'
+                            : formatPrice((selectedCar?.price_per_day || 0) * calculateDuration(bookingDetails.pickupDate, bookingDetails.dropoffDate))
                           }
                         </span>
                       </div>
@@ -3554,7 +3532,7 @@ function SearchContent() {
                         <span className="font-medium">
                           {selectedCar && bookingDetails.pickupDate && bookingDetails.dropoffDate 
                             ? formatPrice(calculateTotalPrice(selectedCar, bookingDetails.pickupDate, bookingDetails.dropoffDate).totalPrice)
-                            : '1050 MAD'
+                            : formatPrice((selectedCar?.price_per_day || 0) * calculateDuration(bookingDetails.pickupDate, bookingDetails.dropoffDate))
                           }
                         </span>
                       </div>

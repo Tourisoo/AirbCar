@@ -510,16 +510,12 @@ function BookingContent() {
                         : car.price.toLocaleString()} MAD
                     </span>
                   </div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">Service fee</span>
-                    <span className="font-medium">25 MAD</span>
-                  </div>
                   <div className="flex justify-between items-center font-semibold text-lg border-t border-gray-200 pt-2">
                     <span>Total</span>
                     <span>
                       {bookingDetails.totalPrice > 0 
                         ? bookingDetails.totalPrice.toLocaleString() 
-                        : (car.price + 25).toLocaleString()} MAD
+                        : car.price.toLocaleString()} MAD
                     </span>
                   </div>
                 </div>
