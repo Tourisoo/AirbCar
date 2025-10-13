@@ -21,6 +21,7 @@ wheels/
 *.egg
 MANIFEST
 
+!backend/airbcar_backend/.env
 # Virtual environments
 env/
 venv/
