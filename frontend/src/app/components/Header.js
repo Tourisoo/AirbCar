@@ -295,17 +295,6 @@ export default function Header() {
                         </div>
                         <span className="font-medium">Favorites</span>
                       </button>
-                        <button 
-                        onClick={() => router.push('/price-alerts')}
-                        className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 group"
-                      >
-                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-gray-200 transition-colors duration-150">
-                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4.5 19.5a1.5 1.5 0 01-1.5-1.5V6a1.5 1.5 0 011.5-1.5h15A1.5 1.5 0 0121 6v12a1.5 1.5 0 01-1.5 1.5h-15z" />
-                          </svg>
-                        </div>
-                        <span className="font-medium">Price Alerts</span>
-                      </button>
                       {isPartner && (
                         <button 
                           onClick={handlePartnerDashboardClick}
@@ -444,21 +433,6 @@ export default function Header() {
                       </svg>
                     </div>
                     <span>Favorites</span>
-                  </button>
-
-                  <button 
-                    onClick={() => {
-                      router.push('/price-alerts')
-                      setIsMobileMenuOpen(false)
-                    }}
-                    className="flex items-center w-full px-4 py-3 text-gray-700 hover:text-orange-600 font-medium text-base transition-all duration-200 hover:bg-orange-50 rounded-xl group"
-                  >
-                    <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center mr-3 group-hover:bg-orange-200 transition-colors duration-200">
-                      <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4.5 19.5a1.5 1.5 0 01-1.5-1.5V6a1.5 1.5 0 011.5-1.5h15A1.5 1.5 0 0121 6v12a1.5 1.5 0 01-1.5 1.5h-15z" />
-                      </svg>
-                    </div>
-                    <span>Price Alerts</span>
                   </button>
                 </>
               )}

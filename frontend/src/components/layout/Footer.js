@@ -21,7 +21,6 @@ export default function Footer() {
       links: [
         { label: 'Car Rental', href: '/search' },
         { label: 'Partner Program', href: '/partner' },
-        { label: 'Price Alerts', href: '/price-alerts' },
         { label: 'Gift Cards', href: '/gift-cards' },
       ]
     },
