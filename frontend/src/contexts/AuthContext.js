@@ -78,7 +78,9 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const login = async (email, password) => {
+  const login = async (email, password, options = {}) => {
+    const { redirect = true, redirectTo = '/' } = options
+    
     try {
       const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
       const response = await fetch(`${apiUrl}/api/login/`, {
@@ -105,8 +107,56 @@ export function AuthProvider({ children }) {
             await checkAuth()
           }
         }
+
+        // Handle role-based redirection if enabled
+        if (redirect && isClient && window?.location) {
+          const token = data.access
+          if (token) {
+            try {
+              const payload = JSON.parse(atob(token.split('.')[1]))
+              const userRole = payload.role || 'user'
+              const isPartner = payload.is_partner || false
+              const isStaff = payload.is_staff || false
+              const isSuperuser = payload.is_superuser || false
+              
+              // Debug: Log the token payload
+              console.log('🔍 Full Token payload:', payload)
+              console.log('🔍 Role detection:', { userRole, isPartner, isStaff, isSuperuser })
+              
+              // FORCE admin redirection for ANY staff or superuser
+              let redirectPath = '/'
+              
+              // Check if user is admin (HIGHEST priority - force redirect)
+              if (isStaff === true || isSuperuser === true) {
+                redirectPath = '/admin/dashboard'
+                console.log('🚀 ADMIN DETECTED - Forcing redirect to:', redirectPath)
+              }
+              // Check if user is partner (second priority)
+              else if (isPartner === true || userRole === 'partner') {
+                redirectPath = '/partner/dashboard'
+                console.log('🏢 PARTNER DETECTED - Redirecting to:', redirectPath)
+              }
+              // Regular user (default)
+              else {
+                redirectPath = redirectTo === '/' ? '/' : redirectTo
+                console.log('👤 USER DETECTED - Redirecting to:', redirectPath)
+              }
+              
+              console.log(`User role: ${userRole}, isStaff: ${isStaff}, isSuperuser: ${isSuperuser}, isPartner: ${isPartner}`)
+              console.log(`Redirecting to: ${redirectPath}`)
+              
+              // Use window.location for navigation to ensure it works everywhere
+              window.location.href = redirectPath
+            } catch (tokenError) {
+              console.error('Error parsing token:', tokenError)
+              if (redirectTo !== '/') {
+                window.location.href = redirectTo
+              }
+            }
+          }
+        }
         
-        return { success: true }
+        return { success: true, user: data.user }
       } else {
         const errorData = await response.json()
         return { 

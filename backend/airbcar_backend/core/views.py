@@ -131,6 +131,28 @@ class UserVerificationView(generics.GenericAPIView):
 # 1. REMOVE CustomLoginView - Use built-in JWT view instead
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+    
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 200:
+            # Add user data to the response
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = serializer.user
+            
+            response.data['user'] = {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'is_partner': user.is_partner,
+                'is_verified': user.is_verified,
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
+                'role': getattr(user, 'role', 'user'),
+            }
+        return response
 
 class UserStatusView(generics.GenericAPIView):
     """
