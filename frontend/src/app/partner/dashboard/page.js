@@ -3433,7 +3433,15 @@ export default function PartnerDashboard() {
                                 {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}
                               </div>
                               <div className="text-sm text-gray-500">
-                                {Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))} days
+                                {(() => {
+                                  const start = new Date(startDate)
+                                  const end = new Date(endDate)
+                                  start.setHours(0, 0, 0, 0)
+                                  end.setHours(0, 0, 0, 0)
+                                  const diffInMs = end.getTime() - start.getTime()
+                                  const diffInDays = diffInMs / (1000 * 60 * 60 * 24)
+                                  return Math.max(1, Math.ceil(diffInDays))
+                                })()} days
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

@@ -124,8 +124,14 @@ function CarDetailsContent() {
     if (pickupDate && returnDate) {
       const pickup = new Date(pickupDate)
       const returnD = new Date(returnDate)
-      const diffTime = Math.abs(returnD - pickup)
-      duration = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1
+      
+      // Set time to start of day for consistent calculation
+      pickup.setHours(0, 0, 0, 0)
+      returnD.setHours(0, 0, 0, 0)
+      
+      const diffInMs = returnD.getTime() - pickup.getTime()
+      const diffInDays = diffInMs / (1000 * 60 * 60 * 24)
+      duration = Math.max(1, Math.ceil(diffInDays))
       
       formattedPickup = pickup.toLocaleDateString('en-US', { 
         weekday: 'short', 

@@ -129,9 +129,16 @@ export default function BookingsPage() {
   const calculateDuration = (startTime, endTime) => {
     const start = new Date(startTime)
     const end = new Date(endTime)
-    const diffInMs = end - start
-    const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24))
-    return diffInDays
+    
+    // Set time to start of day for consistent calculation
+    start.setHours(0, 0, 0, 0)
+    end.setHours(0, 0, 0, 0)
+    
+    const diffInMs = end.getTime() - start.getTime()
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24)
+    
+    // Return 1 day for same-day rentals, otherwise exact days
+    return Math.max(1, Math.ceil(diffInDays))
   }
 
   const openBookingDetails = (booking) => {

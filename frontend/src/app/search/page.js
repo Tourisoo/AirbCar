@@ -13,6 +13,11 @@ function SearchContent() {
   const { user, loading: authLoading, login, register } = useAuth()
   const [cars, setCars] = useState([])
   const [filteredCars, setFilteredCars] = useState([])
+  const [searchForm, setSearchForm] = useState({
+    location: '',
+    pickupDate: '',
+    returnDate: ''
+  })
   const [filters, setFilters] = useState({
     priceRange: [0, 5000],
     transmission: [],
@@ -606,13 +611,22 @@ function SearchContent() {
     fetchCars()
   }, []) // Empty dependency array is correct here
 
-  // Capture search parameters from URL and update filters
+  // Capture search parameters from URL and update both form and filters
   useEffect(() => {
     const location = searchParams.get('location')
     const pickupDate = searchParams.get('pickupDate')
     const dropoffDate = searchParams.get('dropoffDate')
     
     if (location || pickupDate || dropoffDate) {
+      // Update search form state
+      setSearchForm(prev => ({
+        ...prev,
+        location: location || '',
+        pickupDate: pickupDate || '',
+        returnDate: dropoffDate || ''
+      }))
+      
+      // Update filters to show initial results
       setFilters(prev => ({
         ...prev,
         location: location || '',
@@ -722,8 +736,10 @@ function SearchContent() {
       
       return (
         locationMatch &&
-        (car.price_per_day || 0) >= filters.priceRange[0] &&
-        (car.price_per_day || 0) <= filters.priceRange[1] &&
+        (!filters.priceRange || (
+          (car.price_per_day || 0) >= filters.priceRange[0] && 
+          (filters.priceRange[1] >= 5000 ? true : (car.price_per_day || 0) <= filters.priceRange[1])
+        )) &&
         (filters.transmission.length === 0 || filters.transmission.includes(car.transmission)) &&
         (filters.fuelType.length === 0 || filters.fuelType.includes(car.fuelType || car.fuel)) &&
         (filters.seats.length === 0 || filters.seats.includes(car.seats.toString())) &&
@@ -736,9 +752,7 @@ function SearchContent() {
 
     // Calculate rental duration and total price for each car
     if (filters.pickupDate && filters.returnDate) {
-      const startDate = new Date(filters.pickupDate)
-      const endDate = new Date(filters.returnDate)
-      const duration = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)))
+      const duration = calculateDuration(filters.pickupDate, filters.returnDate)
       
       filtered = filtered.map(car => ({
         ...car,
@@ -774,11 +788,53 @@ function SearchContent() {
     setFilteredCars(filtered)
   }, [cars, filters, sortBy])
 
+  // Sync booking details with filter dates
+  useEffect(() => {
+    setBookingDetails(prev => ({
+      ...prev,
+      pickupDate: filters.pickupDate,
+      dropoffDate: filters.returnDate
+    }))
+  }, [filters.pickupDate, filters.returnDate])
+
   const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({
       ...prev,
       [filterType]: value
     }))
+  }
+
+  const handleSearchUpdate = () => {
+    // Copy search form values to actual filters (this triggers the filtering)
+    setFilters(prev => ({
+      ...prev,
+      location: searchForm.location,
+      pickupDate: searchForm.pickupDate,
+      returnDate: searchForm.returnDate
+    }))
+
+    // Update booking details with search form dates
+    setBookingDetails(prev => ({
+      ...prev,
+      pickupDate: searchForm.pickupDate,
+      dropoffDate: searchForm.returnDate
+    }))
+
+    // Update URL parameters to reflect new search
+    const params = new URLSearchParams()
+    if (searchForm.location) params.set('location', searchForm.location)
+    if (searchForm.pickupDate) params.set('pickupDate', searchForm.pickupDate)
+    if (searchForm.returnDate) params.set('dropoffDate', searchForm.returnDate)
+    
+    // Update URL without triggering a page reload
+    const newUrl = params.toString() ? `/search?${params.toString()}` : '/search'
+    window.history.pushState({}, '', newUrl)
+    
+    console.log('Search updated with:', {
+      location: searchForm.location,
+      pickupDate: searchForm.pickupDate,
+      returnDate: searchForm.returnDate
+    })
   }
 
   const handleFeatureToggle = (feature) => {
@@ -871,6 +927,11 @@ function SearchContent() {
   }
 
   const clearFilters = () => {
+    setSearchForm({
+      location: '',
+      pickupDate: '',
+      returnDate: ''
+    })
     setFilters({
       priceRange: [0, 5000],
       transmission: [],
@@ -946,10 +1007,33 @@ function SearchContent() {
     
     const pickup = new Date(pickupDate)
     const returnD = new Date(returnDate)
-    const diffInMs = Math.abs(returnD - pickup)
-    const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24))
     
-    return diffInDays || 1
+    // Calculate the difference in days
+    const diffInMs = returnD.getTime() - pickup.getTime()
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24)
+    
+    // For same day rental (0 difference) or any fractional day, round up to at least 1
+    // This ensures: same day = 1 day, next day = 1 day, day after = 2 days
+    return Math.max(1, Math.ceil(diffInDays))
+  }
+
+  const calculateTotalPrice = (car, pickupDate, dropoffDate) => {
+    if (!car || !pickupDate || !dropoffDate) return 0
+    
+    const days = calculateDuration(pickupDate, dropoffDate)
+    const dailyPrice = Number(car.price_per_day || 0)
+    const rentalPrice = days * dailyPrice
+    const serviceFee = 50
+    const securityDeposit = 1000
+    
+    return {
+      days,
+      dailyPrice,
+      rentalPrice,
+      serviceFee,
+      securityDeposit,
+      totalPrice: rentalPrice + serviceFee + securityDeposit
+    }
   }
 
   const nextImage = () => {
@@ -1530,18 +1614,16 @@ function SearchContent() {
         throw new Error('No car selected for booking')
       }
 
-      // Calculate total price (basic calculation - you might want to add more logic)
-      const startDate = new Date(pickupDate)
-      const endDate = new Date(dropoffDate)
-      const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
-      
-      // Use the correct price field and ensure it's a valid number
-      const dailyPrice = Number(selectedCar.price_per_day || 0)
-      const totalPrice = days * dailyPrice
+      // Calculate total price using the same logic as the booking summary
+      const priceBreakdown = calculateTotalPrice(selectedCar, pickupDate, dropoffDate)
+      const { days, dailyPrice, rentalPrice, serviceFee, securityDeposit, totalPrice } = priceBreakdown
       
       console.log('💰 Price calculation:', {
         days,
         dailyPrice,
+        rentalPrice,
+        serviceFee,
+        securityDeposit,
         totalPrice,
         priceField: selectedCar.price_per_day,
         selectedCarKeys: Object.keys(selectedCar)
@@ -1559,8 +1641,9 @@ function SearchContent() {
         listing: selectedCar.id,
         start_time: startDateTime,
         end_time: endDateTime,
-        price: totalPrice,
-        status: 'confirmed' // Set as confirmed after payment
+        price: rentalPrice, // Just the rental price for the backend
+        status: 'pending', // Set as pending, will be confirmed by owner
+        request_message: `Booking request for ${days} day${days > 1 ? 's' : ''} rental. Total amount including fees: ${totalPrice} MAD`
       }
 
       console.log('✅ Creating booking with data:', bookingData)
@@ -1634,9 +1717,9 @@ function SearchContent() {
                     <input
                       type="text"
                       placeholder="Where are you going?"
-                      value={filters.location}
+                      value={searchForm.location}
                       onChange={(e) => {
-                        setFilters(prev => ({ ...prev, location: e.target.value }))
+                        setSearchForm(prev => ({ ...prev, location: e.target.value }))
                         setShowSuggestions(e.target.value.length > 0)
                       }}
                       className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -1651,7 +1734,7 @@ function SearchContent() {
                           <button
                             key={city}
                             onClick={() => {
-                              setFilters(prev => ({ ...prev, location: city }))
+                              setSearchForm(prev => ({ ...prev, location: city }))
                               setShowSuggestions(false)
                             }}
                             className="w-full px-4 py-2 text-left hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
@@ -1669,8 +1752,8 @@ function SearchContent() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Date</label>
                   <input
                     type="date"
-                    value={filters.pickupDate}
-                    onChange={(e) => setFilters(prev => ({ ...prev, pickupDate: e.target.value }))}
+                    value={searchForm.pickupDate}
+                    onChange={(e) => setSearchForm(prev => ({ ...prev, pickupDate: e.target.value }))}
                     min={new Date().toISOString().split('T')[0]}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   />
@@ -1681,16 +1764,19 @@ function SearchContent() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Return Date</label>
                   <input
                     type="date"
-                    value={filters.returnDate}
-                    onChange={(e) => setFilters(prev => ({ ...prev, returnDate: e.target.value }))}
-                    min={filters.pickupDate || new Date().toISOString().split('T')[0]}
+                    value={searchForm.returnDate}
+                    onChange={(e) => setSearchForm(prev => ({ ...prev, returnDate: e.target.value }))}
+                    min={searchForm.pickupDate || new Date().toISOString().split('T')[0]}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   />
                 </div>
 
                 {/* Search Button */}
                 <div className="flex items-end">
-                  <button className="w-full bg-orange-500 text-white py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors font-medium flex items-center justify-center">
+                  <button 
+                    onClick={handleSearchUpdate}
+                    className="w-full bg-orange-500 text-white py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors font-medium flex items-center justify-center"
+                  >
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
@@ -1745,88 +1831,7 @@ function SearchContent() {
             </div>
           </div>
 
-          {/* Active Filters Display */}
-          {(filters.location || filters.pickupDate || filters.returnDate || filters.priceRange || filters.category || filters.fuelType) && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-900">Active Filters:</h3>
-                <button
-                  onClick={clearFilters}
-                  className="text-sm text-orange-600 hover:text-orange-700 font-medium"
-                >
-                  Clear All Filters
-                </button>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {filters.location && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-100 text-orange-800">
-                    📍 {filters.location}
-                    <button
-                      onClick={() => setFilters(prev => ({ ...prev, location: '' }))}
-                      className="ml-2 text-orange-600 hover:text-orange-800"
-                    >
-                      ×
-                    </button>
-                  </span>
-                )}
-                {filters.pickupDate && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                    📅 From: {new Date(filters.pickupDate).toLocaleDateString()}
-                    <button
-                      onClick={() => setFilters(prev => ({ ...prev, pickupDate: '' }))}
-                      className="ml-2 text-blue-600 hover:text-blue-800"
-                    >
-                      ×
-                    </button>
-                  </span>
-                )}
-                {filters.returnDate && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                    📅 To: {new Date(filters.returnDate).toLocaleDateString()}
-                    <button
-                      onClick={() => setFilters(prev => ({ ...prev, returnDate: '' }))}
-                      className="ml-2 text-blue-600 hover:text-blue-800"
-                    >
-                      ×
-                    </button>
-                  </span>
-                )}
-                {filters.priceRange && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                    💰 ${filters.priceRange[0]} - ${filters.priceRange[1]}
-                    <button
-                      onClick={() => setFilters(prev => ({ ...prev, priceRange: null }))}
-                      className="ml-2 text-green-600 hover:text-green-800"
-                    >
-                      ×
-                    </button>
-                  </span>
-                )}
-                {filters.category && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
-                    🚗 {filters.category}
-                    <button
-                      onClick={() => setFilters(prev => ({ ...prev, category: '' }))}
-                      className="ml-2 text-purple-600 hover:text-purple-800"
-                    >
-                      ×
-                    </button>
-                  </span>
-                )}
-                {filters.fuelType && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
-                    ⛽ {filters.fuelType}
-                    <button
-                      onClick={() => setFilters(prev => ({ ...prev, fuelType: '' }))}
-                      className="ml-2 text-yellow-600 hover:text-yellow-800"
-                    >
-                      ×
-                    </button>
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
+
         </div>
       </div>
 
@@ -1855,16 +1860,18 @@ function SearchContent() {
                     type="range"
                     min="0"
                     max="5000"
-                    value={filters.priceRange[1]}
+                    value={filters.priceRange ? filters.priceRange[1] : 5000}
                     onChange={(e) => handleFilterChange('priceRange', [0, parseInt(e.target.value)])}
                     className="w-full h-3 bg-gradient-to-r from-orange-100 to-orange-300 rounded-lg appearance-none cursor-pointer slider"
                     style={{
-                      background: `linear-gradient(to right, #F97316 0%, #F97316 ${(filters.priceRange[1] / 5000) * 100}%, #E5E7EB ${(filters.priceRange[1] / 5000) * 100}%, #E5E7EB 100%)`
+                      background: `linear-gradient(to right, #F97316 0%, #F97316 ${((filters.priceRange ? filters.priceRange[1] : 5000) / 5000) * 100}%, #E5E7EB ${((filters.priceRange ? filters.priceRange[1] : 5000) / 5000) * 100}%, #E5E7EB 100%)`
                     }}
                   />
                   <div className="flex justify-between text-sm mt-2">
                     <span className="text-gray-700 font-medium bg-gray-50 px-2 py-1 rounded">0 MAD</span>
-                    <span className="text-orange-600 font-medium bg-orange-50 px-2 py-1 rounded">{filters.priceRange[1]} MAD</span>
+                    <span className="text-orange-600 font-medium bg-orange-50 px-2 py-1 rounded">
+                      {filters.priceRange ? (filters.priceRange[1] >= 5000 ? '5000+' : filters.priceRange[1]) : '5000+'} MAD
+                    </span>
                   </div>
                 </div>
               </div>
@@ -2358,24 +2365,7 @@ function SearchContent() {
               </div>
             )}
 
-            {/* Pagination */}
-            {filteredCars.length > 0 && (
-              <div className="mt-12 flex justify-center">
-                <nav className="flex items-center space-x-2">
-                  <button className="px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                    Previous
-                  </button>
-                  <button className="px-4 py-2 bg-orange-500 text-white rounded-lg">1</button>
-                  <button className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">2</button>
-                  <button className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">3</button>
-                  <span className="px-3 py-2 text-gray-700">...</span>
-                  <button className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">10</button>
-                  <button className="px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                    Next
-                  </button>
-                </nav>
-              </div>
-            )}
+
           </div>
         </div>
       </div>
@@ -3382,13 +3372,29 @@ function SearchContent() {
                     <h4 className="font-medium text-gray-900 mb-2">Booking Summary</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-700">{selectedCar?.name} {selectedCar?.modelYear}</span>
-                        <span className="text-gray-900">{selectedCar?.price} MAD/day</span>
+                        <span className="text-gray-700">{selectedCar?.name}</span>
+                        <span className="text-gray-900">{formatPrice(selectedCar?.price_per_day)}/day</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-700">1 day rental</span>
-                        <span className="text-gray-900">{selectedCar?.price} MAD</span>
-                      </div>
+                      {bookingDetails.pickupDate && bookingDetails.dropoffDate && selectedCar && (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-gray-700">Pickup Date</span>
+                            <span className="text-gray-900">{new Date(bookingDetails.pickupDate).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-700">Return Date</span>
+                            <span className="text-gray-900">{new Date(bookingDetails.dropoffDate).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-700">
+                              {calculateTotalPrice(selectedCar, bookingDetails.pickupDate, bookingDetails.dropoffDate).days} day{calculateTotalPrice(selectedCar, bookingDetails.pickupDate, bookingDetails.dropoffDate).days > 1 ? 's' : ''} rental
+                            </span>
+                            <span className="text-gray-900">
+                              {formatPrice(calculateTotalPrice(selectedCar, bookingDetails.pickupDate, bookingDetails.dropoffDate).rentalPrice)}
+                            </span>
+                          </div>
+                        </>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-gray-700">Service fee</span>
                         <span className="text-gray-900">50 MAD</span>
@@ -3399,7 +3405,12 @@ function SearchContent() {
                       </div>
                       <div className="border-t pt-2 flex justify-between font-semibold">
                         <span className="text-gray-900">Total</span>
-                        <span className="text-gray-900">{selectedCar ? selectedCar.price_per_day + 1050 : 1050} MAD</span>
+                        <span className="text-gray-900">
+                          {selectedCar && bookingDetails.pickupDate && bookingDetails.dropoffDate 
+                            ? formatPrice(calculateTotalPrice(selectedCar, bookingDetails.pickupDate, bookingDetails.dropoffDate).totalPrice)
+                            : '1050 MAD'
+                          }
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -3494,27 +3505,57 @@ function SearchContent() {
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-700">Booking ID:</span>
-                        <span className="font-medium">#ABC123456</span>
+                        <span className="font-medium">#{localStorage.getItem('lastBookingId') || 'PENDING'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Car:</span>
-                        <span className="font-medium">{selectedCar?.name} {selectedCar?.modelYear}</span>
+                        <span className="font-medium">{selectedCar?.name}</span>
                       </div>
+                      {bookingDetails.pickupDate && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-700">Pickup:</span>
+                          <span className="font-medium">
+                            {new Date(bookingDetails.pickupDate).toLocaleDateString('en-US', { 
+                              weekday: 'short', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </span>
+                        </div>
+                      )}
+                      {bookingDetails.dropoffDate && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-700">Return:</span>
+                          <span className="font-medium">
+                            {new Date(bookingDetails.dropoffDate).toLocaleDateString('en-US', { 
+                              weekday: 'short', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
-                        <span className="text-gray-700">Pickup:</span>
-                        <span className="font-medium">Wed, Aug 20</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-700">Return:</span>
-                        <span className="font-medium">Thu, Aug 21</span>
+                        <span className="text-gray-700">Duration:</span>
+                        <span className="font-medium">
+                          {selectedCar && bookingDetails.pickupDate && bookingDetails.dropoffDate 
+                            ? `${calculateTotalPrice(selectedCar, bookingDetails.pickupDate, bookingDetails.dropoffDate).days} day${calculateTotalPrice(selectedCar, bookingDetails.pickupDate, bookingDetails.dropoffDate).days > 1 ? 's' : ''}`
+                            : '1 day'
+                          }
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Location:</span>
-                        <span className="font-medium">{selectedCar?.location}</span>
+                        <span className="font-medium">{selectedCar?.location || 'TBD'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Total Paid:</span>
-                        <span className="font-medium">{selectedCar ? selectedCar.price_per_day + 1050 : 1050} MAD</span>
+                        <span className="font-medium">
+                          {selectedCar && bookingDetails.pickupDate && bookingDetails.dropoffDate 
+                            ? formatPrice(calculateTotalPrice(selectedCar, bookingDetails.pickupDate, bookingDetails.dropoffDate).totalPrice)
+                            : '1050 MAD'
+                          }
+                        </span>
                       </div>
                     </div>
                   </div>
