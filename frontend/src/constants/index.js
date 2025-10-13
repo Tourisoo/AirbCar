@@ -76,16 +76,12 @@ export const CAR_CATEGORIES = [
 
 // Moroccan Cities
 export const MOROCCAN_CITIES = [
-  'Casablanca',
-  'Rabat',
-  'Marrakech',
-  'Fez',
-  'Tangier',
   'Agadir',
-  'Meknes',
-  'Oujda',
-  'Kenitra',
-  'Tetouan',
+  'Casablanca', 
+  'Marrakech',
+  'Rabat',
+  'Tangier',
+  'Tetouan'
 ]
 
 // Pagination

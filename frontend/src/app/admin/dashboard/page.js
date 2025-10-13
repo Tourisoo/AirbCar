@@ -70,7 +70,7 @@ export default function AdminDashboard() {
   // Check admin status and redirect if not admin
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/admin/signin')
+      router.push('/auth/signin')
       return
     }
 
@@ -91,7 +91,7 @@ export default function AdminDashboard() {
 
       if (!token) {
         console.log("No token found, redirecting to signin");
-        router.push("/admin/signin");
+        router.push("/auth/signin");
         return;
       }
 
@@ -114,10 +114,11 @@ export default function AdminDashboard() {
           console.log("User is admin, loading dashboard");
           setIsAdmin(true);
           loadDashboardData();
+          router.push("/admin/dashboard/");
         } else {
           console.log("User is not admin, redirecting");
           alert("Access denied: You don't have admin privileges");
-          router.push("/admin/signin");
+          router.push("/auth/signin");
         }
       } else {
         const errorText = await response.text();
@@ -125,7 +126,7 @@ export default function AdminDashboard() {
         console.log("Response not ok, redirecting");
         alert(`Authentication failed: ${response.status} - ${errorText}`);
         localStorage.removeItem("access_token"); // Clear invalid token
-        router.push("/admin/signin");
+        router.push("/auth/signin");
       }
     } catch (error) {
       console.error("Error checking admin status:", error);
@@ -134,7 +135,7 @@ export default function AdminDashboard() {
       } else {
         alert(`Connection error: ${error.message}`);
       }
-      router.push("/admin/signin");
+      router.push("/auth/signin");
     }
   };
 
@@ -177,7 +178,7 @@ export default function AdminDashboard() {
 
       if (!token) {
         console.error("No token found when loading dashboard data");
-        router.push("/admin/signin");
+        router.push("/auth/signin");
         return;
       }
 
@@ -303,7 +304,7 @@ export default function AdminDashboard() {
 
   const handleSignOut = () => {
     logout();
-    router.push("/admin/signin");
+    router.push("/auth/signin");
   };
 
   if (loading || !isAdmin) {

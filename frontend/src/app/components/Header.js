@@ -143,18 +143,18 @@ export default function Header() {
           <nav className="hidden md:flex space-x-6">
             <button 
               onClick={handleBecomePartnerClick}
-              className="px-3 py-2 text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors duration-200 rounded-md"
-            >
+              className="px-3 py-2 text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors duration-200 rounded-md">
               Become a Partner
             </button>
-            <a onClick={() => router.push('/mission')} className="px-3 py-2 text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors duration-200 rounded-md">
+            <button 
+              onClick={() => router.push('/mission')} 
+              className="px-3 py-2 text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors duration-200 rounded-md">
               Our mission
-            </a>
+            </button>
             {user && (
               <button 
                 onClick={handleMyBookingsClick}
-                className="px-3 py-2 text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors duration-200 rounded-md"
-              >
+                className="px-3 py-2 text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors duration-200 rounded-md">
                 My Bookings
               </button>
             )}

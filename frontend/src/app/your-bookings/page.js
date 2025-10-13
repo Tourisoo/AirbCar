@@ -299,7 +299,7 @@ export default function YourBookingsPage() {
                           View Details
                         </button>
                         
-                        {(booking.status === 'confirmed' || booking.status === 'accepted') && new Date(booking.start_time) > new Date() && (
+                        {(booking.status === 'pending' || booking.status === 'confirmed' || booking.status === 'accepted') && new Date(booking.start_time) > new Date() && (
                           <button
                             onClick={() => handleCancelBooking(booking.id)}
                             disabled={cancelLoading}

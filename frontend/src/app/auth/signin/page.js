@@ -36,49 +36,15 @@ function SignInForm() {
     setError('')
 
     try {
-      const result = await login(data.email, data.password)
+      // Use AuthContext login with role-based redirection
+      const result = await login(data.email, data.password, { 
+        redirect: true, 
+        redirectTo: redirectTo 
+      })
       
       if (result.success) {
-        // Get user data from the token to determine redirection
-        const token = localStorage.getItem('access_token')
-        if (token) {
-          try {
-            const payload = JSON.parse(atob(token.split('.')[1]))
-            const userRole = payload.role || 'user'
-            const isPartner = payload.is_partner || false
-            const isStaff = payload.is_staff || false
-            const isSuperuser = payload.is_superuser || false
-            
-            // Smart redirection based on user role (priority: admin > partner > user)
-            let redirectPath = redirectTo
-            
-            // Check if user is admin (highest priority)
-            if (isStaff || isSuperuser || userRole === 'admin') {
-              redirectPath = '/admin/dashboard'
-            }
-            // Check if user is partner (second priority)
-            else if (isPartner || userRole === 'partner') {
-              redirectPath = '/partner/dashboard'
-            }
-            // Regular user (default)
-            else {
-              redirectPath = redirectTo === '/' ? '/' : redirectTo
-            }
-            
-            console.log(`User role: ${userRole}, isStaff: ${isStaff}, isSuperuser: ${isSuperuser}, isPartner: ${isPartner}`)
-            console.log(`Redirecting to: ${redirectPath}`)
-            
-            router.push(redirectPath)
-            router.refresh()
-          } catch (tokenError) {
-            console.error('Error parsing token:', tokenError)
-            router.push(redirectTo)
-            router.refresh()
-          }
-        } else {
-          router.push(redirectTo)
-          router.refresh()
-        }
+        // Redirection is handled automatically by AuthContext
+        // No need to do anything else here
       } else {
         setError(result.error)
       }

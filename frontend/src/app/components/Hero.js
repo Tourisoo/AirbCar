@@ -1,12 +1,18 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { MOROCCAN_CITIES } from '@/constants';
 
 export default function Hero() {
+  // Get current date and tomorrow's date
+  const today = new Date()
+  const tomorrow = new Date(today)
+  tomorrow.setDate(today.getDate() + 1)
+  
   const [searchForm, setSearchForm] = useState({
     location: '',
-    pickupDate: '',
-    dropoffDate: ''
+    pickupDate: today.toISOString().split('T')[0],
+    dropoffDate: tomorrow.toISOString().split('T')[0]
   });
   const router = useRouter();
 
@@ -52,15 +58,20 @@ export default function Hero() {
               <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Pickup location
               </label>
-              <input
-                type="text"
+              <select
                 name="location"
                 value={searchForm.location}
                 onChange={handleInputChange}
-                placeholder="City, airport, or location"
-                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-orange-500/50 focus:border-orange-500 transition-all duration-200 text-gray-700 placeholder-gray-400"
+                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-orange-500/50 focus:border-orange-500 transition-all duration-200 text-gray-700"
                 required
-              />
+              >
+                <option value="">Select a city</option>
+                {MOROCCAN_CITIES.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
             </div>
             
             {/* Pickup Date */}
