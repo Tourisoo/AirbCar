@@ -114,6 +114,7 @@ export default function AdminDashboard() {
           console.log("User is admin, loading dashboard");
           setIsAdmin(true);
           loadDashboardData();
+          router.push("/admin/dashboard/");
         } else {
           console.log("User is not admin, redirecting");
           alert("Access denied: You don't have admin privileges");
