@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { authService } from '@/services/api'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button, Input, Alert } from '@/components/ui'
 import { isValidEmail } from '@/lib/utils'
 
@@ -16,6 +16,7 @@ export default function LoginForm({ onSuccess }) {
   const [generalError, setGeneralError] = useState('')
   
   const router = useRouter()
+  const { login } = useAuth()
 
   const validateForm = () => {
     const newErrors = {}
@@ -47,12 +48,18 @@ export default function LoginForm({ onSuccess }) {
     setLoading(true)
 
     try {
-      const response = await authService.login(formData.email, formData.password)
+      const result = await login(formData.email, formData.password, { 
+        redirect: !onSuccess, // Only redirect if no custom onSuccess handler 
+        redirectTo: '/' 
+      })
       
-      if (onSuccess) {
-        onSuccess(response)
+      if (result.success) {
+        if (onSuccess) {
+          onSuccess(result)
+        }
+        // If no onSuccess handler, AuthContext automatically handles redirection
       } else {
-        router.push('/')
+        setGeneralError(result.error || 'Login failed. Please try again.')
       }
     } catch (error) {
       setGeneralError(error.message || 'Login failed. Please try again.')

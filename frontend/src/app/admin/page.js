@@ -12,7 +12,7 @@ export default function AdminPage() {
     if (!loading) {
       if (!user) {
         // Not logged in, redirect to admin sign-in
-        router.push('/admin/signin')
+        router.push('/auth/signin')
       } else {
         // Logged in, check if admin and redirect accordingly
         checkAdminAndRedirect()
@@ -26,7 +26,7 @@ export default function AdminPage() {
       const token = localStorage.getItem('access_token')
       
       if (!token) {
-        router.push('/admin/signin')
+        router.push('/auth/signin')
         return
       }
 
@@ -44,14 +44,14 @@ export default function AdminPage() {
           router.push('/admin/dashboard')
         } else {
           // User is not admin, redirect to admin sign-in
-          router.push('/admin/signin')
+          router.push('/auth/signin')
         }
       } else {
-        router.push('/admin/signin')
+        router.push('/auth/signin')
       }
     } catch (error) {
       console.error('Error checking admin status:', error)
-      router.push('/admin/signin')
+      router.push('/auth/signin')
     }
   }
 

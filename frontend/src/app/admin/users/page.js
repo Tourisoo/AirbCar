@@ -20,7 +20,7 @@ export default function AdminUsersPage() {
   // Check admin status and redirect if not admin
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/admin/signin')
+      router.push('/auth/signin')
       return
     }
 
@@ -37,7 +37,7 @@ export default function AdminUsersPage() {
 
       if (!token) {
         console.log("No token found, redirecting to signin");
-        router.push("/admin/signin");
+        router.push("/auth/signin");
         return;
       }
 
@@ -54,14 +54,14 @@ export default function AdminUsersPage() {
           setIsAdmin(true);
           loadUsersData();
         } else {
-          router.push("/admin/signin");
+          router.push("/auth/signin");
         }
       } else {
-        router.push("/admin/signin");
+        router.push("/auth/signin");
       }
     } catch (error) {
       console.error("Error checking admin status:", error);
-      router.push("/admin/signin");
+      router.push("/auth/signin");
     }
   };
 
@@ -125,7 +125,7 @@ export default function AdminUsersPage() {
 
   const handleSignOut = () => {
     logout();
-    router.push("/admin/signin");
+    router.push("/auth/signin");
   };
 
   if (loading || !isAdmin) {
