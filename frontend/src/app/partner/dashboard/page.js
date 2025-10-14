@@ -11,7 +11,7 @@ import QuickEditModal from '../../components/QuickEditModal'
 
 export default function PartnerDashboard() {
   const [activeSection, setActiveSection] = useState('general')
-  const { user, loading, updateUser } = useAuth()
+  const { user, loading, updateUser, logout } = useAuth()
   const router = useRouter()
   // State variables
   const [activeTab, setActiveTab] = useState('today')
@@ -525,8 +525,8 @@ export default function PartnerDashboard() {
     
     // Redirect if no user after loading is complete
     if (!user) {
-      console.log('No user found after auth loading complete, redirecting to login')
-      router.push('/auth/signin')
+      console.log('No user found after auth loading complete, redirecting to homepage')
+      router.push('/')
       return
     }
 
@@ -1805,29 +1805,6 @@ export default function PartnerDashboard() {
           }
         ]
       },
-      payment: {
-        title: 'Payment Terms & Fees',
-        content: [
-          {
-            subtitle: 'Payment Methods',
-            items: [
-              'Credit cards (Visa, MasterCard, American Express)',
-              'Debit cards accepted with additional verification',
-              'Cash payments not accepted',
-              'Payment must be in the name of primary driver'
-            ]
-          },
-          {
-            subtitle: 'Additional Fees',
-            items: [
-              'Late return fee: €25 per hour',
-              'Fuel service charge if returned empty',
-              'Cleaning fee for excessive dirt or odors',
-              'Traffic violation fees passed to renter'
-            ]
-          }
-        ]
-      },
       support: {
         title: 'Customer Support & Contact',
         content: [
@@ -2653,7 +2630,6 @@ export default function PartnerDashboard() {
                         <span className="text-sm text-gray-600">{vehicle.rating}</span>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-600 mb-4">{vehicle.bookings} bookings</p>
                     <div className="flex space-x-2">
                       <button 
                         onClick={() => handleToggleAvailability(vehicle)}
@@ -2726,19 +2702,19 @@ export default function PartnerDashboard() {
                   Earnings
                 </button>
                 <hr className="my-2 border-gray-200" />
-                <button className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center text-gray-500">
-                  <svg className="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                  </svg>
-                  Payment Methods
-                </button>
-                <button className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center text-gray-500">
+                <button 
+                  onClick={() => setActiveTab('help-center')}
+                  className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center text-gray-500"
+                >
                   <svg className="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Help Center
                 </button>
-                <button className="w-full text-left py-3 px-4 rounded-lg hover:bg-red-50 transition-colors font-medium text-red-600 flex items-center text-gray-500">
+                <button 
+                  onClick={() => logout()}
+                  className="w-full text-left py-3 px-4 rounded-lg hover:bg-red-50 transition-colors font-medium text-red-600 flex items-center"
+                >
                   <svg className="w-5 h-5 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
@@ -2872,7 +2848,6 @@ export default function PartnerDashboard() {
                         <span className="text-sm text-gray-600">{vehicle.rating}</span>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-600 mb-4">{vehicle.bookings} bookings</p>
                     <div className="flex space-x-2">
                       <button 
                         onClick={() => handleToggleAvailability(vehicle)}
@@ -3196,6 +3171,72 @@ export default function PartnerDashboard() {
                 <div className="text-center">
                   <p className="text-sm text-gray-600">Total Earnings</p>
                   <p className="text-3xl font-bold text-gray-900">DH285,600</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'payment-methods' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Payment Methods</h2>
+              <div className="space-y-4">
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-6 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">
+                        VISA
+                      </div>
+                      <div>
+                        <p className="font-medium">•••• •••• •••• 4242</p>
+                        <p className="text-sm text-gray-500">Expires 12/25</p>
+                      </div>
+                    </div>
+                    <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">Primary</span>
+                  </div>
+                </div>
+                <button className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-500 hover:border-gray-400 transition-colors">
+                  + Add New Payment Method
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'help-center' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Help Center</h2>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
+                    <h3 className="font-medium text-gray-900 mb-2">Getting Started</h3>
+                    <p className="text-sm text-gray-600">Learn the basics of partner dashboard</p>
+                  </div>
+                  <div className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
+                    <h3 className="font-medium text-gray-900 mb-2">Vehicle Management</h3>
+                    <p className="text-sm text-gray-600">How to add and manage your vehicles</p>
+                  </div>
+                  <div className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
+                    <h3 className="font-medium text-gray-900 mb-2">Booking Management</h3>
+                    <p className="text-sm text-gray-600">Handle reservations and customer requests</p>
+                  </div>
+                  <div className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
+                    <h3 className="font-medium text-gray-900 mb-2">Payment & Earnings</h3>
+                    <p className="text-sm text-gray-600">Understanding your earnings and payments</p>
+                  </div>
+                </div>
+                <div className="border-t pt-4">
+                  <h3 className="font-medium text-gray-900 mb-3">Contact Support</h3>
+                  <div className="flex space-x-4">
+                    <button className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
+                      Chat with Support
+                    </button>
+                    <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                      Send Email
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

@@ -901,7 +901,7 @@ function SearchContent() {
   const toggleFavorite = async (carId) => {
     if (!user) {
       // Redirect to login if not authenticated
-      router.push('/login')
+      router.push('/auth/signin')
       return
     }
 

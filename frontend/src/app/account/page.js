@@ -90,7 +90,7 @@ export default function AccountPage() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login')
+      router.push('/')
         return
       }
   }, [user, loading, router])
@@ -422,7 +422,10 @@ export default function AccountPage() {
                 
                 <button
                   type="button"
-                  onClick={() => setShowAccountSettings(true)}
+                  onClick={() => {
+                    setCurrentSection('favorites')
+                    setShowAccountSettings(true)
+                  }}
                   className="w-full text-left p-4 rounded-lg border border-gray-200 hover:border-red-300 hover:bg-red-50 transition-colors group"
                 >
                   <div className="flex items-center space-x-3">
@@ -437,28 +440,12 @@ export default function AccountPage() {
                     </div>
                   </div>
                 </button>
-
-                  <button 
-                  type="button"
-                  onClick={() => setShowAccountSettings(true)}
-                  className="w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors group"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4.5 19.5a1.5 1.5 0 01-1.5-1.5V6a1.5 1.5 0 011.5-1.5h15A1.5 1.5 0 0121 6v12a1.5 1.5 0 01-1.5 1.5h-15z" />
-                      </svg>
-                            </div>
-                            <div>
-                      <p className="font-medium text-gray-900">Price Alerts</p>
-                      <p className="text-sm text-gray-500">Get notified of price drops</p>
-                            </div>
-                          </div>
-                          </button>
-                
                   <button
                   type="button"
-                  onClick={() => setShowAccountSettings(true)}
+                  onClick={() => {
+                    setCurrentSection('account')
+                    setShowAccountSettings(true)
+                  }}
                   className="w-full text-left p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors group"
                   >
                   <div className="flex items-center space-x-3">
@@ -703,17 +690,6 @@ export default function AccountPage() {
                   }`}
                 >
                   Favorites
-                      </button>
-                      <button
-                        type="button"
-                  onClick={() => setCurrentSection('price-alerts')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                    currentSection === 'price-alerts'
-                      ? 'bg-white text-orange-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Price Alerts
                       </button>
                     </div>
 
@@ -994,45 +970,6 @@ export default function AccountPage() {
         </div>
         )}
 
-              {/* Price Alerts Section */}
-              {currentSection === 'price-alerts' && (
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Price Alerts</h3>
-                      <p className="text-gray-600">Get notified when car prices drop</p>
-                      </div>
-                <button
-                      onClick={() => {
-                        // TODO: Add create alert functionality
-                        alert('Create alert functionality coming soon!')
-                      }}
-                      className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm"
-                    >
-                      Create Alert
-                </button>
-              </div>
-
-                  <div className="text-center py-12">
-                    <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4.5 19.5a1.5 1.5 0 01-1.5-1.5V6a1.5 1.5 0 011.5-1.5h15A1.5 1.5 0 0121 6v12a1.5 1.5 0 01-1.5 1.5h-15z" />
-                    </svg>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No price alerts yet</h3>
-                    <p className="text-gray-500 mb-4">
-                      Create your first price alert to get notified when car prices drop.
-                    </p>
-                  <button
-                      onClick={() => {
-                        // TODO: Add create alert functionality
-                        alert('Create alert functionality coming soon!')
-                      }}
-                      className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors"
-                    >
-                      Create Alert
-                  </button>
-                </div>
-                </div>
-              )}
                 </div>
 
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
