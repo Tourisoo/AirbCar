@@ -29,7 +29,6 @@ class User(AbstractUser):
     email_verification_token = models.CharField(max_length=36, blank=True, null=True)
     email_verified = models.BooleanField(default=False)
 
-
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 

@@ -59,25 +59,28 @@ jobs:
       - name: Run Django migrations
         run: |
           cd backend/airbcar_backend
-          python manage.py migrate --settings=airbcar_backend.settings_ci_simple
+          python manage.py migrate
         env:
           DATABASE_NAME: airbcar_db
           DATABASE_USER: airbcar_user
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DJANGO_SETTINGS_MODULE: airbcar_backend.settings_ci_simple
+          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
+          GITHUB_ACTIONS: true
       - name: Run Django tests
         run: |
           cd backend/airbcar_backend
-          python manage.py test --settings=airbcar_backend.settings_ci_simple
+          export DJANGO_SETTINGS_MODULE=airbcar_backend.settings
+          python manage.py test
         env:
           DATABASE_NAME: airbcar_db
           DATABASE_USER: airbcar_user
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DJANGO_SETTINGS_MODULE: airbcar_backend.settings_ci_simple
+          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
+          GITHUB_ACTIONS: true
       - name: Build backend Docker image
         run: docker build -t django-app .
         working-directory: ./backend
@@ -108,10 +111,40 @@ jobs:
         run: |
           cd backend
           pip install -r requirements.txt
+      - name: Debug Django settings
+        run: |
+          cd backend/airbcar_backend
+          echo "=== Environment Debug ==="
+          echo "DJANGO_SETTINGS_MODULE: $DJANGO_SETTINGS_MODULE"
+          echo "GITHUB_ACTIONS: $GITHUB_ACTIONS"
+          echo "Current directory: $(pwd)"
+          echo "Files in current directory:"
+          ls -la
+          echo "Settings files:"
+          find . -name "*settings*" -type f
+          echo "=== Testing Django import ==="
+          python -c "
+          import os
+          print('Environment DJANGO_SETTINGS_MODULE:', os.environ.get('DJANGO_SETTINGS_MODULE'))
+          import django
+          django.setup()
+          from django.conf import settings
+          print('Successfully loaded settings:', settings.SETTINGS_MODULE)
+          print('Database HOST:', settings.DATABASES['default']['HOST'])
+          "
+        env:
+          DATABASE_NAME: airbcar_db
+          DATABASE_USER: airbcar_user
+          DATABASE_PASSWORD: amineamine
+          DATABASE_HOST: localhost
+          DATABASE_PORT: 5432
+          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
+          GITHUB_ACTIONS: true
       - name: Run Django migrations
         run: |
           cd backend/airbcar_backend
-          python manage.py migrate --settings=airbcar_backend.settings_ci_simple
+          export DJANGO_SETTINGS_MODULE=airbcar_backend.settings
+          python manage.py migrate
         env:
           DATABASE_URL: postgres://airbcar_user:amineamine@localhost:5432/airbcar_db
           DATABASE_NAME: airbcar_db
@@ -119,11 +152,13 @@ jobs:
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DJANGO_SETTINGS_MODULE: airbcar_backend.settings_ci_simple
+          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
+          GITHUB_ACTIONS: true
       - name: Start backend server
         run: |
           cd backend/airbcar_backend
-          python manage.py runserver --settings=airbcar_backend.settings_ci_simple &
+          export DJANGO_SETTINGS_MODULE=airbcar_backend.settings
+          python manage.py runserver &
           echo $! > backend.pid
         env:
           DATABASE_URL: postgres://airbcar_user:amineamine@localhost:5432/airbcar_db
@@ -132,7 +167,8 @@ jobs:
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DJANGO_SETTINGS_MODULE: airbcar_backend.settings_ci_simple
+          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
+          GITHUB_ACTIONS: true
       - name: Wait for backend to be ready
         run: |
           timeout 60 bash -c 'until curl -f http://localhost:8000/ 2>/dev/null; do sleep 2; done' || echo "Backend health check skipped"

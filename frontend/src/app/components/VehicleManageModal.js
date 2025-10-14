@@ -1105,30 +1105,128 @@ export default function VehicleManageModal({
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Brand *</label>
-                          <input
-                            type="text"
+                          <select
                             name="brand"
                             value={editData.brand || ''}
                             onChange={handleInputChange}
                             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                               validationErrors.brand ? 'border-red-500' : 'border-gray-300'
                             }`}
-                          />
+                          >
+                            <option value="">Select Brand</option>
+                            <option value="Toyota">Toyota</option>
+                            <option value="Honda">Honda</option>
+                            <option value="Ford">Ford</option>
+                            <option value="BMW">BMW</option>
+                            <option value="Mercedes-Benz">Mercedes-Benz</option>
+                            <option value="Audi">Audi</option>
+                            <option value="Volkswagen">Volkswagen</option>
+                            <option value="Nissan">Nissan</option>
+                            <option value="Hyundai">Hyundai</option>
+                            <option value="Kia">Kia</option>
+                            <option value="Mazda">Mazda</option>
+                            <option value="Subaru">Subaru</option>
+                            <option value="Chevrolet">Chevrolet</option>
+                            <option value="Lexus">Lexus</option>
+                            <option value="Tesla">Tesla</option>
+                            <option value="Porsche">Porsche</option>
+                            <option value="Jaguar">Jaguar</option>
+                            <option value="Land Rover">Land Rover</option>
+                            <option value="Volvo">Volvo</option>
+                            <option value="Other">Other</option>
+                          </select>
                           {validationErrors.brand && (
                             <p className="text-red-500 text-xs mt-1">{validationErrors.brand}</p>
                           )}
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Model *</label>
-                          <input
-                            type="text"
+                          <select
                             name="model"
                             value={editData.model || ''}
                             onChange={handleInputChange}
                             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 ${
                               validationErrors.model ? 'border-red-500' : 'border-gray-300'
                             }`}
-                          />
+                          >
+                            <option value="">Select Model</option>
+                            {/* Toyota Models */}
+                            <option value="Camry">Camry</option>
+                            <option value="Corolla">Corolla</option>
+                            <option value="RAV4">RAV4</option>
+                            <option value="Highlander">Highlander</option>
+                            <option value="Prius">Prius</option>
+                            <option value="Sienna">Sienna</option>
+                            <option value="Tacoma">Tacoma</option>
+                            <option value="Tundra">Tundra</option>
+                            {/* Honda Models */}
+                            <option value="Civic">Civic</option>
+                            <option value="Accord">Accord</option>
+                            <option value="CR-V">CR-V</option>
+                            <option value="Pilot">Pilot</option>
+                            <option value="Odyssey">Odyssey</option>
+                            <option value="Ridgeline">Ridgeline</option>
+                            {/* Ford Models */}
+                            <option value="F-150">F-150</option>
+                            <option value="Mustang">Mustang</option>
+                            <option value="Explorer">Explorer</option>
+                            <option value="Escape">Escape</option>
+                            <option value="Edge">Edge</option>
+                            <option value="Fusion">Fusion</option>
+                            {/* BMW Models */}
+                            <option value="3 Series">3 Series</option>
+                            <option value="5 Series">5 Series</option>
+                            <option value="X3">X3</option>
+                            <option value="X5">X5</option>
+                            <option value="X1">X1</option>
+                            <option value="7 Series">7 Series</option>
+                            {/* Mercedes-Benz Models */}
+                            <option value="C-Class">C-Class</option>
+                            <option value="E-Class">E-Class</option>
+                            <option value="S-Class">S-Class</option>
+                            <option value="GLE">GLE</option>
+                            <option value="GLC">GLC</option>
+                            <option value="A-Class">A-Class</option>
+                            {/* Audi Models */}
+                            <option value="A4">A4</option>
+                            <option value="A6">A6</option>
+                            <option value="Q5">Q5</option>
+                            <option value="Q7">Q7</option>
+                            <option value="A3">A3</option>
+                            <option value="Q3">Q3</option>
+                            {/* Tesla Models */}
+                            <option value="Model 3">Model 3</option>
+                            <option value="Model Y">Model Y</option>
+                            <option value="Model S">Model S</option>
+                            <option value="Model X">Model X</option>
+                            {/* Nissan Models */}
+                            <option value="Altima">Altima</option>
+                            <option value="Sentra">Sentra</option>
+                            <option value="Rogue">Rogue</option>
+                            <option value="Murano">Murano</option>
+                            <option value="Pathfinder">Pathfinder</option>
+                            {/* Hyundai Models */}
+                            <option value="Elantra">Elantra</option>
+                            <option value="Sonata">Sonata</option>
+                            <option value="Tucson">Tucson</option>
+                            <option value="Santa Fe">Santa Fe</option>
+                            <option value="Palisade">Palisade</option>
+                            {/* Chevrolet Models */}
+                            <option value="Malibu">Malibu</option>
+                            <option value="Equinox">Equinox</option>
+                            <option value="Traverse">Traverse</option>
+                            <option value="Silverado">Silverado</option>
+                            <option value="Tahoe">Tahoe</option>
+                            {/* Other Popular Models */}
+                            <option value="Wrangler">Wrangler (Jeep)</option>
+                            <option value="Grand Cherokee">Grand Cherokee (Jeep)</option>
+                            <option value="Outback">Outback (Subaru)</option>
+                            <option value="Forester">Forester (Subaru)</option>
+                            <option value="CX-5">CX-5 (Mazda)</option>
+                            <option value="Sorento">Sorento (Kia)</option>
+                            <option value="Sportage">Sportage (Kia)</option>
+                            <option value="Other">Other</option>
+                          </select>
                           {validationErrors.model && (
                             <p className="text-red-500 text-xs mt-1">{validationErrors.model}</p>
                           )}
@@ -1154,13 +1252,21 @@ export default function VehicleManageModal({
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                          <input
-                            type="text"
+                          <select
                             name="location"
                             value={editData.location || ''}
                             onChange={handleInputChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900"
-                          />
+                          >
+                            <option value="">Select Location</option>
+                            {/* Moroccan Cities */}
+                            <option value="Agadir">Agadir</option>
+                            <option value="Casablanca">Casablanca</option>
+                            <option value="Marrakech">Marrakech</option>
+                            <option value="Rabat">Rabat</option>
+                            <option value="Tetouan">Tetouan</option>
+                            <option value="Tangier">Tangier</option>
+                          </select>
                         </div>
                       </div>
                     </div>

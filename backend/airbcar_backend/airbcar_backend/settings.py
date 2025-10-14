@@ -102,16 +102,33 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DATABASE_NAME', 'airbcar_db'),
-        'USER': os.environ.get('DATABASE_USER', 'airbcar_user'),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'amineamine'),
-        'HOST': os.environ.get('DATABASE_HOST', 'db'),
-        'PORT': os.environ.get('DATABASE_PORT', '5432'),
+# Check if running in CI environment
+IS_CI = os.environ.get('GITHUB_ACTIONS') == 'true' or os.environ.get('CI') == 'true'
+
+if IS_CI:
+    # CI/CD database configuration
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'airbcar_db'),
+            'USER': os.environ.get('DB_USER', 'airbcar_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'amineamine'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
     }
-}
+else:
+    # Production/Development database configuration
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DATABASE_NAME', 'airbcar_db'),
+            'USER': os.environ.get('DATABASE_USER', 'airbcar_user'),
+            'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'amineamine'),
+            'HOST': os.environ.get('DATABASE_HOST', 'db'),
+            'PORT': os.environ.get('DATABASE_PORT', '5432'),
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

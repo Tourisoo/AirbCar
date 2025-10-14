@@ -1,5 +1,4 @@
-# from django.shortcuts import render, redirect
-from django.http import HttpResponse#, JsonResponse
+from django.http import HttpResponse
 from .models import User, Booking, Partner, Listing
 from django.utils import timezone
 from rest_framework import viewsets, generics, status
@@ -7,15 +6,12 @@ from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-# from rest_framework.views import APIView
-# from rest_framework_simplejwt.tokens import RefreshToken
 import uuid
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
-from django.contrib.auth import get_user_model#, authenticate
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-# from django.contrib.auth.tokens import default_token_generator
 from rest_framework import status
 from rest_framework.response import Response
 from .utils import upload_file_to_supabase
@@ -26,79 +22,6 @@ from .serializers import (UserSerializer, BookingSerializer, PartnerSerializer,
     CustomTokenObtainPairSerializer)
 
 User = get_user_model()
-
-class UserVerificationView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        user = request.user
-        token = request.data.get('token')
-        if token == user.email_verification_token:
-            user.email_verified = True
-            user.is_verified = True
-            user.email_verification_token = None
-            user.save()
-            return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
-        return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
-
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
-    
-    def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        if response.status_code == 200:
-            # Add user data to the response
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            user = serializer.user
-            
-            response.data['user'] = {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'is_partner': user.is_partner,
-                'is_verified': user.is_verified,
-                'is_staff': user.is_staff,
-                'is_superuser': user.is_superuser,
-                'role': getattr(user, 'role', 'user'),
-            }
-        return response
-
-class UserStatusView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user = request.user
-        return Response({
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'is_partner': user.is_partner,
-            'is_verified': user.is_verified,
-            'email_verified': user.email_verified,
-            'is_staff': user.is_staff,
-        })
-
-    def post(self, request):
-        """Handle email verification"""
-        user = request.user
-        token = request.data.get('token')
-        if token == user.email_verification_token:
-            user.email_verified = True
-            user.is_verified = True
-            user.email_verification_token = None
-            user.save()
-            return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
-        return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
-
-class AdminStatusView(generics.GenericAPIView):
-    """Simplified admin check"""
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        return Response({'is_admin': request.user.is_staff})
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -263,7 +186,6 @@ class PartnerViewSet(viewsets.ModelViewSet):
         if not user.is_partner:
             raise ValidationError({"detail": "You are not a partner."})
         
-        # Get or create partner record for the current user
         partner, created = Partner.objects.get_or_create(
             user=user,
             defaults={
@@ -276,8 +198,6 @@ class PartnerViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(partner)
         return Response(serializer.data)
-
-# end add for bug fix
 
 class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializer
@@ -292,10 +212,8 @@ class BookingViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated:
             raise ValidationError({"detail": "You are not logged in."})
         
-        # Build the query conditions using Q objects to avoid union() issues
         query = Q(user=user)
         
-        # If user is a partner, also include bookings for their listings
         if user.is_partner:
             query |= Q(listing__partner__user=user)
             
@@ -309,7 +227,6 @@ class BookingViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'listing': 'Listing not found'})
         
-        # Save booking with request message
         request_message = self.request.data.get('request_message', '')
         serializer.save(
             user=self.request.user, 
@@ -328,7 +245,6 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Get all pending bookings for this partner's listings
         partner = user.partner
         pending_bookings = Booking.objects.filter(
             listing__partner=partner,
@@ -343,7 +259,6 @@ class BookingViewSet(viewsets.ModelViewSet):
         """Accept a pending booking request"""
         booking = self.get_object()
         
-        # Check if user is the car owner
         if request.user != booking.listing.partner.user:
             return Response(
                 {'error': 'You can only accept bookings for your own cars'}, 
@@ -356,7 +271,6 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check for conflicting bookings
         conflicting_bookings = Booking.objects.filter(
             listing=booking.listing,
             status='accepted',
@@ -372,7 +286,6 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Accept the booking
         booking.status = 'accepted'
         booking.accepted_at = timezone.now()
         booking.save()
@@ -385,7 +298,6 @@ class BookingViewSet(viewsets.ModelViewSet):
         """Reject a pending booking request"""
         booking = self.get_object()
         
-        # Check if user is the car owner
         if request.user != booking.listing.partner.user:
             return Response(
                 {'error': 'You can only reject bookings for your own cars'}, 
@@ -398,7 +310,6 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Reject the booking
         rejection_reason = request.data.get('rejection_reason', '')
         booking.status = 'rejected'
         booking.rejected_at = timezone.now()
@@ -413,7 +324,6 @@ class BookingViewSet(viewsets.ModelViewSet):
         """Cancel an existing booking"""
         booking = self.get_object()
         
-        # Check if user is either the renter or car owner
         if request.user not in [booking.user, booking.listing.partner.user]:
             return Response(
                 {'error': 'You can only cancel your own bookings'}, 
@@ -426,7 +336,6 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Cancel the booking
         booking.status = 'cancelled'
         booking.cancelled_at = timezone.now()
         booking.save()
@@ -460,7 +369,6 @@ class PasswordResetRequestView(generics.GenericAPIView):
             token_generator = PasswordResetTokenGenerator()
             token = token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            # Send user to frontend reset page with uid and token as URL parameters
             reset_url = f"http://localhost:3000/auth/reset-password?uid={uid}&token={token}"
             send_mail(
                 'Password Reset Request',
@@ -505,6 +413,78 @@ def verify_email(request):
         return HttpResponse("Email successfully verified!")
     except User.DoesNotExist:
         return HttpResponse("Invalid or expired token", status=400)
+
+class UserVerificationView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        token = request.data.get('token')
+        if token == user.email_verification_token:
+            user.email_verified = True
+            user.is_verified = True
+            user.email_verification_token = None
+            user.save()
+            return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
+        return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+    
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 200:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = serializer.user
+            
+            response.data['user'] = {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'is_partner': user.is_partner,
+                'is_verified': user.is_verified,
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
+                'role': getattr(user, 'role', 'user'),
+            }
+        return response
+
+class UserStatusView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'is_partner': user.is_partner,
+            'is_verified': user.is_verified,
+            'email_verified': user.email_verified,
+            'is_staff': user.is_staff,
+        })
+
+    def post(self, request):
+        """Handle email verification"""
+        user = request.user
+        token = request.data.get('token')
+        if token == user.email_verification_token:
+            user.email_verified = True
+            user.is_verified = True
+            user.email_verification_token = None
+            user.save()
+            return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
+        return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+class AdminStatusView(generics.GenericAPIView):
+    """Simplified admin check"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        return Response({'is_admin': request.user.is_staff})
 
 def home_view(request):
     html_content = """

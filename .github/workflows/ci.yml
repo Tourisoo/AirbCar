@@ -79,7 +79,7 @@ jobs:
           DB_NAME: airbcar_db
           DB_USER: airbcar_user
           DB_PASSWORD: amineamine
-          DJANGO_SETTINGS_MODULE: airbcar_backend.settings_ci_simple
+          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
 
       - name: Test database connection
         run: |
@@ -108,7 +108,7 @@ jobs:
           DB_NAME: airbcar_db
           DB_USER: airbcar_user
           DB_PASSWORD: amineamine
-          DJANGO_SETTINGS_MODULE: airbcar_backend.settings_ci_simple
+          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
 
       - name: Verify Django settings are correct
         run: |
@@ -144,15 +144,16 @@ jobs:
           DB_NAME: airbcar_db
           DB_USER: airbcar_user
           DB_PASSWORD: amineamine
-          DJANGO_SETTINGS_MODULE: airbcar_backend.settings_ci_simple
+          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
 
       - name: Run database migrations
         run: |
           cd backend/airbcar_backend
           echo "=== Pre-migration debug ==="
           echo "DJANGO_SETTINGS_MODULE: $DJANGO_SETTINGS_MODULE"
+          export DJANGO_SETTINGS_MODULE=airbcar_backend.settings
           echo "=== Running migrations with Django manage.py ==="
-          python manage.py migrate --settings=airbcar_backend.settings_ci_simple
+          python manage.py migrate
         env:
           GITHUB_ACTIONS: true
           DB_HOST: localhost
@@ -160,12 +161,13 @@ jobs:
           DB_NAME: airbcar_db
           DB_USER: airbcar_user
           DB_PASSWORD: amineamine
-          DJANGO_SETTINGS_MODULE: airbcar_backend.settings_ci_simple
+          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
 
       - name: Run backend tests
         run: |
           cd backend/airbcar_backend
-          python manage.py test --settings=airbcar_backend.settings_ci_simple
+          export DJANGO_SETTINGS_MODULE=airbcar_backend.settings
+          python manage.py test
         env:
           GITHUB_ACTIONS: true
           DB_HOST: localhost
@@ -173,7 +175,7 @@ jobs:
           DB_NAME: airbcar_db
           DB_USER: airbcar_user
           DB_PASSWORD: amineamine
-          DJANGO_SETTINGS_MODULE: airbcar_backend.settings_ci_simple
+          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

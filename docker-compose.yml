@@ -5,7 +5,7 @@ services:
     ports:
       - "8000:8000"
     networks:
-      - airbo
+      - AirbNet
     environment:
       DATABASE_NAME: postgres
       DATABASE_USER: postgres.wtbmqtmmdobfvvecinif
@@ -28,17 +28,16 @@ services:
       - DJANGO_API_URL=http://web:8000
       - NEXT_PUBLIC_DJANGO_API_URL=http://localhost:8000
       - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=your-secret-key-here-replace-in-production
       - DATABASE_URL=postgresql://postgres.wtbmqtmmdobfvvecinif:Mayache+123455@aws-1-eu-north-1.pooler.supabase.com:5432/postgres
       - NODE_OPTIONS=--max-old-space-size=4096
     volumes:
       - ./frontend:/app
       - /app/node_modules
     networks:
-      - airbo
+      - AirbNet
     restart: unless-stopped
 
 
 networks:
-  airbo:
+  AirbNet:
     driver: bridge
