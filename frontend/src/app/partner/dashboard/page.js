@@ -67,10 +67,12 @@ export default function PartnerDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   
-  // Reservations state
+  // Calendar and reservations state
   const [reservations, setReservations] = useState([])
   const [reservationsLoading, setReservationsLoading] = useState(false)
   const [activeReservationTab, setActiveReservationTab] = useState('checking-out')
+  const [calendarBookings, setCalendarBookings] = useState([])
+  const [calendarLoading, setCalendarLoading] = useState(false)
 
   const [showAccountSettings, setShowAccountSettings] = useState(false)
   const [showPartnerEditModal, setShowPartnerEditModal] = useState(false)
@@ -237,7 +239,8 @@ export default function PartnerDashboard() {
   // Fetch partner data from backend API
   const fetchPartnerData = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/partners/me/`, {
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/partners/me/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -255,7 +258,7 @@ export default function PartnerDashboard() {
       }
 
       const partnerData = await response.json()
-      console.log('Partner API URL used:', `http://127.0.0.1:8000/partners/me/`)
+      console.log('Partner API URL used:', `${apiUrl}/partners/me/`)
       console.log('Partner Response status:', response.status)
       console.log('Fetched partner data:', partnerData)
       
@@ -269,7 +272,8 @@ export default function PartnerDashboard() {
   // Fetch vehicles from backend API
   const fetchVehicles = async (partnerId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/listings/?partner=${partnerId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/listings/?partner=${partnerId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -295,7 +299,7 @@ export default function PartnerDashboard() {
       }
 
       const data = await response.json()
-      console.log('API URL used:', `http://127.0.0.1:8000/listings/?partner=${partnerId}`)
+      console.log('API URL used:', `${apiUrl}/listings/?partner=${partnerId}`)
       console.log('Response status:', response.status)
       console.log('Fetched vehicles data:', data)
       console.log('Data type:', typeof data)
@@ -391,7 +395,8 @@ export default function PartnerDashboard() {
   // Delete all vehicles for a partner
   const deletePartnerVehicles = async (partnerId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/listings/?partner=${partnerId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/listings/?partner=${partnerId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -417,7 +422,7 @@ export default function PartnerDashboard() {
       }
 
       const result = await response.json()
-      console.log('DELETE API URL used:', `http://127.0.0.1:8000/listings/?partner=${partnerId}`)
+      console.log('DELETE API URL used:', `${apiUrl}/listings/?partner=${partnerId}`)
       console.log('Delete response status:', response.status)
       console.log('Delete result:', result)
       
@@ -723,6 +728,15 @@ export default function PartnerDashboard() {
     }
   }, [user, vehicles, activeTab])
 
+  // Load calendar bookings when month changes or calendar tab is accessed
+  useEffect(() => {
+    if (user && vehicles.length > 0 && activeTab === 'calendar') {
+      const year = selectedDate.getFullYear()
+      const month = selectedDate.getMonth()
+      loadCalendarBookings(year, month)
+    }
+  }, [user, vehicles, activeTab, selectedDate.getFullYear(), selectedDate.getMonth()])
+
   // Function to refresh data from backend
   const refreshAllData = async () => {
     try {
@@ -1020,8 +1034,12 @@ export default function PartnerDashboard() {
         return
       }
 
+      // Use environment variable for API URL
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      console.log('🌐 Reservations API URL:', apiUrl)
+
       // Fetch reservations from backend
-      const response = await fetch(`http://127.0.0.1:8000/bookings/`, {
+      const response = await fetch(`${apiUrl}/bookings/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -1045,11 +1063,190 @@ export default function PartnerDashboard() {
       })
 
       setReservations(partnerReservations)
+      
+      // Also update calendar bookings
+      setCalendarBookings(partnerReservations)
     } catch (error) {
       console.error('Error loading reservations:', error)
       setReservations([])
+      setCalendarBookings([])
     } finally {
       setReservationsLoading(false)
+    }
+  }
+
+  // Load calendar bookings for a specific month
+  const loadCalendarBookings = async (year, month) => {
+    try {
+      setCalendarLoading(true)
+      console.log(`🗓️ Loading calendar bookings for ${year}-${String(month + 1).padStart(2, '0')}...`)
+      
+      // Verify user is authenticated
+      if (!user) {
+        console.error('❌ No authenticated user for loading calendar bookings')
+        setCalendarBookings([])
+        return
+      }
+
+      // Get access token
+      const accessToken = localStorage.getItem('access_token')
+      if (!accessToken) {
+        console.error('❌ No access token available')
+        setCalendarBookings([])
+        return
+      }
+
+      // Use environment variable for API URL
+      const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
+      console.log('🌐 Calendar API URL:', apiUrl)
+      console.log(' User vehicles count:', vehicles.length)
+
+      // First, try to fetch all bookings
+      let fetchUrl = `${apiUrl}/bookings/`
+      
+      // Calculate date range for the month (for potential filtering)
+      const startDate = new Date(year, month, 1).toISOString().split('T')[0]
+      const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0]
+      console.log('📅 Date range:', { startDate, endDate })
+
+      console.log('📡 Fetching from:', fetchUrl)
+
+      const response = await fetch(fetchUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('📡 Calendar API response status:', response.status)
+
+      if (!response.ok) {
+        console.error(`❌ Calendar API Error: ${response.status} ${response.statusText}`)
+        const errorText = await response.text()
+        console.error('📄 Error response:', errorText)
+        // Fallback to existing reservations if API call fails
+        setCalendarBookings(reservations)
+        return
+      }
+
+      const bookingsData = await response.json()
+      console.log('📋 Raw API response:', bookingsData)
+      
+      // Handle different response formats
+      let bookingsArray = []
+      if (Array.isArray(bookingsData)) {
+        bookingsArray = bookingsData
+      } else if (bookingsData.results && Array.isArray(bookingsData.results)) {
+        bookingsArray = bookingsData.results
+      } else if (bookingsData.bookings && Array.isArray(bookingsData.bookings)) {
+        bookingsArray = bookingsData.bookings
+      } else {
+        console.warn('⚠️ Unexpected booking data format:', bookingsData)
+        setCalendarBookings([])
+        return
+      }
+
+      console.log('📊 Total bookings received:', bookingsArray.length)
+      
+      // Transform and filter bookings based on partner's vehicles
+      const partnerBookings = bookingsArray.filter(booking => {
+        // Check if this booking is for one of the partner's vehicles
+        const hasVehicle = vehicles.some(vehicle => vehicle.id === booking.listing?.id || vehicle.id === booking.vehicle?.id || vehicle.id === booking.listing_id)
+        if (hasVehicle) {
+          console.log(`✅ Found partner booking: ${booking.id} for vehicle ${booking.listing?.id || booking.vehicle?.id || booking.listing_id}`)
+        }
+        return hasVehicle
+      })
+
+      // Filter by date range (client-side filtering if API doesn't support it)
+      const monthFilteredBookings = partnerBookings.filter(booking => {
+        const bookingStart = booking.start_time || booking.start_date || booking.check_in
+        const bookingEnd = booking.end_time || booking.end_date || booking.check_out
+        
+        if (!bookingStart || !bookingEnd) {
+          console.warn('⚠️ Booking missing date fields:', booking)
+          return false
+        }
+        
+        const startDateObj = new Date(bookingStart)
+        const endDateObj = new Date(bookingEnd)
+        const monthStart = new Date(year, month, 1)
+        const monthEnd = new Date(year, month + 1, 0)
+        
+        // Check if booking overlaps with the current month
+        return startDateObj <= monthEnd && endDateObj >= monthStart
+      })
+
+      console.log('🏆 Partner bookings after filtering:', monthFilteredBookings.length)
+      console.log('📝 Sample booking structure:', monthFilteredBookings[0])
+      
+      setCalendarBookings(monthFilteredBookings)
+    } catch (error) {
+      console.error('Error loading calendar bookings:', error)
+      // Fallback to existing reservations
+      setCalendarBookings(reservations)
+    } finally {
+      setCalendarLoading(false)
+    }
+  }
+
+  // Get bookings for a specific date
+  const getBookingsForDate = (date) => {
+    if (!date || !calendarBookings.length) {
+      console.log('📅 No date or no calendar bookings available')
+      return []
+    }
+    
+    const dateStr = date.toISOString().split('T')[0]
+    console.log(`📅 Getting bookings for date: ${dateStr}`)
+    
+    const dayBookings = calendarBookings.filter(booking => {
+      const startDate = new Date(booking.start_time).toISOString().split('T')[0]
+      const endDate = new Date(booking.end_time).toISOString().split('T')[0]
+      
+      // Check if the date falls within the booking period
+      const isInRange = dateStr >= startDate && dateStr <= endDate
+      if (isInRange) {
+        console.log(`✅ Booking ${booking.id} matches date ${dateStr} (${startDate} to ${endDate})`)
+      }
+      return isInRange
+    })
+    
+    console.log(`📊 Found ${dayBookings.length} bookings for ${dateStr}`)
+    return dayBookings
+  }
+
+  // Get booking statistics for a specific date
+  const getDateStats = (date) => {
+    const bookings = getBookingsForDate(date)
+    const dateStr = date.toISOString().split('T')[0]
+    
+    return {
+      checkingOut: bookings.filter(b => {
+        const endDate = new Date(b.end_time).toISOString().split('T')[0]
+        return endDate === dateStr && b.status === 'active'
+      }).length,
+      currentlyHosting: bookings.filter(b => {
+        const startDate = new Date(b.start_time).toISOString().split('T')[0]
+        const endDate = new Date(b.end_time).toISOString().split('T')[0]
+        return dateStr > startDate && dateStr < endDate && b.status === 'active'
+      }).length,
+      arrivingSoon: bookings.filter(b => {
+        const startDate = new Date(b.start_time).toISOString().split('T')[0]
+        return startDate === dateStr && (b.status === 'confirmed' || b.status === 'active')
+      }).length,
+      upcoming: bookings.filter(b => {
+        const startDate = new Date(b.start_time).toISOString().split('T')[0]
+        const tomorrow = new Date(date)
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        const tomorrowStr = tomorrow.toISOString().split('T')[0]
+        return startDate > tomorrowStr && b.status === 'confirmed'
+      }).length,
+      pendingReview: bookings.filter(b => {
+        const endDate = new Date(b.end_time).toISOString().split('T')[0]
+        return endDate < dateStr && b.status === 'completed'
+      }).length
     }
   }
 
@@ -2138,371 +2335,397 @@ export default function PartnerDashboard() {
         )}
 
         {activeTab === 'calendar' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold text-gray-900">Calendar</h2>
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() => changeMonth(-1)}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <h3 className="text-xl font-semibold text-gray-900 min-w-[200px] text-center">
-                    {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                  </h3>
-                  <button
-                    onClick={() => changeMonth(1)}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
+          <div>calendar</div>
+          // <div className="space-y-6">
+          //   <div className="bg-white rounded-lg shadow-sm border p-6">
+          //     <div className="flex justify-between items-center mb-6">
+          //       <h2 className="text-2xl font-semibold text-gray-900">Calendar</h2>
+          //       <div className="flex items-center space-x-4">
+          //         <button
+          //           onClick={() => changeMonth(-1)}
+          //           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          //         >
+          //           <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          //             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          //           </svg>
+          //         </button>
+          //         <h3 className="text-xl font-semibold text-gray-900 min-w-[200px] text-center">
+          //           {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          //         </h3>
+          //         <button
+          //           onClick={() => changeMonth(1)}
+          //           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          //         >
+          //           <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          //             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          //           </svg>
+          //         </button>
+          //       </div>
+          //     </div>
 
-              {/* Calendar Grid */}
-              <div className="grid grid-cols-7 gap-1">
-                {/* Day Headers */}
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                  <div key={day} className="p-3 text-center text-sm font-medium text-gray-500 border-b">
-                    {day}
-                  </div>
-                ))}
+          //     {/* Calendar Grid */}
+          //     <div className="grid grid-cols-7 gap-1">
+          //       {/* Day Headers */}
+          //       {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+          //         <div key={day} className="p-3 text-center text-sm font-medium text-gray-500 border-b">
+          //           {day}
+          //         </div>
+          //       ))}
 
-                {/* Calendar Days */}
-                {getDaysInMonth(selectedDate).map((date, index) => (
-                  <div
-                    key={index}
-                    className={`h-16 p-2 border border-gray-100 ${
-                      date ? 'cursor-pointer hover:bg-gray-50' : ''
-                    } ${
-                      date && isToday(date) ? 'bg-orange-100 border-orange-300' : ''
-                    } ${
-                      date && isSameDay(date, selectedDate) ? 'bg-blue-100 border-blue-300' : ''
-                    }`}
-                    onClick={() => date && setSelectedDate(date)}
-                  >
-                    {date && (
-                      <div className="h-full flex flex-col">
-                        <span className={`text-sm ${
-                          isToday(date) ? 'font-bold text-orange-600' : 
-                          isSameDay(date, selectedDate) ? 'font-bold text-blue-600' : 
-                          'text-gray-900'
-                        }`}>
-                          {date.getDate()}
-                        </span>
+          //       {/* Calendar Days */}
+          //       {getDaysInMonth(selectedDate).map((date, index) => (
+          //         <div
+          //           key={index}
+          //           className={`h-16 p-2 border border-gray-100 ${
+          //             date ? 'cursor-pointer hover:bg-gray-50' : ''
+          //           } ${
+          //             date && isToday(date) ? 'bg-orange-100 border-orange-300' : ''
+          //           } ${
+          //             date && isSameDay(date, selectedDate) ? 'bg-blue-100 border-blue-300' : ''
+          //           }`}
+          //           onClick={() => date && setSelectedDate(date)}
+          //         >
+          //           {date && (
+          //             <div className="h-full flex flex-col">
+          //               <span className={`text-sm ${
+          //                 isToday(date) ? 'font-bold text-orange-600' : 
+          //                 isSameDay(date, selectedDate) ? 'font-bold text-blue-600' : 
+          //                 'text-gray-900'
+          //               }`}>
+          //                 {date.getDate()}
+          //               </span>
                         
-                        {/* Sample bookings/events */}
-                        {date.getDate() === 15 && (
-                          <div className="mt-1">
-                            <div className="w-full h-1 bg-green-400 rounded mb-1"></div>
-                            <div className="text-xs text-green-600">Booking</div>
-                          </div>
-                        )}
-                        {date.getDate() === 18 && (
-                          <div className="mt-1">
-                            <div className="w-full h-1 bg-blue-400 rounded mb-1"></div>
-                            <div className="text-xs text-blue-600">Check-out</div>
-                          </div>
-                        )}
-                        {date.getDate() === 22 && (
-                          <div className="mt-1">
-                            <div className="w-full h-1 bg-yellow-400 rounded mb-1"></div>
-                            <div className="text-xs text-yellow-600">Maintenance</div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+          //               {/* Real bookings from backend */}
+          //               {(() => {
+          //                 const bookings = getBookingsForDate(date)
+          //                 const dateStats = getDateStats(date)
+                          
+          //                 if (bookings.length === 0) return null
+                          
+          //                 return (
+          //                   <div className="mt-1 space-y-1">
+          //                     {/* Check-in */}
+          //                     {dateStats.arrivingSoon > 0 && (
+          //                       <div className="w-full h-1 bg-green-400 rounded"></div>
+          //                     )}
+          //                     {/* Check-out */}
+          //                     {dateStats.checkingOut > 0 && (
+          //                       <div className="w-full h-1 bg-blue-400 rounded"></div>
+          //                     )}
+          //                     {/* Currently hosting */}
+          //                     {dateStats.currentlyHosting > 0 && (
+          //                       <div className="w-full h-1 bg-purple-400 rounded"></div>
+          //                     )}
+          //                     {/* Booking count */}
+          //                     {bookings.length > 0 && (
+          //                       <div className="text-xs text-gray-600 font-medium">
+          //                         {bookings.length} booking{bookings.length > 1 ? 's' : ''}
+          //                       </div>
+          //                     )}
+          //                   </div>
+          //                 )
+          //               })()}
 
-              {/* Calendar Legend */}
-              <div className="mt-6 flex justify-center space-x-6">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-400 rounded mr-2"></div>
-                  <span className="text-sm text-gray-600">New Booking</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-blue-400 rounded mr-2"></div>
-                  <span className="text-sm text-gray-600">Check-out</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-yellow-400 rounded mr-2"></div>
-                  <span className="text-sm text-gray-600">Maintenance</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-orange-100 border border-orange-300 rounded mr-2"></div>
-                  <span className="text-sm text-gray-600">Today</span>
-                </div>
-              </div>
-            </div>
+          //               {/* Loading indicator */}
+          //               {calendarLoading && date.getDate() === 1 && (
+          //                 <div className="mt-1">
+          //                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+          //                 </div>
+          //               )}
+          //             </div>
+          //           )}
+          //         </div>
+          //       ))}
+          //     </div>
 
-            {/* Selected Date Info */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Overview for {formatDate(selectedDate)}
-              </h3>
+          //     {/* Calendar Legend */}
+          //     <div className="mt-6 flex justify-center space-x-6">
+          //       <div className="flex items-center">
+          //         <div className="w-3 h-3 bg-green-400 rounded mr-2"></div>
+          //         <span className="text-sm text-gray-600">Check-in</span>
+          //       </div>
+          //       <div className="flex items-center">
+          //         <div className="w-3 h-3 bg-blue-400 rounded mr-2"></div>
+          //         <span className="text-sm text-gray-600">Check-out</span>
+          //       </div>
+          //       <div className="flex items-center">
+          //         <div className="w-3 h-3 bg-purple-400 rounded mr-2"></div>
+          //         <span className="text-sm text-gray-600">Currently Hosting</span>
+          //       </div>
+          //       <div className="flex items-center">
+          //         <div className="w-3 h-3 bg-orange-100 border border-orange-300 rounded mr-2"></div>
+          //         <span className="text-sm text-gray-600">Today</span>
+          //       </div>
+          //       {calendarLoading && (
+          //         <div className="flex items-center">
+          //           <div className="w-3 h-3 bg-gray-400 rounded mr-2 animate-pulse"></div>
+          //           <span className="text-sm text-gray-500">Loading...</span>
+          //         </div>
+          //       )}
+          //     </div>
+          //   </div>
+
+          //   {/* Selected Date Info */}
+          //   <div className="bg-white rounded-lg shadow-sm border p-6">
+          //     <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          //       Overview for {formatDate(selectedDate)}
+          //     </h3>
               
-              {/* Daily Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                <div className="text-center p-3 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">
-                    {selectedDate.getDate() === 15 ? '1' : selectedDate.getDate() === 18 ? '1' : '0'}
-                  </div>
-                  <div className="text-xs text-gray-600">Checking out</div>
-                </div>
-                <div className="text-center p-3 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {selectedDate.getDate() === 16 ? '2' : selectedDate.getDate() === 17 ? '1' : '0'}
-                  </div>
-                  <div className="text-xs text-gray-600">Currently hosting</div>
-                </div>
-                <div className="text-center p-3 bg-purple-50 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">
-                    {selectedDate.getDate() === 15 ? '1' : '0'}
-                  </div>
-                  <div className="text-xs text-gray-600">Arriving soon</div>
-                </div>
-                <div className="text-center p-3 bg-orange-50 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600">
-                    {selectedDate.getDate() === 20 ? '1' : selectedDate.getDate() === 25 ? '1' : '0'}
-                  </div>
-                  <div className="text-xs text-gray-600">Upcoming</div>
-                </div>
-                <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                  <div className="text-2xl font-bold text-yellow-600">
-                    {selectedDate.getDate() === 19 ? '1' : '0'}
-                  </div>
-                  <div className="text-xs text-gray-600">Pending review</div>
-                </div>
-              </div>
+          //     {/* Daily Stats */}
+          //     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          //       {(() => {
+          //         const stats = getDateStats(selectedDate)
+          //         return (
+          //           <>
+          //             <div className="text-center p-3 bg-green-50 rounded-lg">
+          //               <div className="text-2xl font-bold text-green-600">{stats.checkingOut}</div>
+          //               <div className="text-xs text-gray-600">Checking out</div>
+          //             </div>
+          //             <div className="text-center p-3 bg-blue-50 rounded-lg">
+          //               <div className="text-2xl font-bold text-blue-600">{stats.currentlyHosting}</div>
+          //               <div className="text-xs text-gray-600">Currently hosting</div>
+          //             </div>
+          //             <div className="text-center p-3 bg-purple-50 rounded-lg">
+          //               <div className="text-2xl font-bold text-purple-600">{stats.arrivingSoon}</div>
+          //               <div className="text-xs text-gray-600">Arriving soon</div>
+          //             </div>
+          //             <div className="text-center p-3 bg-orange-50 rounded-lg">
+          //               <div className="text-2xl font-bold text-orange-600">{stats.upcoming}</div>
+          //               <div className="text-xs text-gray-600">Upcoming</div>
+          //             </div>
+          //             <div className="text-center p-3 bg-yellow-50 rounded-lg">
+          //               <div className="text-2xl font-bold text-yellow-600">{stats.pendingReview}</div>
+          //               <div className="text-xs text-gray-600">Pending review</div>
+          //             </div>
+          //           </>
+          //         )
+          //       })()}
+          //     </div>
 
-              {/* Today's Schedule */}
-              <div className="mb-6">
-                <h4 className="font-semibold text-gray-900 mb-3">Today's Schedule</h4>
-                {selectedDate.getDate() === 15 ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center p-3 bg-green-50 rounded-lg border-l-4 border-green-400">
-                      <div className="flex-shrink-0">
-                        <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                      </div>
-                      <div className="ml-3 flex-1">
-                        <p className="text-sm font-medium text-gray-900">New Booking: Royal Enfield Classic 350</p>
-                        <p className="text-sm text-gray-600">Customer: John Doe - 3 days rental</p>
-                        <p className="text-xs text-gray-500">Check-in scheduled</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : selectedDate.getDate() === 18 ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-                      <div className="flex-shrink-0">
-                        <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                      </div>
-                      <div className="ml-3 flex-1">
-                        <p className="text-sm font-medium text-gray-900">Check-out: Royal Enfield Classic 350</p>
-                        <p className="text-sm text-gray-600">Customer: John Doe</p>
-                        <p className="text-xs text-gray-500">Vehicle return scheduled</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : selectedDate.getDate() === 22 ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
-                      <div className="flex-shrink-0">
-                        <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                      </div>
-                      <div className="ml-3 flex-1">
-                        <p className="text-sm font-medium text-gray-900">Maintenance: Yamaha FZ-S</p>
-                        <p className="text-sm text-gray-600">Scheduled service and inspection</p>
-                        <p className="text-xs text-gray-500">Service Center appointment</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-4 text-gray-500">
-                    <p>No scheduled events for this date</p>
-                  </div>
-                )}
-              </div>
+          //     {/* Detailed bookings for selected date */}
+          //     {(() => {
+          //       const dayBookings = getBookingsForDate(selectedDate)
+          //       if (dayBookings.length === 0) {
+          //         return (
+          //           <div className="text-center py-8">
+          //             <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          //               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          //             </svg>
+          //             <p className="text-gray-500">No bookings for this date</p>
+          //           </div>
+          //         )
+          //       }
 
-              {/* Available Vehicles */}
-              <div className="mb-6">
-                <h4 className="font-semibold text-gray-900 mb-3">Available Vehicles</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {vehicles.filter(vehicle => 
-                    selectedDate.getDate() === 15 ? vehicle.status === 'available' && vehicle.id !== 1 :
-                    selectedDate.getDate() === 16 || selectedDate.getDate() === 17 ? vehicle.status === 'available' :
-                    selectedDate.getDate() === 18 ? vehicle.status !== 'maintenance' :
-                    vehicle.status === 'available'
-                  ).map((vehicle) => (
-                    <div key={vehicle.id} className="p-3 border border-gray-200 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {vehicle.brand} {vehicle.model}
-                          </p>
-                          <p className="text-xs text-gray-500">DH{vehicle.dailyRate}/day</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {vehicles.filter(vehicle => 
-                    selectedDate.getDate() === 15 ? vehicle.status === 'available' && vehicle.id !== 1 :
-                    selectedDate.getDate() === 16 || selectedDate.getDate() === 17 ? vehicle.status === 'available' :
-                    selectedDate.getDate() === 18 ? vehicle.status !== 'maintenance' :
-                    vehicle.status === 'available'
-                  ).length === 0 && (
-                    <div className="col-span-3 text-center py-4 text-gray-500">
-                      <p>No vehicles available for this date</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+          //       return (
+          //         <div className="space-y-4">
+          //           <h4 className="font-medium text-gray-900">Bookings for this date:</h4>
+          //           {dayBookings.map((booking, index) => (
+          //             <div key={booking.id || index} className="p-4 bg-gray-50 rounded-lg">
+          //               <div className="flex justify-between items-start">
+          //                 <div>
+          //                   <h5 className="font-medium text-gray-900">
+          //                     {booking.user?.first_name} {booking.user?.last_name} 
+          //                     {!booking.user?.first_name && !booking.user?.last_name && 'Customer'}
+          //                   </h5>
+          //                   <p className="text-sm text-gray-600">
+          //                     Vehicle: {vehicles.find(v => v.id === booking.listing?.id)?.brand} {vehicles.find(v => v.id === booking.listing?.id)?.model}
+          //                   </p>
+          //                   <p className="text-sm text-gray-600">
+          //                     {new Date(booking.start_time).toLocaleDateString()} - {new Date(booking.end_time).toLocaleDateString()}
+          //                   </p>
+          //                 </div>
+          //                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+          //                   booking.status === 'active' ? 'bg-blue-100 text-blue-800' :
+          //                   booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+          //                   booking.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+          //                   'bg-yellow-100 text-yellow-800'
+          //                 }`}>
+          //                   {booking.status}
+          //                 </span>
+          //               </div>
+          //             </div>
+          //           ))}
+          //         </div>
+          //       )
+          //     })()}
+          //   </div>
 
-              {/* Detailed Reservations */}
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-3">Reservation Details</h4>
-                <div className="space-y-4">
-                  
-                  {/* Checking out */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-medium text-gray-900">Checking out</h5>
-                      <span className="text-sm text-gray-500">
-                        {selectedDate.getDate() === 15 || selectedDate.getDate() === 18 ? '(1)' : '(0)'}
-                      </span>
-                    </div>
-                    {selectedDate.getDate() === 15 || selectedDate.getDate() === 18 ? (
-                      <div className="bg-gray-50 p-3 rounded">
-                        <p className="text-sm font-medium">Royal Enfield Classic 350</p>
-                        <p className="text-sm text-gray-600">John Doe • 3-day rental ending</p>
-                        <p className="text-xs text-gray-500">Expected return today</p>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">No check-outs scheduled</p>
-                    )}
-                  </div>
+          //   {/* Detailed Reservations */}
+          //   <div className="bg-white rounded-lg shadow-sm border p-6">
+          //     <div>
+          //       <h4 className="font-semibold text-gray-900 mb-3">Reservation Details</h4>
+          //       <div className="space-y-4">
+          //         {(() => {
+          //           // Calculate date statistics for the selected date
+          //           const dateStats = getDateStats(selectedDate)
+                    
+          //           // Categorize bookings by type
+          //           const todaysBookings = getBookingsForDate(selectedDate)
+          //           const checkIns = todaysBookings.filter(booking => {
+          //             const startDate = new Date(booking.start_time).toISOString().split('T')[0]
+          //             const selectedDateStr = selectedDate.toISOString().split('T')[0]
+          //             return startDate === selectedDateStr && (booking.status === 'confirmed' || booking.status === 'active')
+          //           })
+                    
+          //           const checkOuts = todaysBookings.filter(booking => {
+          //             const endDate = new Date(booking.end_time).toISOString().split('T')[0]
+          //             const selectedDateStr = selectedDate.toISOString().split('T')[0]
+          //             return endDate === selectedDateStr && booking.status === 'active'
+          //           })
+                    
+          //           const ongoing = todaysBookings.filter(booking => {
+          //             const startDate = new Date(booking.start_time).toISOString().split('T')[0]
+          //             const endDate = new Date(booking.end_time).toISOString().split('T')[0]
+          //             const selectedDateStr = selectedDate.toISOString().split('T')[0]
+          //             return selectedDateStr > startDate && selectedDateStr < endDate && booking.status === 'active'
+          //           })
+                    
+          //           const upcoming = calendarBookings.filter(booking => {
+          //             const startDate = new Date(booking.start_time).toISOString().split('T')[0]
+          //             const tomorrow = new Date(selectedDate)
+          //             tomorrow.setDate(tomorrow.getDate() + 1)
+          //             const tomorrowStr = tomorrow.toISOString().split('T')[0]
+          //             return startDate > tomorrowStr && booking.status === 'confirmed'
+          //           })
+                    
+          //           const completed = calendarBookings.filter(booking => {
+          //             const endDate = new Date(booking.end_time).toISOString().split('T')[0]
+          //             const selectedDateStr = selectedDate.toISOString().split('T')[0]
+          //             return endDate < selectedDateStr && booking.status === 'completed'
+          //           })
+                    
+          //           const enhancedDateStats = {
+          //             ...dateStats,
+          //             checkIns,
+          //             checkOuts,
+          //             ongoing,
+          //             upcoming,
+          //             completed
+          //           }
+                    
+          //           return (
+          //             <>
+          //               {/* Today's check-ins */}
+          //               <div className="border border-gray-200 rounded-lg p-4">
+          //                 <div className="flex items-center justify-between mb-2">
+          //                   <h5 className="font-medium text-gray-900">Today's check-ins</h5>
+          //                   <span className="text-sm text-gray-500">
+          //                     ({enhancedDateStats.checkIns.length})
+          //                   </span>
+          //                 </div>
+          //                 {enhancedDateStats.checkIns.length > 0 ? (
+          //                   <div className="space-y-2">
+          //                     {enhancedDateStats.checkIns.map((booking, index) => (
+          //                       <div key={index} className="bg-gray-50 p-3 rounded">
+          //                         <p className="text-sm font-medium">{booking.vehicle?.model || 'Vehicle'}</p>
+          //                         <p className="text-sm text-gray-600">{booking.user?.first_name} {booking.user?.last_name} • Starting today</p>
+          //                         <p className="text-xs text-gray-500">Booking ID: {booking.id}</p>
+          //                       </div>
+          //                     ))}
+          //                   </div>
+          //                 ) : (
+          //                   <p className="text-sm text-gray-500">No check-ins scheduled</p>
+          //                 )}
+          //               </div>
 
-                  {/* Currently hosting */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-medium text-gray-900">Currently hosting</h5>
-                      <span className="text-sm text-gray-500">
-                        {selectedDate.getDate() === 16 || selectedDate.getDate() === 17 ? '(2)' : 
-                         selectedDate.getDate() === 15 ? '(1)' : '(0)'}
-                      </span>
-                    </div>
-                    {selectedDate.getDate() === 16 || selectedDate.getDate() === 17 ? (
-                      <div className="space-y-2">
-                        <div className="bg-gray-50 p-3 rounded">
-                          <p className="text-sm font-medium">Royal Enfield Classic 350</p>
-                          <p className="text-sm text-gray-600">John Doe • Day 2 of 3</p>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded">
-                          <p className="text-sm font-medium">Honda CB Shine</p>
-                          <p className="text-sm text-gray-600">Sarah Smith • Day 1 of 2</p>
-                        </div>
-                      </div>
-                    ) : selectedDate.getDate() === 15 ? (
-                      <div className="bg-gray-50 p-3 rounded">
-                        <p className="text-sm font-medium">Honda CB Shine</p>
-                        <p className="text-sm text-gray-600">Previous customer • Ongoing rental</p>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">No active rentals</p>
-                    )}
-                  </div>
+          //               {/* Today's check-outs */}
+          //               <div className="border border-gray-200 rounded-lg p-4">
+          //                 <div className="flex items-center justify-between mb-2">
+          //                   <h5 className="font-medium text-gray-900">Today's check-outs</h5>
+          //                   <span className="text-sm text-gray-500">
+          //                     ({enhancedDateStats.checkOuts.length})
+          //                   </span>
+          //                 </div>
+          //                 {enhancedDateStats.checkOuts.length > 0 ? (
+          //                   <div className="space-y-2">
+          //                     {enhancedDateStats.checkOuts.map((booking, index) => (
+          //                       <div key={index} className="bg-gray-50 p-3 rounded">
+          //                         <p className="text-sm font-medium">{booking.vehicle?.model || 'Vehicle'}</p>
+          //                         <p className="text-sm text-gray-600">{booking.user?.first_name} {booking.user?.last_name} • Ending today</p>
+          //                         <p className="text-xs text-gray-500">Expected return today</p>
+          //                       </div>
+          //                     ))}
+          //                   </div>
+          //                 ) : (
+          //                   <p className="text-sm text-gray-500">No check-outs scheduled</p>
+          //                 )}
+          //               </div>
 
-                  {/* Arriving soon */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-medium text-gray-900">Arriving soon</h5>
-                      <span className="text-sm text-gray-500">
-                        {selectedDate.getDate() === 15 ? '(1)' : '(0)'}
-                      </span>
-                    </div>
-                    {selectedDate.getDate() === 15 ? (
-                      <div className="bg-gray-50 p-3 rounded">
-                        <p className="text-sm font-medium">Royal Enfield Classic 350</p>
-                        <p className="text-sm text-gray-600">John Doe • Check-in today</p>
-                        <p className="text-xs text-gray-500">Contact: +91 98765 43210</p>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">No arrivals scheduled</p>
-                    )}
-                  </div>
+          //               {/* Currently hosting */}
+          //               <div className="border border-gray-200 rounded-lg p-4">
+          //                 <div className="flex items-center justify-between mb-2">
+          //                   <h5 className="font-medium text-gray-900">Currently hosting</h5>
+          //                   <span className="text-sm text-gray-500">
+          //                     ({enhancedDateStats.ongoing.length})
+          //                   </span>
+          //                 </div>
+          //                 {enhancedDateStats.ongoing.length > 0 ? (
+          //                   <div className="space-y-2">
+          //                     {enhancedDateStats.ongoing.map((booking, index) => (
+          //                       <div key={index} className="bg-gray-50 p-3 rounded">
+          //                         <p className="text-sm font-medium">{booking.vehicle?.model || 'Vehicle'}</p>
+          //                         <p className="text-sm text-gray-600">{booking.user?.first_name} {booking.user?.last_name} • Active rental</p>
+          //                         <p className="text-xs text-gray-500">Started: {new Date(booking.start_time).toLocaleDateString()}</p>
+          //                       </div>
+          //                     ))}
+          //                   </div>
+          //                 ) : (
+          //                   <p className="text-sm text-gray-500">No active rentals</p>
+          //                 )}
+          //               </div>
 
-                  {/* Upcoming bookings */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-medium text-gray-900">Upcoming</h5>
-                      <span className="text-sm text-gray-500">
-                        {selectedDate.getDate() === 20 || selectedDate.getDate() === 25 ? '(1)' : '(0)'}
-                      </span>
-                    </div>
-                    {selectedDate.getDate() === 20 ? (
-                      <div className="bg-gray-50 p-3 rounded">
-                        <p className="text-sm font-medium">Yamaha FZ-S</p>
-                        <p className="text-sm text-gray-600">Mike Johnson • 2-day rental</p>
-                        <p className="text-xs text-gray-500">Starts: Aug 20, 2025</p>
-                      </div>
-                    ) : selectedDate.getDate() === 25 ? (
-                      <div className="bg-gray-50 p-3 rounded">
-                        <p className="text-sm font-medium">Honda CB Shine</p>
-                        <p className="text-sm text-gray-600">Alex Kumar • 1-day rental</p>
-                        <p className="text-xs text-gray-500">Starts: Aug 25, 2025</p>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">No upcoming bookings</p>
-                    )}
-                  </div>
+          //               {/* Upcoming bookings */}
+          //               <div className="border border-gray-200 rounded-lg p-4">
+          //                 <div className="flex items-center justify-between mb-2">
+          //                   <h5 className="font-medium text-gray-900">Upcoming</h5>
+          //                   <span className="text-sm text-gray-500">
+          //                     ({enhancedDateStats.upcoming.length})
+          //                   </span>
+          //                 </div>
+          //                 {enhancedDateStats.upcoming.length > 0 ? (
+          //                   <div className="space-y-2">
+          //                     {enhancedDateStats.upcoming.map((booking, index) => (
+          //                       <div key={index} className="bg-gray-50 p-3 rounded">
+          //                         <p className="text-sm font-medium">{booking.vehicle?.model || 'Vehicle'}</p>
+          //                         <p className="text-sm text-gray-600">{booking.user?.first_name} {booking.user?.last_name} • {Math.ceil((new Date(booking.end_time) - new Date(booking.start_time)) / (1000 * 60 * 60 * 24))}-day rental</p>
+          //                         <p className="text-xs text-gray-500">Starts: {new Date(booking.start_time).toLocaleDateString()}</p>
+          //                       </div>
+          //                     ))}
+          //                   </div>
+          //                 ) : (
+          //                   <p className="text-sm text-gray-500">No upcoming bookings</p>
+          //                 )}
+          //               </div>
 
-                  {/* Pending review */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-medium text-gray-900">Pending review</h5>
-                      <span className="text-sm text-gray-500">
-                        {selectedDate.getDate() === 19 ? '(1)' : '(0)'}
-                      </span>
-                    </div>
-                    {selectedDate.getDate() === 19 ? (
-                      <div className="bg-gray-50 p-3 rounded">
-                        <p className="text-sm font-medium">Royal Enfield Classic 350</p>
-                        <p className="text-sm text-gray-600">John Doe • Rental completed yesterday</p>
-                        <p className="text-xs text-gray-500">Awaiting customer review</p>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">No pending reviews</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button className="bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors font-medium">
-                  Add Booking
-                </button>
-                <button className="bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors font-medium">
-                  Schedule Maintenance
-                </button>
-                <button className="bg-gray-200 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors font-medium">
-                  View Availability
-                </button>
-              </div>
-            </div>
-          </div>
+          //               {/* Recently completed */}
+          //               <div className="border border-gray-200 rounded-lg p-4">
+          //                 <div className="flex items-center justify-between mb-2">
+          //                   <h5 className="font-medium text-gray-900">Recently completed</h5>
+          //                   <span className="text-sm text-gray-500">
+          //                     ({enhancedDateStats.completed.length})
+          //                   </span>
+          //                 </div>
+          //                 {enhancedDateStats.completed.length > 0 ? (
+          //                   <div className="space-y-2">
+          //                     {enhancedDateStats.completed.map((booking, index) => (
+          //                       <div key={index} className="bg-gray-50 p-3 rounded">
+          //                         <p className="text-sm font-medium">{booking.vehicle?.model || 'Vehicle'}</p>
+          //                         <p className="text-sm text-gray-600">{booking.user?.first_name} {booking.user?.last_name} • Completed</p>
+          //                         <p className="text-xs text-gray-500">Ended: {new Date(booking.end_time).toLocaleDateString()}</p>
+          //                       </div>
+          //                     ))}
+          //                   </div>
+          //                 ) : (
+          //                   <p className="text-sm text-gray-500">No recent completions</p>
+          //                 )}
+          //               </div>
+          //             </>
+          //           )
+          //         })()}
+          //       </div>
+          //     </div>
+          //   </div>
+          // </div>
         )}
 
         {activeTab === 'listings' && (
@@ -2631,16 +2854,11 @@ export default function PartnerDashboard() {
                       </div>
                     </div>
                     <div className="flex space-x-2">
-                      <button 
-                        onClick={() => handleToggleAvailability(vehicle)}
-                        className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-colors ${
+                      <span className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-colors ${
                           vehicle.availability 
                             ? 'bg-green-100 text-green-700 hover:bg-green-200' 
                             : 'bg-red-100 text-red-700 hover:bg-red-200'
-                        }`}
-                      >
-                        {vehicle.availability ? 'Available' : 'Unavailable'}
-                      </button>
+                        }`}>{vehicle.availability}</span>
                       <button 
                         onClick={() => handleManageVehicle(vehicle)}
                         className="flex-1 bg-orange-500 text-white py-2 px-3 rounded text-sm hover:bg-orange-600 transition-colors"
@@ -2849,8 +3067,7 @@ export default function PartnerDashboard() {
                       </div>
                     </div>
                     <div className="flex space-x-2">
-                      <button 
-                        onClick={() => handleToggleAvailability(vehicle)}
+                      <p 
                         className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-colors ${
                           vehicle.availability 
                             ? 'bg-green-100 text-green-700 hover:bg-green-200' 
@@ -2858,7 +3075,7 @@ export default function PartnerDashboard() {
                         }`}
                       >
                         {vehicle.availability ? 'Available' : 'Unavailable'}
-                      </button>
+                      </p>
                       <button 
                         onClick={() => handleManageVehicle(vehicle)}
                         className="flex-1 bg-orange-500 text-white py-2 px-3 rounded text-sm hover:bg-orange-600 transition-colors"
