@@ -365,8 +365,10 @@ class BookingViewSet(viewsets.ModelViewSet):
         ).exclude(id=booking.id)
         
         if conflicting_bookings.exists():
+            conflicting_booking = conflicting_bookings.first()
+            conflict_details = f"This time slot conflicts with an existing booking (ID: {conflicting_booking.id}) from {conflicting_booking.start_time.strftime('%Y-%m-%d')} to {conflicting_booking.end_time.strftime('%Y-%m-%d')}"
             return Response(
-                {'error': 'This time slot conflicts with an existing booking'}, 
+                {'error': conflict_details}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         

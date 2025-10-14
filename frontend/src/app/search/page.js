@@ -70,7 +70,8 @@ function SearchContent() {
   const [viewMode, setViewMode] = useState('grid') // grid, list, map
   const [bookingData, setBookingData] = useState({
     // Auth data
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -82,8 +83,6 @@ function SearchContent() {
     licenseNumber: '',
     
     // Personal data
-    firstName: '',
-    lastName: '',
     dateOfBirth: '',
     nationality: '',
     
@@ -982,7 +981,8 @@ function SearchContent() {
     setAuthSubmitLoading(false)
     // Don't reset profileCompleteness here - it should persist while user is logged in
     setBookingData({
-      name: '',
+      firstName: '',
+      lastName: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -990,8 +990,6 @@ function SearchContent() {
       licenseCountry: '',
       licenseIssueDate: '',
       licenseNumber: '',
-      firstName: '',
-      lastName: '',
       dateOfBirth: '',
       nationality: '',
       phoneNumber: '',
@@ -1155,7 +1153,7 @@ function SearchContent() {
     if (validationError) {
       setValidationError('')
     }
-    if (authError && (field === 'email' || field === 'password' || field === 'name' || field === 'confirmPassword')) {
+    if (authError && (field === 'email' || field === 'password' || field === 'firstName' || field === 'lastName' || field === 'confirmPassword')) {
       setAuthError('')
     }
     
@@ -1197,20 +1195,27 @@ function SearchContent() {
           return
         }
         
-        if (!bookingData.name.trim()) {
-          setAuthError("Name is required")
+        if (!bookingData.firstName.trim()) {
+          setAuthError("First name is required")
+          setAuthSubmitLoading(false)
+          return
+        }
+        
+        if (!bookingData.lastName.trim()) {
+          setAuthError("Last name is required")
           setAuthSubmitLoading(false)
           return
         }
         
         result = await register(
-          bookingData.name.trim(),
+          bookingData.firstName.trim(),
+          bookingData.lastName.trim(),
           bookingData.email,
           bookingData.password
         )
       } else {
-        // Sign in flow
-        result = await login(bookingData.email, bookingData.password)
+        // Sign in flow without redirect
+        result = await login(bookingData.email, bookingData.password, { redirect: false })
       }
 
       if (result.success) {
@@ -1399,9 +1404,27 @@ function SearchContent() {
 
   const handleAuthSubmission = async () => {
     if (bookingData.isSignUp) {
-      // Register new user
+      // Validate required fields for sign up
+      if (!bookingData.firstName.trim()) {
+        throw new Error('First name is required')
+      }
+      if (!bookingData.lastName.trim()) {
+        throw new Error('Last name is required')
+      }
+      if (!bookingData.email.trim()) {
+        throw new Error('Email is required')
+      }
+      if (bookingData.password.length < 6) {
+        throw new Error('Password must be at least 6 characters')
+      }
+      if (bookingData.password !== bookingData.confirmPassword) {
+        throw new Error('Passwords do not match')
+      }
+
+      // Register new user with separate first and last names
       const result = await register(
-        bookingData.name.trim(),
+        bookingData.firstName.trim(),
+        bookingData.lastName.trim(),
         bookingData.email,
         bookingData.password
       )
@@ -1413,8 +1436,8 @@ function SearchContent() {
         throw new Error(result.error || 'Registration failed')
       }
     } else {
-      // Login existing user
-      const result = await login(bookingData.email, bookingData.password)
+      // Login existing user without redirect
+      const result = await login(bookingData.email, bookingData.password, { redirect: false })
       
       if (result.success) {
         setIsLoggedIn(true)
@@ -2843,17 +2866,32 @@ function SearchContent() {
                     )}
 
                     {bookingData.isSignUp && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                        <input
-                          type="text"
-                          value={bookingData.name}
-                          onChange={(e) => handleBookingDataChange('name', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
-                          placeholder="Enter your full name"
-                          required
-                        />
-                      </div>
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                            <input
+                              type="text"
+                              value={bookingData.firstName}
+                              onChange={(e) => handleBookingDataChange('firstName', e.target.value)}
+                              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
+                              placeholder="First name"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                            <input
+                              type="text"
+                              value={bookingData.lastName}
+                              onChange={(e) => handleBookingDataChange('lastName', e.target.value)}
+                              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 placeholder:text-gray-500"
+                              placeholder="Last name"
+                              required
+                            />
+                          </div>
+                        </div>
+                      </>
                     )}
 
                     <div>

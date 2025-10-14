@@ -1066,18 +1066,19 @@ export default function PartnerDashboard() {
       switch (status) {
         case 'checking-out':
           // Ending today
-          return endDate.toDateString() === today.toDateString() && reservation.status === 'active'
+          return endDate.toDateString() === today.toDateString() && 
+                 reservation.status === 'accepted' && today >= startDate
         case 'currently-hosting':
           // Currently active (between start and end date)
-          return today >= startDate && today <= endDate && reservation.status === 'active'
+          return today >= startDate && today <= endDate && reservation.status === 'accepted'
         case 'arriving-soon':
           // Starting today or tomorrow
           return (startDate.toDateString() === today.toDateString() || 
                   startDate.toDateString() === tomorrow.toDateString()) && 
-                 reservation.status === 'confirmed'
+                 reservation.status === 'accepted'
         case 'upcoming':
           // Future bookings (more than 1 day away)
-          return startDate > tomorrow && reservation.status === 'confirmed'
+          return startDate > tomorrow && reservation.status === 'accepted'
         case 'pending-review':
           // Completed bookings pending review
           return endDate < today && reservation.status === 'completed'
@@ -2106,7 +2107,7 @@ export default function PartnerDashboard() {
                               DH{reservation.price}
                             </p>
                             <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                              reservation.status === 'active' ? 'bg-green-100 text-green-800' :
+                              reservation.status === 'accepted' ? 'bg-green-100 text-green-800' :
                               reservation.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
                               reservation.status === 'completed' ? 'bg-gray-100 text-gray-800' :
                               'bg-yellow-100 text-yellow-800'
@@ -3039,7 +3040,7 @@ export default function PartnerDashboard() {
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                 booking.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
-                                booking.status === 'active' ? 'bg-green-100 text-green-800' :
+                                booking.status === 'accepted' ? 'bg-green-100 text-green-800' :
                                 booking.status === 'completed' ? 'bg-gray-100 text-gray-800' :
                                 booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
                                 'bg-yellow-100 text-yellow-800'
@@ -3057,7 +3058,7 @@ export default function PartnerDashboard() {
                                     Start Rental
                                   </button>
                                 )}
-                                {booking.status === 'active' && (
+                                {booking.status === 'accepted' && (
                                   <button className="text-blue-600 hover:text-blue-900">
                                     Complete
                                   </button>
@@ -3106,7 +3107,7 @@ export default function PartnerDashboard() {
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Active Bookings</dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {reservations.filter(r => r.status === 'active' || r.status === 'confirmed').length}
+                        {reservations.filter(r => r.status === 'accepted').length}
                       </dd>
                     </dl>
                   </div>
@@ -3881,7 +3882,13 @@ function PendingBookingRequests() {
         fetchPendingRequests() // Refresh the list
       } else {
         const errorData = await response.json()
-        alert('Failed to accept booking: ' + (errorData.error || 'Unknown error'))
+        
+        // Provide detailed error feedback for conflicts
+        if (errorData.error && errorData.error.includes('conflicts with an existing booking')) {
+          alert(`Cannot Accept Booking!\n\nReason: This time slot conflicts with an already accepted booking for the same vehicle.\n\nSolution: Check your "Accepted Bookings" to see which dates are already booked, or reject this request.`)
+        } else {
+          alert('Failed to accept booking: ' + (errorData.error || 'Unknown error'))
+        }
       }
     } catch (error) {
       console.error('Error accepting booking:', error)

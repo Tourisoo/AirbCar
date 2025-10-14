@@ -402,63 +402,25 @@ export default function AccountPage() {
             <div className="bg-white rounded-xl border shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
-              <button
-                  type="button"
-                  onClick={() => router.push('/bookings')}
-                  className="w-full text-left p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition-colors group"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition-colors">
-                      <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-              </div>
-            <div>
-                      <p className="font-medium text-gray-900">My Bookings</p>
-                      <p className="text-sm text-gray-500">View and manage your bookings</p>
-            </div>
-                      </div>
-                </button>
-                
                 <button
-                  type="button"
-                  onClick={() => {
-                    setCurrentSection('favorites')
-                    setShowAccountSettings(true)
-                  }}
-                  className="w-full text-left p-4 rounded-lg border border-gray-200 hover:border-red-300 hover:bg-red-50 transition-colors group"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors">
-                      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                      </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Favorite Cars</p>
-                      <p className="text-sm text-gray-500">Your saved car listings</p>
-                    </div>
-                  </div>
-                </button>
-                  <button
                   type="button"
                   onClick={() => {
                     setCurrentSection('account')
                     setShowAccountSettings(true)
                   }}
-                  className="w-full text-left p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors group"
-                  >
+                  className="w-full text-left p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition-colors group"
+                >
                   <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg group-hover:bg-gray-200 transition-colors`}>
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="p-2 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition-colors">
+                      <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                </div>
-              <div>
+                      </svg>
+                    </div>
+                    <div>
                       <p className="font-medium text-gray-900">Account Settings</p>
                       <p className="text-sm text-gray-500">Manage your profile</p>
                     </div>
-                      </div>
+                  </div>
                 </button>
               </div>
               

@@ -39,7 +39,7 @@ export default function SignUp() {
     setError('') // Clear any previous errors
 
     try {
-      const result = await registerUser(`${data.firstName} ${data.lastName}`, data.email, data.password)
+      const result = await registerUser(data.firstName, data.lastName, data.email, data.password)
       
       if (result.success) {
         setSuccess(true)

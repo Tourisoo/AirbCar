@@ -172,7 +172,7 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const register = async (username, email, password) => {
+  const register = async (firstName, lastName, email, password) => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://localhost:8000'
       const response = await fetch(`${apiUrl}/api/register/`, {
@@ -180,12 +180,17 @@ export function AuthProvider({ children }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ 
+          first_name: firstName,
+          last_name: lastName,
+          email, 
+          password 
+        }),
       })
 
       if (response.ok) {
-        // After successful registration, automatically log the user in
-        const loginResult = await login(email, password)
+        // After successful registration, automatically log the user in without redirect
+        const loginResult = await login(email, password, { redirect: false })
         return loginResult
       } else {
         const errorData = await response.json()
