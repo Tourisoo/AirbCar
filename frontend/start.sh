@@ -16,8 +16,8 @@ fi
 if [ ! -f ".env.local" ]; then
   echo "Creating .env.local from .env.example..."
   cp .env.example .env.local
-  echo "⚠️  Please set NEXTAUTH_SECRET in .env.local"
-  echo "💡 Generate one with: openssl rand -base64 32"
+  echo "Please set NEXTAUTH_SECRET in .env.local"
+  echo "Generate one with: openssl rand -base64 32"
 fi
 
 # If .env.local lacks a DJANGO_API_URL line, append it.
@@ -31,7 +31,7 @@ fi
 if grep -q "your-nextauth-secret-here" .env.local; then
   SECRET=$(openssl rand -base64 32)
   sed -i "s/your-nextauth-secret-here/$SECRET/" .env.local
-  echo "✅ Generated NextAuth secret"
+  echo "Generated NextAuth secret"
 fi
 
 set -a
@@ -43,17 +43,17 @@ echo "Checking Django backend connection..."
 RETRIES=30
 while [ $RETRIES -gt 0 ]; do
   if curl -f "$DJANGO_API_URL/" > /dev/null 2>&1; then
-    echo "✅ Django backend is ready at $DJANGO_API_URL"
+    echo "Django backend is ready at $DJANGO_API_URL"
     break
   else
-    echo "⏳ Waiting for Django backend to be ready... ($RETRIES retries left)"
+    echo "Waiting for Django backend to be ready... ($RETRIES retries left)"
     sleep 5
     RETRIES=$((RETRIES - 1))
   fi
 done
 
 if [ $RETRIES -eq 0 ]; then
-  echo "⚠️  Django backend not responding at $DJANGO_API_URL after waiting"
+  echo "Django backend not responding at $DJANGO_API_URL after waiting"
 fi
 
 echo "Starting Next.js application..."
