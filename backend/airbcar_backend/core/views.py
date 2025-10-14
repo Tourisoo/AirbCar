@@ -43,7 +43,6 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         if response.status_code == 200:
-            # Add user data to the response
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             user = serializer.user
@@ -259,7 +258,6 @@ class PartnerViewSet(viewsets.ModelViewSet):
         if not user.is_partner:
             raise ValidationError({"detail": "You are not a partner."})
         
-        # Get or create partner record for the current user
         partner, created = Partner.objects.get_or_create(
             user=user,
             defaults={
@@ -272,8 +270,6 @@ class PartnerViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(partner)
         return Response(serializer.data)
-
-# end add for bug fix
 
 class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializer
@@ -288,10 +284,8 @@ class BookingViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated:
             raise ValidationError({"detail": "You are not logged in."})
         
-        # Build the query conditions using Q objects to avoid union() issues
         query = Q(user=user)
         
-        # If user is a partner, also include bookings for their listings
         if user.is_partner:
             query |= Q(listing__partner__user=user)
             
@@ -305,7 +299,6 @@ class BookingViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'listing': 'Listing not found'})
         
-        # Save booking with request message
         request_message = self.request.data.get('request_message', '')
         serializer.save(
             user=self.request.user, 
@@ -324,7 +317,6 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Get all pending bookings for this partner's listings
         partner = user.partner
         pending_bookings = Booking.objects.filter(
             listing__partner=partner,
@@ -339,7 +331,6 @@ class BookingViewSet(viewsets.ModelViewSet):
         """Accept a pending booking request"""
         booking = self.get_object()
         
-        # Check if user is the car owner
         if request.user != booking.listing.partner.user:
             return Response(
                 {'error': 'You can only accept bookings for your own cars'}, 
@@ -352,7 +343,6 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check for conflicting bookings
         conflicting_bookings = Booking.objects.filter(
             listing=booking.listing,
             status='accepted',
@@ -366,7 +356,6 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Accept the booking
         booking.status = 'accepted'
         booking.accepted_at = timezone.now()
         booking.save()
@@ -379,7 +368,6 @@ class BookingViewSet(viewsets.ModelViewSet):
         """Reject a pending booking request"""
         booking = self.get_object()
         
-        # Check if user is the car owner
         if request.user != booking.listing.partner.user:
             return Response(
                 {'error': 'You can only reject bookings for your own cars'}, 
@@ -392,7 +380,6 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Reject the booking
         rejection_reason = request.data.get('rejection_reason', '')
         booking.status = 'rejected'
         booking.rejected_at = timezone.now()
@@ -407,7 +394,6 @@ class BookingViewSet(viewsets.ModelViewSet):
         """Cancel an existing booking"""
         booking = self.get_object()
         
-        # Check if user is either the renter or car owner
         if request.user not in [booking.user, booking.listing.partner.user]:
             return Response(
                 {'error': 'You can only cancel your own bookings'}, 
@@ -420,7 +406,6 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Cancel the booking
         booking.status = 'cancelled'
         booking.cancelled_at = timezone.now()
         booking.save()
@@ -454,7 +439,6 @@ class PasswordResetRequestView(generics.GenericAPIView):
             token_generator = PasswordResetTokenGenerator()
             token = token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            # Send user to frontend reset page with uid and token as URL parameters
             reset_url = f"http://localhost:3000/auth/reset-password?uid={uid}&token={token}"
             send_mail(
                 'Password Reset Request',
