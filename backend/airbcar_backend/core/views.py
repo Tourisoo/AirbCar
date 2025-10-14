@@ -1,5 +1,4 @@
-# from django.shortcuts import render, redirect
-from django.http import HttpResponse#, JsonResponse
+from django.http import HttpResponse
 from .models import User, Booking, Partner, Listing
 from django.utils import timezone
 from rest_framework import viewsets, generics, status
@@ -7,15 +6,12 @@ from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-# from rest_framework.views import APIView
-# from rest_framework_simplejwt.tokens import RefreshToken
 import uuid
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
-from django.contrib.auth import get_user_model#, authenticate
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-# from django.contrib.auth.tokens import default_token_generator
 from rest_framework import status
 from rest_framework.response import Response
 from .utils import upload_file_to_supabase
