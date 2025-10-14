@@ -23,78 +23,6 @@ from .serializers import (UserSerializer, BookingSerializer, PartnerSerializer,
 
 User = get_user_model()
 
-class UserVerificationView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        user = request.user
-        token = request.data.get('token')
-        if token == user.email_verification_token:
-            user.email_verified = True
-            user.is_verified = True
-            user.email_verification_token = None
-            user.save()
-            return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
-        return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
-
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
-    
-    def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        if response.status_code == 200:
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            user = serializer.user
-            
-            response.data['user'] = {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'is_partner': user.is_partner,
-                'is_verified': user.is_verified,
-                'is_staff': user.is_staff,
-                'is_superuser': user.is_superuser,
-                'role': getattr(user, 'role', 'user'),
-            }
-        return response
-
-class UserStatusView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user = request.user
-        return Response({
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'is_partner': user.is_partner,
-            'is_verified': user.is_verified,
-            'email_verified': user.email_verified,
-            'is_staff': user.is_staff,
-        })
-
-    def post(self, request):
-        """Handle email verification"""
-        user = request.user
-        token = request.data.get('token')
-        if token == user.email_verification_token:
-            user.email_verified = True
-            user.is_verified = True
-            user.email_verification_token = None
-            user.save()
-            return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
-        return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
-
-class AdminStatusView(generics.GenericAPIView):
-    """Simplified admin check"""
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        return Response({'is_admin': request.user.is_staff})
-
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -483,6 +411,78 @@ def verify_email(request):
         return HttpResponse("Email successfully verified!")
     except User.DoesNotExist:
         return HttpResponse("Invalid or expired token", status=400)
+
+class UserVerificationView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        token = request.data.get('token')
+        if token == user.email_verification_token:
+            user.email_verified = True
+            user.is_verified = True
+            user.email_verification_token = None
+            user.save()
+            return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
+        return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+    
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 200:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = serializer.user
+            
+            response.data['user'] = {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'is_partner': user.is_partner,
+                'is_verified': user.is_verified,
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
+                'role': getattr(user, 'role', 'user'),
+            }
+        return response
+
+class UserStatusView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'is_partner': user.is_partner,
+            'is_verified': user.is_verified,
+            'email_verified': user.email_verified,
+            'is_staff': user.is_staff,
+        })
+
+    def post(self, request):
+        """Handle email verification"""
+        user = request.user
+        token = request.data.get('token')
+        if token == user.email_verification_token:
+            user.email_verified = True
+            user.is_verified = True
+            user.email_verification_token = None
+            user.save()
+            return Response({'message': 'Email verified'}, status=status.HTTP_200_OK)
+        return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+class AdminStatusView(generics.GenericAPIView):
+    """Simplified admin check"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        return Response({'is_admin': request.user.is_staff})
 
 def home_view(request):
     html_content = """
