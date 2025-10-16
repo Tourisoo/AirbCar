@@ -51,3 +51,20 @@ docker logs <container_id>
 docker exec -it <container_id> /bin/bash 
 
 aham cmnd mn 3and zaghloul: docker system prune -a
+
+
+
+
+ npm run lint     
+ npx eslint src/app/components/Header.js   
+ NPX: for direct execution
+ NPM: for installed packages/scripts
+ recharts: Data Visualization
+ lucide-react: for icons
+ react-dom: 
+    - Page loads - Renders initial HTML
+    - User clicks buttons - Handles click events
+    - Forms are filled - Manages input values
+    - State changes - Updates DOM efficiently
+    - Navigation occurs - Renders new pages
+    - Components mount/unmount - Manages lifecycle
