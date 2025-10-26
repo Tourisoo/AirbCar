@@ -2,6 +2,11 @@
 const path = require('path');
 const nextConfig = {
   reactStrictMode: true,
+
+    // This section disables the build activity indicator overlay in the browser
+  devIndicators: {
+    buildActivity: false, 
+  },
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
@@ -17,16 +22,17 @@ const nextConfig = {
   // Custom webpack config - removed profiling aliases that cause issues with React 19
   webpack: (config, { dev, isServer }) => {
     // Remove problematic profiling aliases for React 19 compatibility
-
+    
     // Ensure '@' alias points to the src directory explicitly for webpack
     config.resolve = config.resolve || {}
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
       '@': path.resolve(__dirname, 'src'),
     }
-
+    
     return config
   },
 };
 
 module.exports = nextConfig;
+devIndicators: false;

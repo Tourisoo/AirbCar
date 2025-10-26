@@ -17,7 +17,7 @@ COPY package.json ./
 RUN pnpm install --no-frozen-lockfile
 
 # Copy only the necessary files for the application
-COPY .env.example ./
+COPY ../.env.example ./
 COPY next.config.js ./
 COPY postcss.config.mjs ./
 COPY eslint.config.mjs ./

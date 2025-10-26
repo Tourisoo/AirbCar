@@ -1,43 +1,63 @@
-
 services:
-  web:
+  # Local database - only for local development
+  db:
+    image: postgres:14-alpine
+    container_name: airb_postgres_db
+    env_file:
+      - .env.local
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - AirbNet
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+    # profiles:
+      # - local
+
+  django-api:
     build: backend/
     ports:
       - "8000:8000"
     networks:
       - AirbNet
-    environment:
-      DATABASE_NAME: postgres
-      DATABASE_USER: postgres.wtbmqtmmdobfvvecinif
-      DATABASE_PASSWORD: Mayache+123455
-      DATABASE_HOST: aws-1-eu-north-1.pooler.supabase.com
-      DATABASE_PORT: 5432
-      DJANGO_SUPERUSER_USERNAME: amine
-      DJANGO_SUPERUSER_EMAIL: amine@a.com
-      DJANGO_SUPERUSER_PASSWORD: amineamine
-      LOAD_INITIAL_FIXTURE: "1"
-      
+    env_file:
+      - .env.local
+    # environment:
+    #   FIRST_RUN: ${FIRST_RUN:-1}
+    #   LOAD_INITIAL_FIXTURE: ${LOAD_INITIAL_FIXTURE:-1}
+    # Conditionally depend on db only if using local profile
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
+    #     required: false
     restart: unless-stopped
 
-  app:
+  next-app:
     build: frontend/
     ports:
       - "3000:3000"
+    networks:
+      - AirbNet
+    env_file:
+      - .env.local
     environment:
-      - NODE_ENV=development
-      - DJANGO_API_URL=http://web:8000
-      - NEXT_PUBLIC_DJANGO_API_URL=http://localhost:8000
-      - NEXTAUTH_URL=http://localhost:3000
-      - DATABASE_URL=postgresql://postgres.wtbmqtmmdobfvvecinif:Mayache+123455@aws-1-eu-north-1.pooler.supabase.com:5432/postgres
-      - NODE_OPTIONS=--max-old-space-size=4096
+      DJANGO_API_URL: http://django-api:8000 
+      NODE_ENV: development
+      NODE_OPTIONS: --max-old-space-size=4096
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    networks:
-      - AirbNet
+    depends_on:
+      - django-api
     restart: unless-stopped
-
 
 networks:
   AirbNet:
     driver: bridge
+
+volumes:
+  postgres_data:

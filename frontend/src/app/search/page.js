@@ -515,7 +515,7 @@ function SearchContent() {
       const isClientSide = typeof window !== 'undefined';
       const apiUrl = isClientSide 
         ? (process.env.NEXT_PUBLIC_DJANGO_API_URL || 'http://127.0.0.1:8000')
-        : (process.env.DJANGO_API_URL || 'http://web:8000');
+        : (process.env.DJANGO_API_URL || 'http://django-api:8000');
       
       console.log('Fetching from:', `${apiUrl}/listings/`);
       const response = await fetch(`${apiUrl}/listings/`, {

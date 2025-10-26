@@ -122,9 +122,9 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DATABASE_NAME', 'airbcar_db'),
-            'USER': os.environ.get('DATABASE_USER', 'airbcar_user'),
-            'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'amineamine'),
+            'NAME': os.environ.get('POSTGRES_DB', 'airbcar_db'),
+            'USER': os.environ.get('POSTGRES_USER', 'airbcar_user'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'amineamine'),
             'HOST': os.environ.get('DATABASE_HOST', 'db'),
             'PORT': os.environ.get('DATABASE_PORT', '5432'),
         }
