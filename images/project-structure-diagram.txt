@@ -1,0 +1,87 @@
+ AirbCar Project Structure Diagram
+=====================================
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            🐳 Docker Services Architecture                      │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐                        │
+│  │   🎨 Next.js │    │ 🔧 Django   │    │ 🗄️ PostgreSQL │                        │
+│  │   Frontend  │◄──►│   Backend   │◄──►│   Database  │                        │
+│  │  Port: 3000 │    │  Port: 8000 │    │  Port: 5432 │                        │
+│  └─────────────┘    └─────────────┘    └─────────────┘                        │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐ │
+│  │                        🌐 User Interface Layer                             │ │
+│  │  React Components → API Calls → Django Views → Models → Database          │ │
+│  └─────────────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            🔄 Data Flow Architecture                           │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  User Interface (React)                                                        │
+│         ↓                                                                       │
+│  API Services (Axios)                                                          │
+│         ↓                                                                       │
+│  Django REST API (DRF)                                                         │
+│         ↓                                                                       │
+│  Serializers (Data Validation)                                                 │
+│         ↓                                                                       │
+│  Models (Database ORM)                                                         │
+│         ↓                                                                       │
+│  PostgreSQL Database                                                            │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐ │
+│  │ 🔐 Authentication: JWT Tokens                                              │ │
+│  │ 🛡️ Security: CORS Headers                                                  │ │
+│  │ 📊 Features: Users, Cars, Bookings, Partners                              │ │
+│  └─────────────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            🛠️ Development Commands                            │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  🚀 Quick Start:                                                                │
+│  ├── make local    → Start with local PostgreSQL + sample data                │
+│  ├── make run      → Start with remote Supabase database                      │
+│  ├── make status   → Check container health status                            │
+│  ├── make logs     → View application logs                                    │
+│  └── make clean    → Stop and cleanup containers                              │
+│                                                                                 │
+│  🔧 Manual Development:                                                        │
+│  ├── Backend: python manage.py runserver                                      │
+│  └── Frontend: npm run dev                                                     │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            📊 Technology Stack                                │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  🔧 Backend Stack:                                                              │
+│  ├── Django 4.2.21 + DRF 3.14.0                                              │
+│  ├── JWT Authentication (SimpleJWT 5.3.0)                                     │
+│  ├── PostgreSQL 14 Database                                                    │
+│  ├── CORS Headers (django-cors-headers 4.2.0)                                 │
+│  └── Production: Gunicorn 22.0.0                                               │
+│                                                                                 │
+│  🎨 Frontend Stack:                                                            │
+│  ├── Next.js 15.5.4 + React 19.2.0                                            │
+│  ├── Tailwind CSS 4 (Styling)                                                  │
+│  ├── React Hook Form 7.60.0 (Forms)                                           │
+│  ├── Zod 4.0.5 (Validation)                                                   │
+│  ├── Lucide React 0.544.0 (Icons)                                              │
+│  └── GSAP 3.13.0 (Animations)                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            🌐 Access Points                                    │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  🌐 Frontend: http://localhost:3000                                            │
+│  🔧 Backend API: http://localhost:8000                                         │
+│  👤 Admin Panel: http://localhost:8000/admin                                   │
+│  🗄️ Database: localhost:5432 (PostgreSQL)                                      │
+└─────────────────────────────────────────────────────────────────────────────────┘

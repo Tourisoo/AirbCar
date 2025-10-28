@@ -1,5 +1,4 @@
 services:
-  # Local database - only for local development
   db:
     image: postgres:14-alpine
     container_name: airb_postgres_db
@@ -15,8 +14,6 @@ services:
       timeout: 5s
       retries: 5
     restart: always
-    # profiles:
-      # - local
 
   django-api:
     build: backend/
@@ -26,14 +23,12 @@ services:
       - AirbNet
     env_file:
       - .env.local
-    # environment:
-    #   FIRST_RUN: ${FIRST_RUN:-1}
-    #   LOAD_INITIAL_FIXTURE: ${LOAD_INITIAL_FIXTURE:-1}
-    # Conditionally depend on db only if using local profile
-    # depends_on:
-    #   db:
-    #     condition: service_healthy
-    #     required: false
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
 
   next-app:
