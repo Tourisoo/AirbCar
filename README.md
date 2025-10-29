@@ -4,25 +4,22 @@ Simple car rental app. Frontend is Next.js. Backend is Django REST API. You can 
 
 - Local mode: uses a local Postgres in Docker. This is for anyone who wants to try the app. No private keys needed.
 - Remote mode: uses a remote Supabase database. This is only for owners who have the private `.env.local` file.
-
 ### Screenshots
-<table>
-  <tr>
-    <td><img src="images/Deployment-Diagram.jpg" alt="Deployment Diagram" width="100%" /></td>
-    <td><img src="images/Booking-Flow.jpg" alt="Booking flow" width="100%" /></td>
-    <td><img src="images/Docker_Terminal.jpg" alt="Running Project in terminal" width="100%" /></td>
-  </tr>
-  <tr>
-    <td><img src="images/Landing_Page.jpg" alt="Landing page" width="100%" /></td>
-    <td><img src="images/Search.jpg" alt="Search" width="100%" /></td>
-    <td><img src="images/Admin_Dashboard.jpg" alt="Admin Dashboard" width="100%" /></td>
-  </tr>
-  <tr>
-    <td><img src="images/User_Dashboard.jpg" alt="User Dashboard" width="100%" /></td>
-    <td><img src="images/Partner_Dashboard1.jpg" alt="Partner Dashboard 1" width="100%" /></td>
-    <td><img src="images/Partner_Dashboard2.jpg" alt="Partner Dashboard 2" width="100%" /></td>
-  </tr>
-</table>
+<p align="center">
+    <img src="https://raw.githubusercontent.com/Tourisoo/AirbCar/main/images/Deployment-Diagram.jpg" width="32%" alt="Deployment Diagram" />
+    <img src="https://raw.githubusercontent.com/Tourisoo/AirbCar/main/images/Booking-Flow.jpg" width="32%" alt="Booking flow" />
+    <img src="https://raw.githubusercontent.com/Tourisoo/AirbCar/main/images/Docker_Terminal.jpg" width="32%" alt="Running Project in terminal" />
+</p>
+<p align="center">
+    <img src="https://raw.githubusercontent.com/Tourisoo/AirbCar/main/images/Landing_Page.jpg" width="32%" alt="Landing page" />
+    <img src="https://raw.githubusercontent.com/Tourisoo/AirbCar/main/images/Search.jpg" width="32%" alt="Search" />
+    <img src="https://raw.githubusercontent.com/Tourisoo/AirbCar/main/images/Admin_Dashboard.jpg" width="32%" alt="Admin Dashboard" />
+</p>
+<p align="center">
+    <img src="https://raw.githubusercontent.com/Tourisoo/AirbCar/main/images/User_Dashboard.jpg" width="32%" alt="User Dashboard" />
+    <img src="https://raw.githubusercontent.com/Tourisoo/AirbCar/main/images/Partner_Dashboard1.jpg" width="32%" alt="Partner Dashboard 1" />
+    <img src="https://raw.githubusercontent.com/Tourisoo/AirbCar/main/images/Partner_Dashboard2.jpg" width="32%" alt="Partner Dashboard 2" /> 
+</p>
 
 ## Quick start (visitors)
 
