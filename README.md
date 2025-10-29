@@ -6,17 +6,23 @@ Simple car rental app. Frontend is Next.js. Backend is Django REST API. You can 
 - Remote mode: uses a remote Supabase database. This is only for owners who have the private `.env.local` file.
 
 ### Screenshots
-<p align="center">
-    <img src="images/Deployment-Diagram.jpg" width="49%" alt="Deployment Diagram" />
-    <img src="images/Booking-Flow.jpg" width="49%" alt="Booking flow" />
-    <img src="images/Docker_Terminal.jpg" width="49%" alt="Running Project in terminal" />
-    <img src="images/Landing_Page.jpg" width="49%" alt="Landing page" />
-    <img src="images/Search.jpg" width="49%" alt="Search" />
-    <img src="images/Admin_Dashboard.jpg" width="49%" alt="Admin Dashboard" />
-    <img src="images/User_Dashboard.jpg" width="49%" alt="User Dashboard" />
-    <img src="images/Partner_Dashboard1.jpg" width="49%" alt="Partner Dashboard 1" />
-    <img src="images/Partner_Dashboard2.jpg" width="49%" alt="Partner Dashboard 2" /> 
-</p>
+<table>
+  <tr>
+    <td><img src="images/Deployment-Diagram.jpg" alt="Deployment Diagram" width="100%" /></td>
+    <td><img src="images/Booking-Flow.jpg" alt="Booking flow" width="100%" /></td>
+    <td><img src="images/Docker_Terminal.jpg" alt="Running Project in terminal" width="100%" /></td>
+  </tr>
+  <tr>
+    <td><img src="images/Landing_Page.jpg" alt="Landing page" width="100%" /></td>
+    <td><img src="images/Search.jpg" alt="Search" width="100%" /></td>
+    <td><img src="images/Admin_Dashboard.jpg" alt="Admin Dashboard" width="100%" /></td>
+  </tr>
+  <tr>
+    <td><img src="images/User_Dashboard.jpg" alt="User Dashboard" width="100%" /></td>
+    <td><img src="images/Partner_Dashboard1.jpg" alt="Partner Dashboard 1" width="100%" /></td>
+    <td><img src="images/Partner_Dashboard2.jpg" alt="Partner Dashboard 2" width="100%" /></td>
+  </tr>
+</table>
 
 ## Quick start (visitors)
 
