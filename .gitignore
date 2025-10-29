@@ -2,8 +2,6 @@
 
 # Environment variables (security)
 .env.local
-.env.production
-.env.development
 
 # Python
 __pycache__/

@@ -5,11 +5,24 @@ Simple car rental app. Frontend is Next.js. Backend is Django REST API. You can 
 - Local mode: uses a local Postgres in Docker. This is for anyone who wants to try the app. No private keys needed.
 - Remote mode: uses a remote Supabase database. This is only for owners who have the private `.env.local` file.
 
-![Landing page](images/Landing_Page.jpg)
+### Screenshots
+<p align="center">
+    <img src="images/Deployment-Diagram.jpg" width="49%" alt="Deployment Diagram" />
+    <img src="images/Booking-Flow.jpg" width="49%" alt="Booking flow" />
+    <img src="images/Docker_Terminal.jpg" width="49%" alt="Running Project in terminal" />
+    <img src="images/Landing_Page.jpg" width="49%" alt="Landing page" />
+    <img src="images/Search.jpg" width="49%" alt="Search" />
+    <img src="images/Admin_Dashboard.jpg" width="49%" alt="Admin Dashboard" />
+    <img src="images/User_Dashboard.jpg" width="49%" alt="User Dashboard" />
+    <img src="images/Partner_Dashboard1.jpg" width="49%" alt="Partner Dashboard 1" />
+    <img src="images/Partner_Dashboard2.jpg" width="49%" alt="Partner Dashboard 2" /> 
+</p>
 
 ## Quick start (visitors)
 
 If you just want to test the app, use local mode.
+
+Note: Ensure Docker (e.g., Docker Desktop) is installed and running before you start.
 
 ```bash
 git clone https://github.com/Tourisoo/AirbCar.git
@@ -23,14 +36,14 @@ This will:
 - Start the frontend, backend, and a Postgres container
 - Open the app on your machine
 
-Open these URLs:
-
+Open these URL:
 - Frontend: http://localhost:3000
-- Backend admin: http://localhost:8000/admin
+
+Users to test with:
+- USER:    test@example.com | test123
+- PARTNER: partner@example.com | partner123
 
 Note: when local mode starts, the temporary `.env.local` file is created and later removed by the command. You do not need to manage it.
-
-![Search page](images/Search.jpg)
 
 ## Requirements
 
@@ -87,10 +100,6 @@ Note: when local mode starts, the temporary `.env.local` file is created and lat
   make build
   ```
 
-The screenshot below shows the terminal after running `make run` and `make status`.
-
-![Docker terminal output](images/Docker_Terminal.jpg)
-
 ## Remote mode (owners)
 
 Remote mode runs the frontend and backend in Docker, and connects to a Supabase Postgres database. Only owners with the private `.env.local` can use this.
@@ -126,19 +135,16 @@ AirbCar/
   images/                 # Screenshots
 ```
 
-## Screenshots
-
-![User dashboard](images/User_Dashboard.jpg)
-![Partner dashboard 1](images/Partner_Dashboard1.jpg)
-![Partner dashboard 2](images/Partner_Dashboard2.jpg)
-![Admin dashboard](images/Admin_Dashboard.jpg)
-
 ## Tips
 
 - If ports 3000 or 8000 are busy, stop the other app that uses them or change ports locally.
 - Use `make logs` and `make status` to debug.
 - If you want a fresh start, run `make clean` or `make fclean`.
 
-## License
+## Use Policy & Status
 
-MIT
+**Status:** This repository is **PUBLIC** for demonstration and portfolio viewing purposes only.
+
+**License:** **ALL RIGHTS RESERVED.** No license is granted for reproduction, modification, distribution, or commercial use of the source code contained herein.
+
+**Testing:** You are permitted to clone and run the application locally (via `make local`) solely for testing, review, and personal assessment of the project's functionality.
