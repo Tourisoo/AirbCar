@@ -120,7 +120,8 @@ jobs:
               sys.exit(1)
           "
         env:
-          SECRET_KEY: test-secret-key-for-ci-only-not-for-production
+          SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
+          DEBUG: "True"
           GITHUB_ACTIONS: true
           DB_HOST: localhost
           DB_PORT: 5432
@@ -157,6 +158,8 @@ jobs:
               print('SQLite detected, skipping HOST check.')
           "
         env:
+          SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
+          DEBUG: "True"
           GITHUB_ACTIONS: true
           DB_HOST: localhost
           DB_PORT: 5432
@@ -174,6 +177,8 @@ jobs:
           echo "=== Running migrations with Django manage.py ==="
           python manage.py migrate
         env:
+          SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
+          DEBUG: "True"
           GITHUB_ACTIONS: true
           DB_HOST: localhost
           DB_PORT: 5432
@@ -188,6 +193,8 @@ jobs:
           export DJANGO_SETTINGS_MODULE=config.settings
           python manage.py test
         env:
+          SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
+          DEBUG: "True"
           GITHUB_ACTIONS: true
           DB_HOST: localhost
           DB_PORT: 5432
