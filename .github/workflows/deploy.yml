@@ -58,7 +58,7 @@ jobs:
         working-directory: ./backend
       - name: Run Django migrations
         run: |
-          cd backend/airbcar_backend
+          cd backend
           python manage.py migrate
         env:
           DATABASE_NAME: airbcar_db
@@ -66,12 +66,12 @@ jobs:
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
+          DJANGO_SETTINGS_MODULE: config.settings
           GITHUB_ACTIONS: true
       - name: Run Django tests
         run: |
-          cd backend/airbcar_backend
-          export DJANGO_SETTINGS_MODULE=airbcar_backend.settings
+          cd backend
+          export DJANGO_SETTINGS_MODULE=config.settings
           python manage.py test
         env:
           DATABASE_NAME: airbcar_db
@@ -79,7 +79,7 @@ jobs:
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
+          DJANGO_SETTINGS_MODULE: config.settings
           GITHUB_ACTIONS: true
       - name: Build backend Docker image
         run: docker build -t django-app .
@@ -113,7 +113,7 @@ jobs:
           pip install -r requirements.txt
       - name: Debug Django settings
         run: |
-          cd backend/airbcar_backend
+          cd backend
           echo "=== Environment Debug ==="
           echo "DJANGO_SETTINGS_MODULE: $DJANGO_SETTINGS_MODULE"
           echo "GITHUB_ACTIONS: $GITHUB_ACTIONS"
@@ -138,12 +138,12 @@ jobs:
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
+          DJANGO_SETTINGS_MODULE: config.settings
           GITHUB_ACTIONS: true
       - name: Run Django migrations
         run: |
-          cd backend/airbcar_backend
-          export DJANGO_SETTINGS_MODULE=airbcar_backend.settings
+          cd backend
+          export DJANGO_SETTINGS_MODULE=config.settings
           python manage.py migrate
         env:
           DATABASE_URL: postgres://airbcar_user:amineamine@localhost:5432/airbcar_db
@@ -152,12 +152,12 @@ jobs:
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
+          DJANGO_SETTINGS_MODULE: config.settings
           GITHUB_ACTIONS: true
       - name: Start backend server
         run: |
-          cd backend/airbcar_backend
-          export DJANGO_SETTINGS_MODULE=airbcar_backend.settings
+          cd backend
+          export DJANGO_SETTINGS_MODULE=config.settings
           python manage.py runserver &
           echo $! > backend.pid
         env:
@@ -167,7 +167,7 @@ jobs:
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DJANGO_SETTINGS_MODULE: airbcar_backend.settings
+          DJANGO_SETTINGS_MODULE: config.settings
           GITHUB_ACTIONS: true
       - name: Wait for backend to be ready
         run: |

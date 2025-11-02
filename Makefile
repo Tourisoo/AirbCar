@@ -55,11 +55,12 @@ run:
 
 local:
 	@echo "$(BOLD)$(GREEN)╔══════════════════════════════════════════════════════════════════════════════╗$(RESET)"
-	@echo "$(BOLD)$(GREEN)║$(RESET) $(BOLD)$(WHITE)Starting AirbCar in Local Development Mode$(RESET) $(BOLD)$(GREEN)║$(RESET)"
+	@echo "$(BOLD)$(GREEN)║$(RESET)		     $(BOLD)$(WHITE)Starting AirbCar in Local Development Mode$(RESET)	     	       $(BOLD)$(GREEN)║$(RESET)"
 	@echo "$(BOLD)$(GREEN)╚══════════════════════════════════════════════════════════════════════════════╝$(RESET)"
 	@echo ""
 	@echo "$(YELLOW)Setting up environment file...$(RESET)"
 	@cp .env.local.example .env.local
+	@python -c "import secrets; f=open('.env.local','r+'); c=f.read(); f.seek(0); f.write(c.replace('auto-generated-by-make-local', secrets.token_urlsafe(50))); f.truncate()" 2>nul || python3 -c "import secrets; f=open('.env.local','r+'); c=f.read(); f.seek(0); f.write(c.replace('auto-generated-by-make-local', secrets.token_urlsafe(50))); f.truncate()"
 	@$(MAKE) clean
 	@echo "$(YELLOW)Building and starting services...$(RESET)"
 	@docker compose up --build -d

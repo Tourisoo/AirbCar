@@ -360,6 +360,7 @@ class PasswordResetRequestView(generics.GenericAPIView):
     serializer_class = PasswordResetRequestSerializer
     
     def post(self, request):
+        frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
@@ -369,7 +370,7 @@ class PasswordResetRequestView(generics.GenericAPIView):
             token_generator = PasswordResetTokenGenerator()
             token = token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            reset_url = f"http://localhost:3000/auth/reset-password?uid={uid}&token={token}"
+            reset_url = f"{frontend_url}/auth/reset-password?uid={uid}&token={token}"
             send_mail(
                 'Password Reset Request',
                 f'Use this link to reset your password: {reset_url}',
@@ -487,123 +488,4 @@ class AdminStatusView(generics.GenericAPIView):
         return Response({'is_admin': request.user.is_staff})
 
 def home_view(request):
-    html_content = """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Airbcar Backend API</title>
-        <style>
-            body {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                margin: 0;
-                padding: 2rem;
-                background-color: #f9f9f9;
-                color: #333;
-            }
-            h1 {
-                color: #1e88e5;
-                border-bottom: 2px solid #1e88e5;
-                padding-bottom: 0.3rem;
-            }
-            h2 {
-                margin-top: 2rem;
-                color: #444;
-            }
-            code {
-                background-color: #eaeaea;
-                padding: 2px 6px;
-                border-radius: 4px;
-                font-size: 0.95em;
-            }
-            pre {
-                background-color: #272822;
-                color: #f8f8f2;
-                padding: 1rem;
-                overflow-x: auto;
-                border-radius: 5px;
-            }
-            .section {
-                margin-bottom: 2rem;
-            }
-            .container {
-                max-width: 900px;
-                margin: auto;
-            }
-            a {
-                color: #1e88e5;
-                text-decoration: none;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>🚗 Airbcar Backend API</h1>
-            <p><strong>Date:</strong> July 9, 2025</p>
-            <p><strong>Dev:</strong> Naoufal (Frontend)</p>
-            <p><strong>Status:</strong> Day 1 — Login, Sign-up, User APIs</p>
-            <p><strong>Base URL:</strong> <code>http://localhost:8000/</code></p>
-
-            <div class="section">
-                <h2>✅ Login</h2>
-                <p><strong>POST</strong> <code>/api/login/</code></p>
-                <pre>   {
-        "username": "testuser2",
-        "password": "testpass123"
-    }</pre>
-                <p><strong>Returns:</strong> JWT <code>access</code> & <code>refresh</code> tokens + user info</p>
-            </div>
-
-            <div class="section">
-                <h2>🔁 Refresh Token</h2>
-                <p><strong>POST</strong> <code>/api/token/refresh/</code></p>
-                <pre>   {
-        "refresh": "your_refresh_token_here"
-    }</pre>
-            </div>
-
-            <div class="section">
-                <h2>📝 Register (Sign-up)</h2>
-                <p><strong>POST</strong> <code>/api/register/</code></p>
-                <pre>   {
-        "username": "testuser2",
-        "email": "test2@example.com",
-        "password": "testpass123",
-        "phone_number": "+1234567890"
-    }</pre>
-            </div>
-
-            <div class="section">
-                <h2>👥 User APIs</h2>
-                <ul>
-                    <li>GET <code>/api/users/</code> — List all users</li>
-                    <li>GET <code>/api/users/&lt;id&gt;/</code> — Get specific user</li>
-                    <li>GET <code>/users/</code> — User list view</li>
-                </ul>
-            </div>
-
-            <div class="section">
-                <h2>🛠️ Dev Setup</h2>
-                <pre>
-    cd airbcar_backend
-    source env/bin/activate
-    pip install -r requirements.txt
-    sudo service postgresql start
-    python manage.py migrate
-    python manage.py runserver
-                </pre>
-            </div>
-
-            <div class="section">
-                <h2>📌 Notes</h2>
-                <ul>
-                    <li>Tokens must be used as: <code>Authorization: Bearer &lt;access&gt;</code></li>
-                    <li>Pending: Email verification, Password reset</li>
-                    <li>Contact: Amine</li>
-                </ul>
-            </div>
-        </div>
-    </body>
-    </html>
-    """
-    return HttpResponse(html_content)
+    return HttpResponse("AirbCar API is running")

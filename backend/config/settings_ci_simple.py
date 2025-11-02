@@ -10,7 +10,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'airbcar_db',
         'USER': 'airbcar_user',
-        'PASSWORD': 'amineamine',
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'test-ci-password'),
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -55,3 +55,6 @@ SECRET_KEY = 'test-secret-key-for-ci-only'
 
 # Allow all hosts in CI
 ALLOWED_HOSTS = ['*']
+
+ROOT_URLCONF = 'config.urls'
+WSGI_APPLICATION = 'config.wsgi.application'
