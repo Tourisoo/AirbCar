@@ -61,6 +61,8 @@ jobs:
           cd backend
           python manage.py migrate
         env:
+          SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
+          DEBUG: "True"
           DATABASE_NAME: airbcar_db
           DATABASE_USER: airbcar_user
           DATABASE_PASSWORD: amineamine
@@ -74,6 +76,8 @@ jobs:
           export DJANGO_SETTINGS_MODULE=config.settings
           python manage.py test
         env:
+          SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
+          DEBUG: "True"
           DATABASE_NAME: airbcar_db
           DATABASE_USER: airbcar_user
           DATABASE_PASSWORD: amineamine
@@ -133,6 +137,8 @@ jobs:
           print('Database HOST:', settings.DATABASES['default']['HOST'])
           "
         env:
+          SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
+          DEBUG: "True"
           DATABASE_NAME: airbcar_db
           DATABASE_USER: airbcar_user
           DATABASE_PASSWORD: amineamine
@@ -146,6 +152,8 @@ jobs:
           export DJANGO_SETTINGS_MODULE=config.settings
           python manage.py migrate
         env:
+          SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
+          DEBUG: "True"
           DATABASE_URL: postgres://airbcar_user:amineamine@localhost:5432/airbcar_db
           DATABASE_NAME: airbcar_db
           DATABASE_USER: airbcar_user
@@ -161,6 +169,8 @@ jobs:
           python manage.py runserver &
           echo $! > backend.pid
         env:
+          SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
+          DEBUG: "True"
           DATABASE_URL: postgres://airbcar_user:amineamine@localhost:5432/airbcar_db
           DATABASE_NAME: airbcar_db
           DATABASE_USER: airbcar_user

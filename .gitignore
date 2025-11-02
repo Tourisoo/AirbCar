@@ -43,3 +43,7 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# GitHub Actions local testing tool
+bin/
+backend/bin/

@@ -21,6 +21,17 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     
+    env:
+      SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
+      DEBUG: "True"
+      GITHUB_ACTIONS: "true"
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      DB_NAME: airbcar_db
+      DB_USER: airbcar_user
+      DB_PASSWORD: amineamine
+      DJANGO_SETTINGS_MODULE: config.settings
+    
     services:
       db:
         image: postgres:15
