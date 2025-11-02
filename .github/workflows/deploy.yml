@@ -68,12 +68,12 @@ jobs:
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DJANGO_SETTINGS_MODULE: config.settings
+          DJANGO_SETTINGS_MODULE: config.settings_ci_simple
           GITHUB_ACTIONS: true
       - name: Run Django tests
         run: |
           cd backend
-          export DJANGO_SETTINGS_MODULE=config.settings
+          export DJANGO_SETTINGS_MODULE=config.settings_ci_simple
           python manage.py test
         env:
           SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
@@ -83,7 +83,7 @@ jobs:
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DJANGO_SETTINGS_MODULE: config.settings
+          DJANGO_SETTINGS_MODULE: config.settings_ci_simple
           GITHUB_ACTIONS: true
       - name: Build backend Docker image
         run: docker build -t django-app .
@@ -144,12 +144,12 @@ jobs:
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DJANGO_SETTINGS_MODULE: config.settings
+          DJANGO_SETTINGS_MODULE: config.settings_ci_simple
           GITHUB_ACTIONS: true
       - name: Run Django migrations
         run: |
           cd backend
-          export DJANGO_SETTINGS_MODULE=config.settings
+          export DJANGO_SETTINGS_MODULE=config.settings_ci_simple
           python manage.py migrate
         env:
           SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
@@ -160,12 +160,12 @@ jobs:
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DJANGO_SETTINGS_MODULE: config.settings
+          DJANGO_SETTINGS_MODULE: config.settings_ci_simple
           GITHUB_ACTIONS: true
       - name: Start backend server
         run: |
           cd backend
-          export DJANGO_SETTINGS_MODULE=config.settings
+          export DJANGO_SETTINGS_MODULE=config.settings_ci_simple
           python manage.py runserver &
           echo $! > backend.pid
         env:
@@ -177,7 +177,7 @@ jobs:
           DATABASE_PASSWORD: amineamine
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DJANGO_SETTINGS_MODULE: config.settings
+          DJANGO_SETTINGS_MODULE: config.settings_ci_simple
           GITHUB_ACTIONS: true
       - name: Wait for backend to be ready
         run: |

@@ -15,7 +15,7 @@ env:
   DB_NAME: airbcar_db
   DB_USER: airbcar_user
   DB_PASSWORD: amineamine
-  DJANGO_SETTINGS_MODULE: config.settings
+  DJANGO_SETTINGS_MODULE: config.settings_ci_simple
 
 jobs:
   build-and-test:
@@ -30,7 +30,7 @@ jobs:
       DB_NAME: airbcar_db
       DB_USER: airbcar_user
       DB_PASSWORD: amineamine
-      DJANGO_SETTINGS_MODULE: config.settings
+      DJANGO_SETTINGS_MODULE: config.settings_ci_simple
     
     services:
       db:
