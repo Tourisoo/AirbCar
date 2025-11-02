@@ -20,21 +20,6 @@ env:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-
-jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    
-    env:
-      SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
-      DEBUG: True
-      GITHUB_ACTIONS: true
-      DB_HOST: localhost
-      DB_PORT: 5432
-      DB_NAME: airbcar_db
-      DB_USER: airbcar_user
-      DB_PASSWORD: amineamine
-      DJANGO_SETTINGS_MODULE: config.settings
     
     services:
       db:
@@ -51,10 +36,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-      # redis:
-      #   image: redis:7
-      #   ports:
-      #     - 6379:6379
     steps:
       - uses: actions/checkout@v4
 
@@ -75,133 +56,15 @@ jobs:
           cd backend
           pip install -r requirements.txt
 
-      - name: Debug database configuration
-        run: |
-          cd backend
-          echo "=== Environment Variables ==="
-          echo "GITHUB_ACTIONS: $GITHUB_ACTIONS"
-          echo "DB_HOST: $DB_HOST"
-          echo "DB_NAME: $DB_NAME"
-          echo "DB_USER: $DB_USER"
-          echo "DJANGO_SETTINGS_MODULE: $DJANGO_SETTINGS_MODULE"
-          echo ""
-          echo "=== Django Settings Check ==="
-          python -c "
-          import os
-          import sys
-          sys.path.append('.')
-          import django
-          django.setup()
-          from django.conf import settings
-          print('Settings module loaded:', settings.SETTINGS_MODULE)
-          print('Database HOST:', settings.DATABASES['default']['HOST'])
-          print('Database NAME:', settings.DATABASES['default']['NAME'])
-          print('Database USER:', settings.DATABASES['default']['USER'])
-          " || echo "Django setup failed"
-
-      - name: Test database connection
-        run: |
-          cd backend
-          python -c "
-          import os
-          import sys
-          sys.path.append('.')
-          import django
-          django.setup()
-          from django.db import connection
-          from django.conf import settings
-          print('Testing connection with HOST:', settings.DATABASES['default']['HOST'])
-          try:
-              cursor = connection.cursor()
-              cursor.execute('SELECT 1')
-              print('Database connection successful!')
-          except Exception as e:
-              print(f'Database connection failed: {e}')
-              sys.exit(1)
-          "
-        env:
-          SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
-          DEBUG: "True"
-          GITHUB_ACTIONS: true
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: airbcar_db
-          DB_USER: airbcar_user
-          DB_PASSWORD: amineamine
-          DJANGO_SETTINGS_MODULE: config.settings
-
-      - name: Verify Django settings are correct
-        run: |
-          cd backend
-          echo "=== Testing Django Configuration ==="
-          python -c "
-          import os
-          print('Environment DJANGO_SETTINGS_MODULE:', os.environ.get('DJANGO_SETTINGS_MODULE'))
-          import django
-          django.setup()
-          from django.conf import settings
-          print('Django settings module:', settings.SETTINGS_MODULE)
-          print('Database configuration:')
-          print('  ENGINE:', settings.DATABASES['default']['ENGINE'])
-          print('  HOST:', settings.DATABASES['default']['HOST'])
-          print('  NAME:', settings.DATABASES['default']['NAME'])
-          print('  USER:', settings.DATABASES['default']['USER'])
-          print('  PORT:', settings.DATABASES['default']['PORT'])
-          # Only check HOST if not using SQLite
-          if settings.DATABASES['default']['ENGINE'] != 'django.db.backends.sqlite3':
-              if settings.DATABASES['default']['HOST'] != 'localhost':
-                  print('ERROR: Database HOST is not localhost!')
-                  exit(1)
-              else:
-                  print('SUCCESS: Database HOST is correctly set to localhost')
-          else:
-              print('SQLite detected, skipping HOST check.')
-          "
-        env:
-          SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
-          DEBUG: "True"
-          GITHUB_ACTIONS: true
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: airbcar_db
-          DB_USER: airbcar_user
-          DB_PASSWORD: amineamine
-          DJANGO_SETTINGS_MODULE: config.settings
-
       - name: Run database migrations
         run: |
           cd backend
-          echo "=== Pre-migration debug ==="
-          echo "DJANGO_SETTINGS_MODULE: $DJANGO_SETTINGS_MODULE"
-          export DJANGO_SETTINGS_MODULE=config.settings
-          echo "=== Running migrations with Django manage.py ==="
           python manage.py migrate
-        env:
-          SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
-          DEBUG: "True"
-          GITHUB_ACTIONS: true
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: airbcar_db
-          DB_USER: airbcar_user
-          DB_PASSWORD: amineamine
-          DJANGO_SETTINGS_MODULE: config.settings
 
       - name: Run backend tests
         run: |
           cd backend
-          export DJANGO_SETTINGS_MODULE=config.settings
           python manage.py test
-        env:
-          SECRET_KEY: django-insecure-ci-k8m2p9x4q7w5n3h6j1v8c0z2b5a4y7t1r9e3u6i8o0p2s4d6f8g
-          DEBUG: "True"
-          GITHUB_ACTIONS: true
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: airbcar_db
-          DB_USER: airbcar_user
-          DB_PASSWORD: amineamine
-          DJANGO_SETTINGS_MODULE: config.settings
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
