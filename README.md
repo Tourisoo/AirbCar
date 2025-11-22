@@ -1,9 +1,11 @@
 # AirbCar
 
-Simple car rental app. Frontend is Next.js. Backend is Django REST API. You can run it in two ways:
+Simple car rental app. Frontend is Next.js. Backend is Django REST API. 
 
-- Local mode: uses a local Postgres in Docker. This is for anyone who wants to try the app. No private keys needed.
-- Remote mode: uses a remote Supabase database. This is only for owners who have the private `.env.local` file.
+
+**Technologies:** Python, Django, Django REST Framework, PostgreSQL, Docker, GitHub Actions, Supabase, Git
+
+
 
 ### Screenshots
 <p align="center">
@@ -21,6 +23,21 @@ Simple car rental app. Frontend is Next.js. Backend is Django REST API. You can 
     <img src="images/Partner_Dashboard1.jpg" width="32%" alt="Partner Dashboard 1" />
     <img src="images/Partner_Dashboard2.jpg" width="32%" alt="Partner Dashboard 2" /> 
 </p>
+
+- **Designed and built complete backend API from scratch** using Django and PostgreSQL, serving RESTful endpoints for user management, vehicle booking, and role-specific dashboard data.
+- **Implemented robust Role-Based Access Control (RBAC) system** with custom permissions for Owners, Renters, and Admins, ensuring secure multi-tenant data access
+- **Developed core booking flow** with complex business logic: availability checking, conflict resolution, pricing calculation, and booking state management
+- **Created secure authentication system** with JWT tokens and refresh token mechanism
+- **Designed normalized database schema** with tables, foreign key relationships, and optimized queries for performance.
+- Set up complete **CI/CD pipeline using GitHub Actions** for automated testing, linting, and deployment
+- Configured **Docker and Docker Compose** for consistent development and production environments
+- Integrated **Supabase** for hosting database and data storage.
+
+<br>**You can run it in two ways:**
+
+- Local mode: uses a local Postgres in Docker. This is for anyone who wants to try the app. No private keys needed.
+- Remote mode: uses a remote Supabase database. This is only for owners who have the private `.env.local` file.
+
 
 ## Quick start (visitors)
 
